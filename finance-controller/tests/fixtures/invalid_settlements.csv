@@ -1,0 +1,6 @@
+settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,description,currency
+STL0001,2026-07-02,37181.36,REF79402654,Kale LLC,0.0,37181.36,UPI/HDFC9703905715/Settlement for REF79402654,INR
+STL0002,02/07/2026,"1,23,456.78",REF79402655,Company Inc,10.50,123446.28,Reconciliation check,INR
+STL0003,2026-07-03,invalid_amount,REF79402656,Kale LLC,0.0,37181.36,UPI/HDFC9703905715/Settlement for REF79402656,INR
+STL0004,malformed-date,37181.36,REF79402657,Kale LLC,0.0,37181.36,UPI/HDFC9703905715/Settlement for REF79402657,INR
+STL0005,2026-07-05,37181.36,,Kale LLC,0.0,37181.36,UPI/HDFC9703905715/Settlement for empty ref,INR

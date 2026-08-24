@@ -1,0 +1,112 @@
+---
+description: "Build a live MotherDuck dashboard as a Dive. Use when composing one shareable KPI, trend, and breakdown story over existing MotherDuck data, especially when the result should stay a saved workspace artifact rather than a full application."
+license: "MIT"
+---
+# Build an Analytics Dashboard
+
+Use this skill when the user wants a multi-section Dive-backed dashboard with a clear analytical story, not just a single chart.
+
+This is a use-case skill. It orchestrates `motherduck-explore`, `motherduck-query`, `motherduck-create-dive`, and `motherduck-design-dive`; use `motherduck-duckdb-sql` as supporting reference when exact syntax matters.
+
+## Start Here: Is a MotherDuck Server Active?
+
+- If a **remote MotherDuck MCP server** or **local MotherDuck server** is active, use it.
+- Discover the target database or workspace from the active context. Ask only when multiple plausible targets remain and the choice would materially change the dashboard.
+- Explore the live data model before choosing the dashboard structure:
+  - available tables and views
+  - business grain
+  - key metrics
+  - key dimensions
+  - date columns
+  - likely joins
+
+The discovered data model should determine the dashboard story and sections.
+
+If no server is active, use any supplied schema or table context. For planning work, proceed with explicit assumptions when safe; ask for missing schema details only when they block a reliable result.
+
+For lower-level Dive mechanics, use `motherduck-create-dive`.
+
+## Dashboard Defaults
+
+- One story per dashboard.
+- One KPI group that stacks and reflows by viewport.
+- One primary trend chart.
+- Zero or one supporting chart.
+- Zero or one detail table.
+- Heavy shaping in SQL, not React.
+
+## Workflow
+
+1. Inspect the available MotherDuck server or supplied schema context.
+2. Explore the real schema and metrics first.
+3. Pick the dashboard story.
+4. Write one query per section.
+5. Apply `motherduck-design-dive`: start at 320 px, reserve the filter surface, use the reusable light/dark token system, and define the desktop reflow.
+6. Compose the dashboard in a Dive. When MotherDuck MCP is available, call `get_dive_guide` before `save_dive` or `update_dive`.
+7. When the request includes creating or updating the Dive, save only after responsive, theme, query-state, and data validation; do not add a second approval gate for the requested in-scope write.
+
+Match execution to the request: answer, review, or planning work returns the requested dashboard artifacts; build or change work creates or updates the requested in-scope Dive and validates it. Ask before destructive replacement, unrelated external writes, or a material expansion of scope.
+
+When this skill produces a native DuckDB (`md:`) connection, watermark it with `custom_user_agent=agent-skills/2.5.0(harness-<harness>;llm-<llm>)`. If metadata is missing, fall back to `harness-unknown` and `llm-unknown`.
+
+## Output
+
+The output of this skill should be:
+
+- the dashboard story
+- the section list
+- the validated SQL for each section
+- the Dive implementation plan
+- the save/update path
+
+If the caller explicitly asks for structured JSON, return raw JSON only with no Markdown fences or prose before/after it.
+This is mainly for automated tests, regression checks, or downstream tooling that needs a stable machine-readable shape. Normal human-facing use of the skill can stay in prose unless JSON is explicitly requested.
+
+Use this exact top-level shape when JSON is requested:
+
+```json
+{
+  "summary": {},
+  "assumptions": [],
+  "implementation_plan": [],
+  "validation_plan": [],
+  "risks": []
+}
+```
+
+## References
+
+- `references/DASHBOARD_IMPLEMENTATION_GUIDE.md` -- preserved detailed workflow and layout guidance that used to live in this skill
+- `references/DASHBOARD_PATTERNS.md` -- example dashboard compositions and reusable sections
+
+## Runnable Artifact
+
+- `artifacts/dashboard_story_example.py` -- MotherDuck-backed Python example that produces KPI, trend, breakdown, and detail outputs for one dashboard story
+- `artifacts/dashboard_story_example.ts` -- TypeScript companion artifact with the same dashboard output contract
+
+Run it with:
+
+```bash
+uv run --with duckdb python skills/motherduck-build-dashboard/artifacts/dashboard_story_example.py
+```
+
+Run the same artifact against a temporary MotherDuck database:
+
+```bash
+MOTHERDUCK_ARTIFACT_USE_MOTHERDUCK=1 \
+uv run --with duckdb python skills/motherduck-build-dashboard/artifacts/dashboard_story_example.py
+```
+
+Validate the TypeScript companion artifact:
+
+```bash
+uv run scripts/test_typescript_artifacts.py
+```
+
+## Related Skills
+
+- `motherduck-explore` -- inspect the actual database before deciding the dashboard sections
+- `motherduck-query` -- validate each dashboard query
+- `motherduck-create-dive` -- useSQLQuery, theming, preview/save, loading, and visual mechanics
+- `motherduck-design-dive` -- responsive layout, filter capacity, light/dark tokens, reusable components, and visual QA
+- `motherduck-duckdb-sql` -- resolve syntax and function questions

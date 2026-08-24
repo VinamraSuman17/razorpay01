@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Finance Controller</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Finance Controller</h1>
+            <p>Reconciliation Dashboard & Audit Operations</p>
+        </header>
+
+        <!-- Batch Controller Section -->
+        <section class="card">
+            <h2>Reconciliation Batch Control</h2>
+            <button id="run-batch-btn">Run Batch Reconciliation</button>
+            <div id="batch-loader" class="hidden">Running pipeline... Please wait.</div>
+            
+            <div id="summary-grid" class="grid hidden">
+                <div class="stat-box">
+                    <span class="stat-label">Match Rate</span>
+                    <span id="stat-match-rate" class="stat-value">0%</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Total Settlements</span>
+                    <span id="stat-total" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Matches Found</span>
+                    <span id="stat-matched" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Exceptions Count</span>
+                    <span id="stat-exceptions" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Needs Review</span>
+                    <span id="stat-review" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Execution Time</span>
+                    <span id="stat-time" class="stat-value">0s</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settlement Q&A Section -->
+        <section class="card">
+            <h2>Settlement Q&A Agent</h2>
+            <div class="qa-input-group">
+                <input type="text" id="qa-input" placeholder="e.g., Show me details for settlement STL0003 or count chargebacks">
+                <button id="qa-submit-btn">Ask Question</button>
+            </div>
+            <div id="qa-response-box" class="response-box hidden">
+                <strong>Answer:</strong>
+                <p id="qa-answer-text"></p>
+                <div id="qa-sql-box" class="sql-box hidden">
+                    <small>Generated SQL Query:</small>
+                    <code id="qa-sql-code"></code>
+                </div>
+            </div>
+        </section>
+
+        <!-- Matched Records Section -->
+        <section class="card">
+            <h2>Matched Records</h2>
+            <div class="table-container">
+                <table id="matches-table">
+                    <thead>
+                        <tr>
+                            <th>Settlement ID</th>
+                            <th>Order ID</th>
+                            <th>Rule Applied</th>
+                            <th>Confidence</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matches-tbody">
+                        <tr><td colspan="5">No matched records loaded yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Exceptions Section -->
+        <section class="card">
+            <div class="header-with-filter">
+                <h2>Exceptions & Action Items</h2>
+                <div class="filter-controls">
+                    <label for="priority-sort">Sort by Priority:</label>
+                    <select id="priority-sort">
+                        <option value="NONE">Default Order</option>
+                        <option value="HIGH_FIRST">High Priority First</option>
+                        <option value="LOW_FIRST">Low Priority First</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="exceptions-table">
+                    <thead>
+                        <tr>
+                            <th>Record ID</th>
+                            <th>Source</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Reason</th>
+                            <th>Suggested Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="exceptions-tbody">
+                        <tr><td colspan="6">No exceptions loaded yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

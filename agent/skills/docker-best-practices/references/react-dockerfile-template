@@ -1,0 +1,124 @@
+# =============================================================================
+# Production React Multi-Stage Dockerfile
+# =============================================================================
+# Build stage: node:20-alpine (compile TypeScript, bundle React)
+# Runtime stage: nginx:alpine (serve static files, ~7MB base)
+#
+# Final image contains NO Node.js runtime -- only static HTML/CSS/JS + Nginx.
+#
+# Build:
+#   docker build -t app-frontend:latest -f Dockerfile.frontend ./frontend
+#
+# Run:
+#   docker run -p 8080:8080 app-frontend:latest
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Stage 1: Dependencies -- install node_modules
+# ---------------------------------------------------------------------------
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Copy only package files for better layer caching
+# This layer is rebuilt only when package.json or lockfile changes
+COPY package.json package-lock.json ./
+
+# Install dependencies
+# --ignore-scripts: security measure, do not run postinstall scripts
+# npm ci: clean install from lockfile (deterministic, faster than npm install)
+RUN npm ci --ignore-scripts
+
+# ---------------------------------------------------------------------------
+# Stage 2: Builder -- compile and bundle the application
+# ---------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code
+COPY . .
+
+# Build the production bundle
+# This creates the build/ directory with optimized static assets
+RUN npm run build
+
+# ---------------------------------------------------------------------------
+# Stage 3: Runtime -- serve with Nginx
+# ---------------------------------------------------------------------------
+FROM nginx:alpine AS runtime
+
+# Metadata labels
+LABEL org.opencontainers.image.title="app-frontend"
+LABEL org.opencontainers.image.description="React frontend served by Nginx"
+LABEL org.opencontainers.image.vendor="platform-team"
+
+# Create non-root user and group
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+
+# Copy built static files from builder stage
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copy custom Nginx configuration
+# This handles SPA routing (all paths -> index.html)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Adjust permissions for non-root Nginx operation
+# Nginx needs to write to these directories at runtime
+RUN chown -R appuser:appgroup /var/cache/nginx \
+                              /var/log/nginx \
+                              /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown appuser:appgroup /var/run/nginx.pid
+
+# Switch to non-root user
+USER appuser
+
+# Use non-privileged port (8080 instead of 80)
+EXPOSE 8080
+
+# Health check using wget (available in alpine, unlike curl)
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=10s \
+    CMD wget -q --spider http://localhost:8080/ || exit 1
+
+# Run Nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]
+
+# =============================================================================
+# Required: nginx.conf
+# =============================================================================
+# Place this nginx.conf alongside the Dockerfile:
+#
+#   server {
+#       listen 8080;
+#       server_name _;
+#       root /usr/share/nginx/html;
+#       index index.html;
+#
+#       # SPA routing: serve index.html for all routes
+#       location / {
+#           try_files $uri $uri/ /index.html;
+#       }
+#
+#       # Cache static assets aggressively
+#       location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+#           expires 1y;
+#           add_header Cache-Control "public, immutable";
+#       }
+#
+#       # Security headers
+#       add_header X-Frame-Options "SAMEORIGIN" always;
+#       add_header X-Content-Type-Options "nosniff" always;
+#       add_header X-XSS-Protection "1; mode=block" always;
+#       add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+#
+#       # Gzip compression
+#       gzip on;
+#       gzip_types text/plain text/css application/json application/javascript
+#                  text/xml application/xml application/xml+rss text/javascript;
+#   }
+# =============================================================================

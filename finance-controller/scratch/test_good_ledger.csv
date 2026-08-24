@@ -1,0 +1,2 @@
+order_id,invoice_date,expected_amount,customer_name,customer_reference,expected_settlement_date,tax_amount,currency,status
+ORD_TST01,2026-07-04,1000.00,Acme Corp,REF99001,2026-07-06,180.00,INR,unsettled

@@ -1,0 +1,140 @@
+# =============================================================================
+# Docker Compose -- Local Development Environment
+# =============================================================================
+# Services:
+#   - backend:  FastAPI application with hot reload (port 8000)
+#   - frontend: React dev server with hot reload (port 3000)
+#   - db:       PostgreSQL 16 with health check (port 5432)
+#   - redis:    Redis 7 with health check (port 6379)
+#
+# Usage:
+#   docker compose up -d          # Start all services
+#   docker compose logs -f backend # Follow backend logs
+#   docker compose down -v         # Stop and remove volumes
+# =============================================================================
+
+services:
+  # ─── Backend (FastAPI) ───────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: builder  # Use builder stage for dev (includes build tools)
+    container_name: app-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source code for hot reloading
+      - ./src:/app/src:cached
+      - ./alembic:/app/alembic:cached
+      - ./alembic.ini:/app/alembic.ini:ro
+      # Do NOT mount node_modules or __pycache__
+    environment:
+      - APP_ENV=development
+      - DEBUG=true
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/app_dev
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key-do-not-use-in-production
+      - JWT_SECRET_KEY=dev-jwt-secret-do-not-use-in-production
+      - LOG_LEVEL=DEBUG
+      - CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    # Override CMD for development: enable auto-reload
+    command: >
+      uvicorn src.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dir src
+      --log-level debug
+    restart: unless-stopped
+
+  # ─── Frontend (React) ───────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+      target: deps  # Use deps stage that has node_modules
+    container_name: app-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot reloading
+      - ./frontend/src:/app/src:cached
+      - ./frontend/public:/app/public:cached
+      # Preserve node_modules from the image (do not override with host)
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_ENABLE_DEBUG_PANEL=true
+      - WATCHPACK_POLLING=true  # Enable polling for file changes in Docker
+    depends_on:
+      backend:
+        condition: service_healthy
+    # Run React dev server
+    command: npm start
+    restart: unless-stopped
+
+  # ─── PostgreSQL ─────────────────────────────────────────────────────────
+  db:
+    image: postgres:16
+    container_name: app-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: app_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # Performance tuning for development
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    volumes:
+      # Persist database data across restarts
+      - pgdata:/var/lib/postgresql/data
+      # Optional: initialization scripts
+      # - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ─── Redis ──────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: app-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    # Limit memory usage in development
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+
+# ─── Named Volumes ──────────────────────────────────────────────────────────
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+
+# ─── Networks ────────────────────────────────────────────────────────────────
+# Default network is created automatically by Compose.
+# All services can reach each other by service name (e.g., db, redis).

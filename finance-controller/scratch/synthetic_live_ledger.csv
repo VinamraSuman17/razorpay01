@@ -1,0 +1,6 @@
+order_id,invoice_date,expected_amount,customer_name,customer_reference,expected_settlement_date,tax_amount,currency,status
+ORD_LIVE01,2026-08-01,5000.00,Acme Tech,REF881001,2026-08-01,900.00,INR,unsettled
+ORD_LIVE02,2026-08-02,12000.00,Starlight Retail,REF881002,2026-08-02,2160.00,INR,unsettled
+ORD_LIVE03,2026-08-03,8500.00,Apex Digital,REF881003,2026-08-03,1530.00,INR,unsettled
+ORD_LIVE04,2026-08-04,3500.00,Nexus Labs,REF773419,2026-08-04,630.00,INR,unsettled
+ORD_LIVE05,2026-08-05,10000.00,Global Trading,REF881005,2026-08-05,0,USD,unsettled

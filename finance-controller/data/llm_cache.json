@@ -1,0 +1,184 @@
+{
+  "bf5fae41c7179508c0e3aa5adf6adb7b4e3b07b47519f2948c9d4f680082b8b7": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement is a chargeback reversal for a specific reference (REF16934060) and amount (-3636084 INR). None of the shortlisted candidates have matching references, customer names, or amounts within the allowed tolerance. The differences in amounts are significant.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "3b861442d612273a7bdfaac3fabb0188669d31c8601a85fc2c4fc0a34c9ad546": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "None of the shortlisted candidates have an expected amount that matches the settlement amount of 825337 within the allowed tolerance. The differences are significantly larger than the 500 paise tolerance.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "eb92280b917a8c5e8c63d41c5fb8a90708220ec4be83f8dee5deef0ce44570f9": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement amount (5,148,175) does not match any of the shortlisted candidates' expected amounts, even after considering potential currency conversions or fee adjustments. The UTR reference in the settlement (REF71545168) does not match any of the customer references provided in the candidates. Furthermore, all candidates are already marked as 'settled'.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "1b22152ce4f4398ef16a48821c7e70e879e9d612456b309d6683178965500b58": {
+    "decision": "match",
+    "matched_order_id": "ORD0076",
+    "confidence": 0.95,
+    "reasoning": "The settlement amount matches the expected amount of ORD0076 exactly. The payer account name Mandal-Setty matches the customer name perfectly. The UTR reference REF06797483 is highly similar to the customer reference REF06797403, and the settlement date aligns with the expected settlement date.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "49b4cfee85ce7952bd6ae5e942fe6cf811f5d82afd15f4c8bb0eaae44605e781": {
+    "decision": "match",
+    "matched_order_id": "ORD0075",
+    "confidence": 0.98,
+    "reasoning": "The settlement amount matches the expected amount of ORD0075 exactly. The customer name Borde and Sons is an exact match, and the UTR reference REF91334132 is highly similar to the customer reference REF91334123.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "f51c77f2ca7afd1fbe15d04f54c4e6bb46ed6c74fad89d078f125feebd49c8d2": {
+    "decision": "match",
+    "matched_order_id": "ORD0074",
+    "confidence": 0.98,
+    "reasoning": "The settlement amount matches the expected amount of ORD0074 exactly. The customer name is an exact match, and the customer reference REF99386774 is highly similar to the settlement UTR REF99386747.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "be94fb0313a5fff6ab9266d0342f69a0024ef559d3df6c7dc1b7e257ac02b742": {
+    "decision": "match",
+    "matched_order_id": "ORD0085",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 33,018,154 INR matches the expected order amount of 395,427 USD after applying an FX conversion rate of 83.5. The customer name and reference number (REF24771093) are an exact match.",
+    "rule_category": "FX_CONVERSION"
+  },
+  "04544adb9b8d8516e678564081f6feaea4cba259d24ade70a2d5d9138ce64561": {
+    "decision": "match",
+    "matched_order_id": "ORD0086",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 33,628,623 INR matches the expected order amount of 402,738 USD after applying an FX conversion rate of 83.5. The customer reference REF86131712 matches.",
+    "rule_category": "FX_CONVERSION"
+  },
+  "553ad787e8998ee1b91e592b259ab8e4656637458164a6faec24d153de07e8b8": {
+    "decision": "match",
+    "matched_order_id": "ORD0084",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 33,752,620 INR matches the expected order amount of 404,223 USD after applying an FX conversion rate of 83.5. The customer reference REF03859770 matches.",
+    "rule_category": "FX_CONVERSION"
+  },
+  "74e86b376f431de666ea2837d60e30220044be497468435ef0a005145ce79684": {
+    "decision": "match",
+    "matched_order_id": "ORD0077",
+    "confidence": 0.95,
+    "reasoning": "The settlement amount of 3,045,870 INR and customer name Dixit LLC match ORD0077 exactly. The UTR reference REF13493681 differs from customer reference REF13493618 by a minor digit transposition (81 vs 18), providing strong corroborating evidence for a fuzzy match.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "6fd2efed9c334e936e1b09fdcea20d07912f4efd1b3df4b5655954b577933538": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "Chargeback reversal reference REF02563421 does not match candidate orders.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "8d678fbdb2ecfd9e48fe7f559eedacaa9ffe1c50f506b4f37a3932e4d9a91d92": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "Unidentified inward transfer MISC982146 does not match candidate amounts or references.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "e7cd7007959dc03d68ba3c8779b4e54cb03866e04b803293d6522c4cf0115495": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "Duplicate credit settlement REF78742967 does not match available open orders.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "d18690f4c9f70487b40323936acaab50bad2854ad840a13c83b5f3e251c4510d": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "Duplicate credit settlement REF65512567 does not match available open orders.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "8d644e2b8bf56a539ba58813e992e08951adabb73e6cb8a8f119e19f21275251": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "Chargeback reversal reference REF46270482 does not match candidate orders.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "1cedefca02a6cdc26230e91c8fb96e3900f4111391a4bf197c6284735269702e": {
+    "decision": "match",
+    "matched_order_id": "ORD0086",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 33,628,623 INR matches the expected order amount of 402,738 USD after applying an FX conversion rate of 83.5. The customer reference REF86131712 matches.",
+    "rule_category": "FX_CONVERSION"
+  },
+  "f4f04e471ee14cc3f91e69ad80eec92a5ecdaf244f14fdea6915655ade0d8c15": {
+    "decision": "match",
+    "matched_order_id": "ORD0084",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 33,752,620 INR matches the expected order amount of 404,223 USD after applying an FX conversion rate of 83.5. The customer reference REF03859770 matches.",
+    "rule_category": "FX_CONVERSION"
+  },
+  "3529df625bc37773a69ebff1070e6dffee3de96dfb93bed4625bbd28394ec767": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "STL0074 does not match shortlisted candidates within tolerance.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "9ce4acf20ec2f605d6efcb9b7e2c91b3440cc42932bdeb047fe76afe8ca0a627": {
+    "decision": "match",
+    "matched_order_id": "ORD0077",
+    "confidence": 0.95,
+    "reasoning": "The settlement amount matches the expected amount of ORD0077 exactly. Customer name and reference are highly similar.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "f395cbdcc4307e513ea42c1746c2461204eed1b4f53b4ea308fb979aa13ec933": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 1.0,
+    "reasoning": "The settlement amount (8,021,465) significantly deviates from the expected amount of the only candidate order (3,045,870). The difference of 4,975,595 far exceeds the allowed tolerance of 500.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "bb7aeca3ef6ae4476a3d009ee03e85ba8eb5272c36d804f072705943fb5367e0": {
+    "decision": "match",
+    "matched_order_id": "ORD_LIVE04",
+    "confidence": 0.95,
+    "reasoning": "Settlement amount matches ORD_LIVE04 exactly. Customer name Nexus Labs is an exact match and UTR reference REF773491 differs from customer reference REF773419 by a minor 2-digit transposition.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "3bc00f73b6dd3615a2b3a2867a09319a98974d1bb3f8a1723c64505f97e975d9": {
+    "decision": "match",
+    "matched_order_id": "ORD_LIVE05",
+    "confidence": 1.0,
+    "reasoning": "Settlement amount of 835,000 INR matches expected order amount of 10,000 USD after applying FX conversion rate of 83.5. Customer reference REF881005 matches.",
+    "rule_category": "FX_CONVERSION"
+  },
+  "760b0790901de5c8b86b2cad2ed57b8392487ed3d8c18b8ed2d0ed8f59b7c058": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "None of the shortlisted candidates have an amount that matches the settlement amount of 647356 within the allowed tolerance. The differences are significant (209419, 1225597, and 198364 respectively). Additionally, there is no alignment in customer names or UTR references.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "7508d7fae813d5dab35ebf079175bd77d15bfe74933341c347a99e5195782373": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 1.0,
+    "reasoning": "The settlement amount (-3,769,445) does not match the expected amounts of either candidate (ORD0024: 448,992; ORD0027: 437,937). The UTR references and customer names also show no correlation. The settlement is a chargeback reversal, which does not align with the settled status of the provided candidates.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "0352e54fec5ee599bbe045c243df6b3c3ba885b2a7fe867434eb4e376712db6d": {
+    "decision": "match",
+    "matched_order_id": "ORD0025",
+    "confidence": 0.95,
+    "reasoning": "The settlement amount matches the expected amount of ORD0025 exactly. The payer name 'Khurana-Singh' is an exact match. The UTR reference 'REF6862Q034' is highly similar to the customer reference 'REF68625034', likely representing a minor character substitution (Q vs 5) common in OCR or manual entry, which falls under the FUZZY_REFERENCE category.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "c8f0508ee48df3efb18b9013b3b19ef64ce5840886ace132395a0f3ea7dd18c7": {
+    "decision": "match",
+    "matched_order_id": "ORD0027",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 36,567,740 INR matches the expected order amount of 437,937 USD after applying an FX conversion rate of 83.5. The customer name 'Prashad and Sons' and the reference 'REF03503484' match perfectly between the settlement and the order record.",
+    "rule_category": "FX_CONVERSION"
+  }
+}

@@ -1,0 +1,12 @@
+reconciliation:
+  amount_tolerance_paise: 500  # absolute tolerance in paise (e.g., Rs. 5.00)
+  amount_tolerance_percent: 1.0  # percentage tolerance (e.g., 1.0%)
+  date_tolerance_days: 3  # tolerance window for date matching in days
+  
+thresholds:
+  auto_match_confidence: 0.85  # confidence >= 0.85 auto-matches
+  needs_review_confidence: 0.50  # confidence between 0.50 and 0.85 triggers review
+
+gemini:
+  model_name: "gemini-3.5-flash-lite"
+  requests_per_minute: 15

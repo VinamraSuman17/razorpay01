@@ -1,0 +1,102 @@
+# =============================================================================
+# Production Python Multi-Stage Dockerfile
+# =============================================================================
+# Base: python:3.12-slim (Debian-based, best binary wheel compatibility)
+# Pattern: Builder stage installs dependencies, runtime stage copies only what
+#          is needed. Final image has no build tools, no pip cache, non-root user.
+#
+# Build:
+#   docker build -t app-backend:latest -f Dockerfile.backend .
+#
+# Run:
+#   docker run -p 8000:8000 --env-file .env app-backend:latest
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Stage 1: Builder -- install Python dependencies
+# ---------------------------------------------------------------------------
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+# Install build-time system dependencies
+# - build-essential: gcc, make (needed for compiling C extensions)
+# - libpq-dev: PostgreSQL client headers (needed for psycopg2)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only requirements first for better layer caching
+# This layer is rebuilt only when requirements.txt changes
+COPY requirements.txt .
+
+# Install Python dependencies into /install prefix
+# --no-cache-dir: do not store pip cache (saves ~50MB)
+# --prefix=/install: isolate packages for clean COPY to runtime stage
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# ---------------------------------------------------------------------------
+# Stage 2: Runtime -- minimal production image
+# ---------------------------------------------------------------------------
+FROM python:3.12-slim AS runtime
+
+# Metadata labels (OCI standard)
+LABEL org.opencontainers.image.title="app-backend"
+LABEL org.opencontainers.image.description="FastAPI backend application"
+LABEL org.opencontainers.image.vendor="platform-team"
+
+# Install runtime-only system dependencies
+# - libpq5: PostgreSQL client library (runtime only, no headers)
+# - curl: needed for HEALTHCHECK
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libpq5 \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+# - No login shell (/sbin/nologin)
+# - No home directory created
+# - Dedicated group
+RUN groupadd -r appuser && \
+    useradd -r -g appuser -d /app -s /sbin/nologin appuser
+
+WORKDIR /app
+
+# Copy installed Python packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy application code
+COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser alembic/ ./alembic/
+COPY --chown=appuser:appuser alembic.ini .
+
+# Ensure the app directory is owned by appuser
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose the application port
+EXPOSE 8000
+
+# Health check: verify the application is responding
+# - interval: check every 30 seconds
+# - timeout: fail if no response within 10 seconds
+# - retries: mark unhealthy after 3 consecutive failures
+# - start_period: give the app 15 seconds to start up
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=15s \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run with uvicorn
+# - --host 0.0.0.0: bind to all interfaces (required in Docker)
+# - --port 8000: match EXPOSE
+# - --workers 4: production worker count (adjust based on CPU cores)
+# - --access-log: enable access logging
+CMD ["uvicorn", "src.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--workers", "4", \
+     "--access-log"]
