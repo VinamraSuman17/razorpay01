@@ -334,6 +334,8 @@ def run_agent_verification(
             log_match(db_conn, stl_id, res.matched_order_id, f"NEEDS_HUMAN_REVIEW_{res.rule_category}", confidence=res.confidence, reason=res.reasoning)
             stats["needs_review"] += 1
         else:
+            if res.rule_category == "QUOTA_EXHAUSTED_REVIEW":
+                stl["quota_exhausted_reason"] = res.reasoning
             stats["exceptions"] += 1
             
     return stats

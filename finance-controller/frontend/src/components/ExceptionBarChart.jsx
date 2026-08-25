@@ -4,7 +4,6 @@ import { Group } from '@visx/group';
 import { AxisLeft, AxisBottom } from '@visx/axis';
 import { scaleBand, scaleLinear } from '@visx/scale';
 import { useTooltip, TooltipWithBounds, defaultStyles } from '@visx/tooltip';
-import { LinearGradient } from '@visx/gradient';
 import { ParentSize } from '@visx/responsive';
 
 const tooltipStyles = {
@@ -33,7 +32,7 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
   // Aggregate exceptions by operational category
   const counts = {};
   exceptionsList.forEach((e) => {
-    const cat = e.category ? e.category.replace(/_/g, ' ') : 'OTHER';
+    const cat = e.category ? e.category.replace(/_/g, ' ') : 'UNCLASSIFIED';
     counts[cat] = (counts[cat] || 0) + 1;
   });
 
@@ -64,7 +63,6 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
   return (
     <div className="relative w-full h-full">
       <svg width={width} height={height}>
-        <LinearGradient id="red-bar-gradient" from="#EF4444" to="#991B1B" />
         <Group top={margin.top} left={margin.left}>
           {data.map((d) => {
             const barWidth = xScale(d.count);
@@ -78,9 +76,9 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
                   y={barY}
                   width={barWidth}
                   height={barHeight}
-                  fill="url(#red-bar-gradient)"
-                  rx={4}
-                  className="transition-all duration-200 hover:opacity-85 cursor-pointer"
+                  fill="#DC2626"
+                  rx={3}
+                  className="transition-opacity duration-150 hover:opacity-85 cursor-pointer"
                   onMouseMove={(event) => {
                     const svg = event.currentTarget.ownerSVGElement;
                     const rect = svg.getBoundingClientRect();
@@ -92,7 +90,7 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
                   }}
                   onMouseLeave={hideTooltip}
                 />
-                {/* Count label at end of bar */}
+                {/* Direct count label at end of bar */}
                 <text
                   x={barWidth + 6}
                   y={barY + barHeight / 2}
@@ -100,7 +98,7 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
                   fontSize={11}
                   fontWeight={600}
                   fill="#0B1F3A"
-                  className="font-mono-tabular"
+                  className="font-mono tabular-nums"
                 >
                   {d.count}
                 </text>
@@ -113,8 +111,8 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
             stroke="transparent"
             tickStroke="transparent"
             tickLabelProps={() => ({
-              fill: '#475569',
-              fontSize: 10,
+              fill: '#0B1F3A',
+              fontSize: 11,
               fontWeight: 500,
               textAnchor: 'end',
               dy: '0.33em',
@@ -124,8 +122,8 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
           <AxisBottom
             top={yMax}
             scale={xScale}
-            stroke="#CBD5E1"
-            tickStroke="#CBD5E1"
+            stroke="#E2E8F0"
+            tickStroke="#E2E8F0"
             numTicks={Math.min(maxCount, 5)}
             tickLabelProps={() => ({
               fill: '#64748B',
@@ -139,9 +137,9 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
       {tooltipOpen && tooltipData && (
         <TooltipWithBounds top={tooltipTop} left={tooltipLeft} style={tooltipStyles}>
           <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
+            <span className="w-2 h-2 rounded-full bg-[#DC2626]" />
             <span className="font-semibold">{tooltipData.category}:</span>
-            <span className="font-mono-tabular font-bold">{tooltipData.count} exception(s)</span>
+            <span className="font-mono tabular-nums font-bold">{tooltipData.count} exception(s)</span>
           </div>
         </TooltipWithBounds>
       )}

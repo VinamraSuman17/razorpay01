@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Upload, FileText, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Upload, AlertCircle, CheckCircle2, RefreshCw, Play } from 'lucide-react';
 
 export function BatchUploadSection({ onUploadSuccess }) {
   const [bankFile, setBankFile] = useState(null);
@@ -41,7 +42,7 @@ export function BatchUploadSection({ onUploadSuccess }) {
       try {
         data = JSON.parse(text);
       } catch (e) {
-        // Non-JSON HTML response (e.g. proxy 502/413)
+        // Non-JSON HTML response
       }
 
       if (!res.ok) {
@@ -72,33 +73,41 @@ export function BatchUploadSection({ onUploadSuccess }) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 mb-6">
-      <div className="flex items-center space-x-2 mb-4">
-        <Upload className="w-5 h-5 text-[#2563EB]" />
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+      className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 mb-6"
+    >
+      <div className="flex items-center space-x-3 mb-6">
+        <div className="p-2 rounded-lg bg-blue-50 text-[#2563EB]">
+          <Upload className="w-5 h-5" />
+        </div>
         <div>
-          <h3 className="text-sm font-bold text-[#0B1F3A]">Supply Custom Dataset Batch</h3>
-          <p className="text-xs text-slate-500">Upload Bank Settlements and Internal Ledger CSV files to validate and reconcile a new dataset</p>
+          <h3 className="text-base font-semibold text-[#0B1F3A]">Supply Custom Dataset Batch</h3>
+          <p className="text-xs text-slate-500 mt-0.5">Upload Bank Settlements and Internal Ledger CSV files to validate and reconcile a new dataset</p>
         </div>
       </div>
 
       {errorMsg && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start space-x-2 whitespace-pre-wrap">
+        <div className="mb-6 p-4 rounded-lg bg-[#DC2626]/10 border border-[#DC2626]/20 text-[#DC2626] text-xs flex items-start space-x-2 whitespace-pre-wrap">
           <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
-          <div className="flex-1 font-mono-tabular">{errorMsg}</div>
+          <div className="flex-1 font-mono tabular-nums">{errorMsg}</div>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center space-x-2">
+        <div className="mb-6 p-4 rounded-lg bg-[#16A34A]/10 border border-[#16A34A]/20 text-[#16A34A] text-xs flex items-center space-x-2">
           <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
-          <span>{successMsg}</span>
+          <span className="font-medium">{successMsg}</span>
         </div>
       )}
 
       {warnings && warnings.length > 0 && (
-        <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs font-mono-tabular">
-          <div className="font-semibold mb-1 flex items-center space-x-1.5 text-amber-800">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+        <div className="mb-6 p-4 rounded-lg bg-[#D97706]/10 border border-[#D97706]/20 text-[#D97706] text-xs font-mono tabular-nums">
+          <div className="font-semibold mb-2 flex items-center space-x-1.5 text-[#D97706]">
+            <AlertCircle className="w-4 h-4 text-[#D97706]" />
             <span>Validation Warnings ({warnings.length} rejected row(s)):</span>
           </div>
           <ul className="list-disc pl-5 space-y-1 text-[11px]">
@@ -109,62 +118,58 @@ export function BatchUploadSection({ onUploadSuccess }) {
         </div>
       )}
 
-      <form onSubmit={handleUpload} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+      <form onSubmit={handleUpload} className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
         {/* Bank File Input */}
         <div className="md:col-span-2">
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
+          <label className="block text-xs font-medium text-slate-700 mb-2">
             Bank Settlements CSV
           </label>
-          <div className="relative">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={(e) => setBankFile(e.target.files[0])}
-              className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#2563EB] hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg py-1 px-2"
-            />
-          </div>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setBankFile(e.target.files[0])}
+            className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#2563EB] hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg p-1.5"
+          />
         </div>
 
         {/* Ledger File Input */}
         <div className="md:col-span-2">
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
+          <label className="block text-xs font-medium text-slate-700 mb-2">
             Internal Ledger CSV
           </label>
-          <div className="relative">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={(e) => setLedgerFile(e.target.files[0])}
-              className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#2563EB] hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg py-1 px-2"
-            />
-          </div>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setLedgerFile(e.target.files[0])}
+            className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#2563EB] hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg p-1.5"
+          />
         </div>
 
-        {/* Submit Button */}
+        {/* Primary Action Trigger Button */}
         <div className="md:col-span-1">
           <button
             type="submit"
             disabled={uploading}
-            className={`w-full py-2 px-3 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center space-x-2 transition-all ${
+            className={`w-full py-2.5 px-4 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center space-x-2 transition-colors ${
               uploading
                 ? 'bg-slate-700 text-slate-300 cursor-not-allowed'
-                : 'bg-[#0B1F3A] hover:bg-slate-800 text-white cursor-pointer active:scale-98'
+                : 'bg-[#2563EB] hover:bg-blue-600 text-white cursor-pointer'
             }`}
           >
             {uploading ? (
               <>
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span>Reconciliation in progress, this can take a few minutes...</span>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Reconciling...</span>
               </>
             ) : (
               <>
-                <Upload className="w-3.5 h-3.5" />
-                <span>Upload & Reconcile</span>
+                <Play className="w-4 h-4 fill-current" />
+                <span>Run Batch Reconciliation</span>
               </>
             )}
           </button>
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 }

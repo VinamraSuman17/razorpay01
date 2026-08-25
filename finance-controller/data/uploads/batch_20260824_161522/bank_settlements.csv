@@ -1,2 +1,0 @@
-settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,description,currency
-STL_TST01,2026-07-06,1000.00,REF99001,Acme Corp,23.60,976.40,UPI Transfer,INR

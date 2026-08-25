@@ -1,6 +1,0 @@
-order_id,invoice_date,expected_amount,customer_name,customer_reference,expected_settlement_date,tax_amount,currency,status
-TEST_ORD_001,2026-08-01,1000.00,Acme Corp,TEST_REF_001,2026-08-01,180.00,INR,unsettled
-TEST_ORD_002,2026-08-02,2000.00,Beta LLC,TEST_REF_002,2026-08-02,360.00,INR,unsettled
-TEST_ORD_003,2026-08-03,3000.00,Gamma Inc,TEST_REF_003,2026-08-03,540.00,INR,unsettled
-TEST_ORD_004,2026-08-04,4000.00,Delta Co,TEST_REF_004,2026-08-04,720.00,INR,unsettled
-TEST_ORD_005,2026-08-05,5000.00,Epsilon Ltd,TEST_REF_005,2026-08-05,900.00,INR,unsettled

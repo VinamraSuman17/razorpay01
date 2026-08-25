@@ -1,3 +1,0 @@
-settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,description,currency
-LIVE_STL_001,2026-08-01,1000.00,LIVE_REF_001,Acme Corp,23.60,976.40,Payment for LIVE_REF_001,INR
-LIVE_STL_002,2026-08-02,2000.00,LIVE_REF_002,Beta LLC,47.20,1952.80,Payment for LIVE_REF_002,INR

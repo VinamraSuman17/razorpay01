@@ -1,6 +1,0 @@
-settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,description,currency
-TEST_STL_001,2026-08-01,1000.00,TEST_REF_001,Acme Corp,23.60,976.40,Payment for TEST_REF_001,INR
-TEST_STL_002,2026-08-02,2000.00,TEST_REF_002,Beta LLC,47.20,1952.80,Payment for TEST_REF_002,INR
-TEST_STL_003,2026-08-03,3000.00,TEST_REF_003,Gamma Inc,70.80,2929.20,Payment for TEST_REF_003,INR
-TEST_STL_004,2026-08-04,4000.00,TEST_REF_004,Delta Co,94.40,3905.60,Payment for TEST_REF_004,INR
-TEST_STL_005,2026-08-05,5000.00,TEST_REF_005,Epsilon Ltd,118.00,4882.00,Payment for TEST_REF_005,INR

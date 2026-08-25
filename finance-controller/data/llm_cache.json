@@ -117,5 +117,19 @@
     "confidence": 0.0,
     "reasoning": "The settlement amount of 375,517,100 does not match either of the shortlisted candidates (ORD0050: 116,452,700; ORD0016: 229,302,500). The differences are significant and far exceed the allowed tolerance. Additionally, there is no correlation between the payer account 'Naik-Kara' and the customer names in the candidates.",
     "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "bf5fae41c7179508c0e3aa5adf6adb7b4e3b07b47519f2948c9d4f680082b8b7": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement amount of 363,608,400 paise does not match the expected amounts of any of the shortlisted candidates (ORD0075, ORD0085, ORD0087). Furthermore, the payer name 'Yohannan, Hegde and Patla' does not match any of the customer names in the candidate list, and the UTR reference 'REF16934060' does not correspond to any of the provided customer references.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "3b861442d612273a7bdfaac3fabb0188669d31c8601a85fc2c4fc0a34c9ad546": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 1.0,
+    "reasoning": "None of the shortlisted candidates have an expected amount within the reconciliation tolerance of the settlement amount (82533700). The differences are significantly larger than the allowed 500 paise tolerance. Additionally, there is no correlation between the payer name/UTR reference and the candidate records.",
+    "rule_category": "UNMATCHED_EXCEPTION"
   }
 }

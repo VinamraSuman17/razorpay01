@@ -29,6 +29,20 @@ def classify_unmatched_record(
     rec_id = record.get("settlement_id") if is_bank else record.get("order_id")
     
     # -------------------------------------------------------------
+    # Rule 0: Quota Exhausted / Manual Review Flag
+    # -------------------------------------------------------------
+    if record.get("quota_exhausted_reason"):
+        return ExceptionItem(
+            record_id=rec_id,
+            source=source_type,
+            category="QUOTA_EXHAUSTED_REVIEW",
+            reason=record["quota_exhausted_reason"],
+            suggested_action=f"Manually review record {rec_id} or re-run reconciliation batch after Gemini API quota resets.",
+            priority="HIGH",
+            is_exception=True
+        )
+
+    # -------------------------------------------------------------
     # Rule 1: Chargeback / Reversal
     # -------------------------------------------------------------
     net_amt_paise = record.get("net_amount", record.get("amount", 0))

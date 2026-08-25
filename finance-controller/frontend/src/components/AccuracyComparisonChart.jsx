@@ -4,7 +4,6 @@ import { Group } from '@visx/group';
 import { AxisLeft, AxisBottom } from '@visx/axis';
 import { scaleBand, scaleLinear, scaleOrdinal } from '@visx/scale';
 import { useTooltip, TooltipWithBounds, defaultStyles } from '@visx/tooltip';
-import { LinearGradient } from '@visx/gradient';
 import { ParentSize } from '@visx/responsive';
 
 const tooltipStyles = {
@@ -30,12 +29,16 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
     showTooltip,
   } = useTooltip();
 
+  const matchRate = summary?.match_rate_percent || 97.9;
+  const baselineRate = 62.1;
+  const delta = (matchRate - baselineRate).toFixed(1);
+
   // Metrics comparison data
   const data = [
     {
       metric: 'Match Rate',
-      'Plain Rules (Exact/Tol)': 62.11,
-      'Full AI Pipeline': summary?.match_rate_percent || 97.89,
+      'Plain Rules (Exact/Tol)': baselineRate,
+      'Full AI Pipeline': matchRate,
     },
     {
       metric: 'Precision',
@@ -44,8 +47,8 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
     },
     {
       metric: 'Recall',
-      'Plain Rules (Exact/Tol)': 62.11,
-      'Full AI Pipeline': summary?.recall_percent || 97.89,
+      'Plain Rules (Exact/Tol)': baselineRate,
+      'Full AI Pipeline': summary?.recall_percent || matchRate,
     },
   ];
 
@@ -53,7 +56,7 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
 
   if (width < 10 || height < 10) return null;
 
-  const margin = { top: 20, right: 15, bottom: 40, left: 45 };
+  const margin = { top: 25, right: 15, bottom: 40, left: 45 };
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
 
@@ -71,7 +74,7 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
   });
 
   const yScale = scaleLinear({
-    domain: [0, 100],
+    domain: [0, 110],
     range: [yMax, 0],
   });
 
@@ -83,9 +86,6 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
   return (
     <div className="relative w-full h-full">
       <svg width={width} height={height}>
-        <LinearGradient id="baseline-gradient" from="#94A3B8" to="#64748B" />
-        <LinearGradient id="pipeline-gradient" from="#3B82F6" to="#1D4ED8" />
-
         <Group top={margin.top} left={margin.left}>
           <BarGroup
             data={data}
@@ -101,33 +101,46 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
               barGroups.map((barGroup) => (
                 <Group key={`bar-group-${barGroup.index}-${barGroup.x0}`} left={barGroup.x0}>
                   {barGroup.bars.map((bar) => {
-                    const gradientId = bar.key === 'Full AI Pipeline' ? 'pipeline-gradient' : 'baseline-gradient';
+                    const solidColor = bar.key === 'Full AI Pipeline' ? '#2563EB' : '#94A3B8';
                     return (
-                      <rect
-                        key={`bar-group-bar-${barGroup.index}-${bar.index}-${bar.value}-${bar.key}`}
-                        x={bar.x}
-                        y={bar.y}
-                        width={bar.width}
-                        height={bar.height}
-                        fill={`url(#${gradientId})`}
-                        rx={3}
-                        className="transition-all duration-200 hover:opacity-85 cursor-pointer"
-                        onMouseMove={(event) => {
-                          const svg = event.currentTarget.ownerSVGElement;
-                          const rect = svg.getBoundingClientRect();
-                          showTooltip({
-                            tooltipLeft: event.clientX - rect.left,
-                            tooltipTop: event.clientY - rect.top,
-                            tooltipData: {
-                              metric: data[barGroup.index].metric,
-                              key: bar.key,
-                              value: bar.value,
-                              color: bar.color,
-                            },
-                          });
-                        }}
-                        onMouseLeave={hideTooltip}
-                      />
+                      <Group key={`bar-container-${barGroup.index}-${bar.index}`}>
+                        <rect
+                          x={bar.x}
+                          y={bar.y}
+                          width={bar.width}
+                          height={bar.height}
+                          fill={solidColor}
+                          rx={3}
+                          className="transition-opacity duration-150 hover:opacity-85 cursor-pointer"
+                          onMouseMove={(event) => {
+                            const svg = event.currentTarget.ownerSVGElement;
+                            const rect = svg.getBoundingClientRect();
+                            showTooltip({
+                              tooltipLeft: event.clientX - rect.left,
+                              tooltipTop: event.clientY - rect.top,
+                              tooltipData: {
+                                metric: data[barGroup.index].metric,
+                                key: bar.key,
+                                value: bar.value,
+                                color: solidColor,
+                              },
+                            });
+                          }}
+                          onMouseLeave={hideTooltip}
+                        />
+                        {/* Direct percentage label on top of bar */}
+                        <text
+                          x={bar.x + bar.width / 2}
+                          y={bar.y - 4}
+                          textAnchor="middle"
+                          fontSize={10}
+                          fontWeight={600}
+                          fill="#0B1F3A"
+                          className="font-mono tabular-nums"
+                        >
+                          {bar.value.toFixed(0)}%
+                        </text>
+                      </Group>
                     );
                   })}
                 </Group>
@@ -137,8 +150,8 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
 
           <AxisLeft
             scale={yScale}
-            stroke="#CBD5E1"
-            tickStroke="#CBD5E1"
+            stroke="#E2E8F0"
+            tickStroke="#E2E8F0"
             tickFormat={(val) => `${val}%`}
             tickLabelProps={() => ({
               fill: '#64748B',
@@ -151,10 +164,10 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
           <AxisBottom
             top={yMax}
             scale={x0Scale}
-            stroke="#CBD5E1"
-            tickStroke="#CBD5E1"
+            stroke="#E2E8F0"
+            tickStroke="#E2E8F0"
             tickLabelProps={() => ({
-              fill: '#475569',
+              fill: '#0B1F3A',
               fontSize: 11,
               fontWeight: 600,
               textAnchor: 'middle',
@@ -163,6 +176,11 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
           />
         </Group>
       </svg>
+
+      {/* Delta Callout Badge */}
+      <div className="absolute top-0 right-2 px-2 py-0.5 rounded-full bg-[#16A34A]/15 text-[#16A34A] text-[10px] font-bold font-mono">
+        +{delta}pp Lift
+      </div>
 
       {/* Bottom Legend */}
       <div className="absolute bottom-0 right-2 flex items-center space-x-3 text-[11px] font-medium text-slate-600">
@@ -183,7 +201,7 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
             <div className="flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tooltipData.color }} />
               <span className="font-medium">{tooltipData.key}:</span>
-              <span className="font-mono-tabular font-bold text-white">{tooltipData.value}%</span>
+              <span className="font-mono tabular-nums font-bold text-white">{tooltipData.value}%</span>
             </div>
           </div>
         </TooltipWithBounds>

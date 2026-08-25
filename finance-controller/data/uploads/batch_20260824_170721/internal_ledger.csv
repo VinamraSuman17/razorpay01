@@ -1,3 +1,0 @@
-order_id,invoice_date,expected_amount,customer_name,customer_reference,expected_settlement_date,tax_amount,currency,status
-UP_ORD_001,2026-08-01,1000.00,Acme Corp,UP_REF_001,2026-08-01,180.00,INR,unsettled
-UP_ORD_002,2026-08-02,2000.00,Beta LLC,UP_REF_002,2026-08-02,360.00,INR,unsettled
