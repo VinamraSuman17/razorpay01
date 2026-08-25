@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export function SettlementQA({ onAskQuestion, onAsk }) {
   const askFn = onAskQuestion || onAsk;
@@ -47,31 +48,39 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-xs mb-6 overflow-hidden flex flex-col">
-      <div className="p-4 border-b border-slate-100 bg-[#0B1F3A] text-white flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Bot className="w-5 h-5 text-[#2563EB]" />
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+      className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-6 overflow-hidden flex flex-col rounded-none"
+    >
+      <div className="p-4 border-b-2 border-black bg-black text-white flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="p-1.5 bg-white text-black border-2 border-white">
+            <Bot className="w-5 h-5 stroke-[2.5]" />
+          </div>
           <div>
-            <h3 className="text-base font-bold">Settlement Audit Q&A Assistant</h3>
-            <p className="text-xs text-slate-300">Grounded NL query engine using DuckDB audit trail & Gemini 3.5 synthesis</p>
+            <h3 className="text-base font-black uppercase">Settlement Audit Q&A Assistant</h3>
+            <p className="text-xs text-zinc-300 font-medium">Grounded NL query engine using DuckDB audit trail & Gemini 3.5 synthesis</p>
           </div>
         </div>
-        <span className="text-xs font-mono-tabular bg-white/10 px-2.5 py-1 rounded text-slate-200">
+        <span className="text-xs font-mono font-bold bg-zinc-800 border-1.5 border-white px-3 py-1 text-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.4)]">
           Model: gemini-3.5-flash-lite
         </span>
       </div>
 
       {/* Suggested Quick Questions */}
-      <div className="p-3 bg-slate-50 border-b border-slate-100 flex flex-wrap gap-2 items-center">
-        <span className="text-[11px] font-semibold text-slate-500 flex items-center space-x-1">
-          <Sparkles className="w-3 h-3 text-[#2563EB]" />
+      <div className="p-4 bg-zinc-100 border-b-2 border-black flex flex-wrap gap-2 items-center">
+        <span className="text-xs font-black uppercase tracking-wider text-black flex items-center space-x-1">
+          <Sparkles className="w-4 h-4 text-black" />
           <span>Quick Ask:</span>
         </span>
         {sampleQuestions.map((q, idx) => (
           <button
             key={idx}
             onClick={() => handleSend(q)}
-            className="text-xs px-2.5 py-1 bg-white hover:bg-slate-100 text-[#0B1F3A] rounded border border-slate-200 shadow-2xs transition-colors"
+            className="text-xs font-extrabold px-3 py-1.5 bg-white text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] cursor-pointer"
           >
             {q}
           </button>
@@ -79,9 +88,9 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
       </div>
 
       {/* Conversation Thread */}
-      <div className="p-4 min-h-[220px] max-h-[360px] overflow-y-auto space-y-4 bg-slate-50/50">
+      <div className="p-5 min-h-[220px] max-h-[360px] overflow-y-auto space-y-4 bg-zinc-50 border-b-2 border-black">
         {chatHistory.length === 0 ? (
-          <div className="text-center py-10 text-slate-400 text-xs">
+          <div className="text-center py-10 text-zinc-600 font-bold text-xs">
             Ask any question about bank settlements, matching logic, platform fee deductions, or exception recommendations.
           </div>
         ) : (
@@ -91,26 +100,26 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
               className={`flex items-start space-x-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {msg.role === 'assistant' && (
-                <div className="p-1.5 rounded-lg bg-[#0B1F3A] text-white shrink-0 mt-0.5">
+                <div className="p-1.5 bg-black text-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0 mt-0.5">
                   <Bot className="w-4 h-4" />
                 </div>
               )}
 
               <div
-                className={`p-3.5 rounded-xl text-xs max-w-2xl leading-relaxed ${
+                className={`p-4 text-xs max-w-2xl leading-relaxed border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
                   msg.role === 'user'
-                    ? 'bg-[#2563EB] text-white rounded-tr-none'
-                    : 'bg-white text-slate-800 border border-slate-200 shadow-xs rounded-tl-none'
+                    ? 'bg-black text-white font-bold'
+                    : 'bg-white text-black font-medium'
                 }`}
               >
                 {msg.role === 'user' ? (
                   <p>{msg.content}</p>
                 ) : (
-                  <div className="prose prose-xs max-w-none text-slate-800">
+                  <div className="prose prose-xs max-w-none text-black">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                     {msg.sqlQuery && (
-                      <details className="mt-2 text-[10px] bg-slate-900 text-slate-300 p-2 rounded font-mono-tabular">
-                        <summary className="cursor-pointer text-slate-400 font-semibold mb-1">Generated SQL Query</summary>
+                      <details className="mt-3 text-[11px] bg-black text-white p-3 border-2 border-black font-mono shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                        <summary className="cursor-pointer text-zinc-300 font-black uppercase mb-1">Generated SQL Query</summary>
                         <code>{msg.sqlQuery}</code>
                       </details>
                     )}
@@ -119,7 +128,7 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
               </div>
 
               {msg.role === 'user' && (
-                <div className="p-1.5 rounded-lg bg-[#2563EB] text-white shrink-0 mt-0.5">
+                <div className="p-1.5 bg-black text-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0 mt-0.5">
                   <User className="w-4 h-4" />
                 </div>
               )}
@@ -128,8 +137,8 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
         )}
 
         {loading && (
-          <div className="flex items-center space-x-2 text-slate-400 text-xs py-2">
-            <Bot className="w-4 h-4 animate-spin text-[#2563EB]" />
+          <div className="flex items-center space-x-2 text-black font-bold text-xs py-2">
+            <Bot className="w-4 h-4 animate-spin text-black" />
             <span>Analyzing reconciliation database and synthesizing response...</span>
           </div>
         )}
@@ -138,24 +147,24 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
       {/* Input Box */}
       <form
         onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-        className="p-3 border-t border-slate-100 flex items-center space-x-2 bg-white"
+        className="p-4 flex items-center space-x-3 bg-white"
       >
         <input
           type="text"
           placeholder="Ask a question about a settlement (e.g. 'Why was STL0068 matched?')..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          className="flex-1 px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB]"
+          className="flex-1 px-4 py-2.5 text-xs font-bold text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:bg-zinc-50"
         />
         <button
           type="submit"
           disabled={loading || !question.trim()}
-          className="px-4 py-2 bg-[#2563EB] hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 disabled:opacity-50 transition-colors"
+          className="px-5 py-2.5 brutal-btn-black text-xs font-black uppercase tracking-wider flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span>Send</span>
-          <Send className="w-3.5 h-3.5" />
+          <Send className="w-3.5 h-3.5 stroke-[2.5]" />
         </button>
       </form>
-    </div>
+    </motion.div>
   );
 }

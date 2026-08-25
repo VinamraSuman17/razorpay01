@@ -75,34 +75,34 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[#F7F8FA] text-[#0B1F3A]">
-        {/* Header - Navy Solid Surface */}
-        <header className="bg-[#0B1F3A] text-white py-4 px-6 border-b border-slate-800 sticky top-0 z-50 shadow-xs">
+      <div className="min-h-screen bg-[#F4F4F5] text-black">
+        {/* Header - Pure Black Solid Neubrutalist Bar */}
+        <header className="bg-black text-white py-4 px-6 border-b-4 border-black sticky top-0 z-50 shadow-[0_4px_0_0_#000000]">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-[#2563EB] rounded-lg">
-                <Activity className="w-5 h-5 text-white" />
+              <div className="p-2 bg-white text-black border-2 border-white">
+                <Activity className="w-5 h-5 stroke-[3]" />
               </div>
               <div>
-                <h1 className="text-lg font-bold tracking-tight flex items-center gap-2">
+                <h1 className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
                   Razorpay Autonomous Finance Controller
-                  <span className="text-[10px] bg-[#16A34A]/20 text-[#16A34A] border border-[#16A34A]/30 px-2 py-0.5 rounded font-mono uppercase font-semibold">
-                    Production v1.0
+                  <span className="text-[10px] bg-white text-black border-1.5 border-white px-2 py-0.5 font-mono uppercase font-black shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">
+                    v1.0 Production
                   </span>
                 </h1>
-                <p className="text-xs text-slate-400">Autonomous Bank Settlement & Internal Ledger Matching Engine</p>
+                <p className="text-xs text-zinc-300 font-medium">Autonomous Bank Settlement & Internal Ledger Matching Engine</p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3">
               {lastRunTime ? (
-                <div className="hidden sm:flex items-center space-x-1.5 text-xs text-slate-300 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800 font-mono">
-                  <Clock className="w-4 h-4 text-[#2563EB]" />
+                <div className="hidden sm:flex items-center space-x-2 text-xs text-white bg-zinc-900 px-3.5 py-1.5 border-2 border-white font-mono font-bold shadow-[2px_2px_0px_0px_rgba(255,255,255,0.4)]">
+                  <Clock className="w-4 h-4 text-white" />
                   <span>Last Run: {new Date(lastRunTime).toLocaleTimeString()}</span>
                 </div>
               ) : (
-                <div className="hidden sm:flex items-center space-x-1.5 text-xs text-slate-400 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
-                  <span className="w-2 h-2 rounded-full bg-slate-500" />
+                <div className="hidden sm:flex items-center space-x-2 text-xs text-zinc-300 bg-zinc-900 px-3.5 py-1.5 border-2 border-white font-mono font-bold shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">
+                  <span className="w-2.5 h-2.5 rounded-none bg-white border border-white" />
                   <span>Awaiting Dataset Upload</span>
                 </div>
               )}
@@ -117,12 +117,12 @@ export default function App() {
 
           {/* No Dataset Warning Alert */}
           {noDataAlert && (
-            <div className="mb-6 p-4 rounded-xl bg-[#D97706]/10 border border-[#D97706]/20 text-[#D97706] text-xs flex items-start space-x-3 shadow-xs">
-              <AlertTriangle className="w-5 h-5 text-[#D97706] shrink-0 mt-0.5" />
-              <div className="flex-1 font-medium leading-relaxed">{noDataAlert}</div>
+            <div className="mb-6 p-4 bg-black text-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs flex items-start space-x-3 font-bold">
+              <AlertTriangle className="w-5 h-5 text-white shrink-0 mt-0.5" />
+              <div className="flex-1 font-mono leading-relaxed">{noDataAlert}</div>
               <button
                 onClick={() => setNoDataAlert(null)}
-                className="text-[#D97706] hover:text-amber-950 font-bold text-sm px-1 cursor-pointer"
+                className="text-white hover:text-zinc-300 font-black text-sm px-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -138,16 +138,16 @@ export default function App() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="bg-white rounded-xl border border-slate-200 shadow-xs p-12 text-center my-6"
+              className="bg-white border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-12 text-center my-6 rounded-none"
             >
-              <div className="w-16 h-16 rounded-full bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-4 border border-blue-100">
-                <UploadCloud className="w-8 h-8" />
+              <div className="w-16 h-16 bg-black text-white border-2 border-black flex items-center justify-center mx-auto mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <UploadCloud className="w-8 h-8 stroke-[2.5]" />
               </div>
-              <h3 className="text-base font-bold text-[#0B1F3A] mb-1">No Reconciliation Dataset Uploaded</h3>
-              <p className="text-xs text-slate-500 max-w-md mx-auto mb-6">
+              <h3 className="text-lg font-black uppercase text-black mb-1">No Reconciliation Dataset Uploaded</h3>
+              <p className="text-xs font-medium text-zinc-600 max-w-md mx-auto mb-6 leading-relaxed">
                 Upload your Bank Settlements CSV and Internal Ledger CSV using the file picker above to validate schema and run automated multi-tier reconciliation.
               </p>
-              <div className="inline-flex items-center space-x-2 text-xs font-semibold text-[#2563EB] bg-blue-50/80 px-4 py-2 rounded-lg border border-blue-100">
+              <div className="inline-flex items-center space-x-2 text-xs font-black uppercase text-black bg-zinc-100 px-4 py-2.5 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <span>Select two CSV files above and click "Run Batch Reconciliation"</span>
               </div>
             </motion.div>
@@ -160,7 +160,6 @@ export default function App() {
                   value={summary?.total_bank_settlements ?? 0}
                   subtitle="Bank records in batch"
                   icon={Database}
-                  color="blue"
                   index={0}
                 />
                 <StatCard
@@ -168,7 +167,6 @@ export default function App() {
                   value={summary?.matched_count ?? 0}
                   subtitle={`${summary?.match_rate_percent ?? 0}% match coverage`}
                   icon={CheckCircle}
-                  color="emerald"
                   index={1}
                 />
                 <StatCard
@@ -176,7 +174,6 @@ export default function App() {
                   value={summary?.needs_review_count ?? 0}
                   subtitle="Gemini verified items"
                   icon={Activity}
-                  color="amber"
                   index={2}
                 />
                 <StatCard
@@ -184,7 +181,6 @@ export default function App() {
                   value={summary?.exception_count ?? 0}
                   subtitle="Unmatched records requiring action"
                   icon={AlertTriangle}
-                  color="red"
                   index={3}
                 />
               </div>

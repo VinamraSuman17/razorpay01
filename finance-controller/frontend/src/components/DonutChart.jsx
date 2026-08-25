@@ -6,13 +6,14 @@ import { ParentSize } from '@visx/responsive';
 
 const tooltipStyles = {
   ...defaultStyles,
-  backgroundColor: '#0B1F3A',
+  backgroundColor: '#000000',
   color: '#FFFFFF',
-  borderRadius: '8px',
+  borderRadius: '0px',
   padding: '8px 12px',
   fontSize: '12px',
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-  border: '1px solid rgba(255, 255, 255, 0.15)',
+  fontWeight: 'bold',
+  boxShadow: '4px 4px 0px 0px #000000',
+  border: '2px solid #FFFFFF',
   zIndex: 1000,
   pointerEvents: 'none',
 };
@@ -28,9 +29,9 @@ function DonutChartInner({ width, height, matchesCount = 0, needsReviewCount = 0
   } = useTooltip();
 
   const data = [
-    { label: 'Auto-Matched', value: matchesCount, color: '#16A34A' },
-    { label: 'Needs Review', value: needsReviewCount, color: '#D97706' },
-    { label: 'Exceptions', value: exceptionsCount, color: '#DC2626' },
+    { label: 'Auto-Matched', value: matchesCount, color: '#000000' },
+    { label: 'Needs Review', value: needsReviewCount, color: '#71717A' },
+    { label: 'Exceptions', value: exceptionsCount, color: '#E4E4E7' },
   ].filter(d => d.value >= 0);
 
   const total = data.reduce((acc, d) => acc + d.value, 0);
@@ -40,7 +41,7 @@ function DonutChartInner({ width, height, matchesCount = 0, needsReviewCount = 0
   const centerY = height / 2;
   const centerX = width / 2;
   const radius = Math.min(width, height) / 2;
-  const innerRadius = radius * 0.58;
+  const innerRadius = radius * 0.55;
   const outerRadius = radius * 0.88;
 
   return (
@@ -52,8 +53,8 @@ function DonutChartInner({ width, height, matchesCount = 0, needsReviewCount = 0
             pieValue={(d) => d.value}
             outerRadius={outerRadius}
             innerRadius={innerRadius}
-            padAngle={0.03}
-            cornerRadius={3}
+            padAngle={0.04}
+            cornerRadius={0}
           >
             {(pie) =>
               pie.arcs.map((arc) => {
@@ -64,6 +65,8 @@ function DonutChartInner({ width, height, matchesCount = 0, needsReviewCount = 0
                     key={label}
                     d={pie.path(arc) || ''}
                     fill={color}
+                    stroke="#000000"
+                    strokeWidth={2}
                     className="transition-opacity duration-150 hover:opacity-85 cursor-pointer"
                     onMouseMove={(event) => {
                       const svg = event.currentTarget.ownerSVGElement;
@@ -85,14 +88,14 @@ function DonutChartInner({ width, height, matchesCount = 0, needsReviewCount = 0
           <text
             textAnchor="middle"
             dy="-0.15em"
-            className="fill-[#0B1F3A] font-bold text-2xl font-mono tabular-nums"
+            className="fill-black font-black text-3xl font-mono tabular-nums"
           >
             {total}
           </text>
           <text
             textAnchor="middle"
             dy="1.3em"
-            className="fill-slate-400 font-medium text-[10px] uppercase tracking-wider"
+            className="fill-zinc-600 font-extrabold text-[10px] uppercase tracking-wider"
           >
             Total Records
           </text>
@@ -101,11 +104,11 @@ function DonutChartInner({ width, height, matchesCount = 0, needsReviewCount = 0
 
       {tooltipOpen && tooltipData && (
         <TooltipWithBounds top={tooltipTop} left={tooltipLeft} style={tooltipStyles}>
-          <div className="flex items-center space-x-2 font-medium">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tooltipData.color }} />
-            <span className="font-semibold">{tooltipData.label}:</span>
-            <span className="font-mono tabular-nums font-bold">{tooltipData.value}</span>
-            <span className="text-slate-300 text-[11px]">({tooltipData.percentage}%)</span>
+          <div className="flex items-center space-x-2 font-mono text-xs">
+            <span className="w-3 h-3 border border-white" style={{ backgroundColor: tooltipData.color }} />
+            <span className="font-extrabold uppercase">{tooltipData.label}:</span>
+            <span className="font-mono tabular-nums font-black">{tooltipData.value}</span>
+            <span className="text-zinc-300">({tooltipData.percentage}%)</span>
           </div>
         </TooltipWithBounds>
       )}

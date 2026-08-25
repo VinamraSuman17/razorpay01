@@ -78,39 +78,39 @@ export function BatchUploadSection({ onUploadSuccess }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 mb-6"
+      className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 mb-6 rounded-none"
     >
-      <div className="flex items-center space-x-3 mb-6">
-        <div className="p-2 rounded-lg bg-blue-50 text-[#2563EB]">
-          <Upload className="w-5 h-5" />
+      <div className="flex items-center space-x-3 mb-6 pb-4 border-b-2 border-black">
+        <div className="p-2 bg-black text-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
+          <Upload className="w-5 h-5 stroke-[2.5]" />
         </div>
         <div>
-          <h3 className="text-base font-semibold text-[#0B1F3A]">Supply Custom Dataset Batch</h3>
-          <p className="text-xs text-slate-500 mt-0.5">Upload Bank Settlements and Internal Ledger CSV files to validate and reconcile a new dataset</p>
+          <h3 className="text-lg font-black uppercase text-black">Supply Custom Dataset Batch</h3>
+          <p className="text-xs font-medium text-zinc-600">Upload Bank Settlements and Internal Ledger CSV files to validate and reconcile a new dataset</p>
         </div>
       </div>
 
       {errorMsg && (
-        <div className="mb-6 p-4 rounded-lg bg-[#DC2626]/10 border border-[#DC2626]/20 text-[#DC2626] text-xs flex items-start space-x-2 whitespace-pre-wrap">
-          <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
-          <div className="flex-1 font-mono tabular-nums">{errorMsg}</div>
+        <div className="mb-6 p-4 bg-zinc-900 text-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs flex items-start space-x-3">
+          <AlertCircle className="w-5 h-5 text-white shrink-0 mt-0.5" />
+          <div className="flex-1 font-mono tabular-nums font-bold leading-relaxed">{errorMsg}</div>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-6 p-4 rounded-lg bg-[#16A34A]/10 border border-[#16A34A]/20 text-[#16A34A] text-xs flex items-center space-x-2">
-          <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
-          <span className="font-medium">{successMsg}</span>
+        <div className="mb-6 p-4 bg-black text-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs flex items-center space-x-3">
+          <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
+          <span className="font-extrabold uppercase tracking-wide">{successMsg}</span>
         </div>
       )}
 
       {warnings && warnings.length > 0 && (
-        <div className="mb-6 p-4 rounded-lg bg-[#D97706]/10 border border-[#D97706]/20 text-[#D97706] text-xs font-mono tabular-nums">
-          <div className="font-semibold mb-2 flex items-center space-x-1.5 text-[#D97706]">
-            <AlertCircle className="w-4 h-4 text-[#D97706]" />
+        <div className="mb-6 p-4 bg-zinc-100 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs font-mono tabular-nums text-black">
+          <div className="font-black uppercase mb-2 flex items-center space-x-1.5 text-black">
+            <AlertCircle className="w-4 h-4 text-black" />
             <span>Validation Warnings ({warnings.length} rejected row(s)):</span>
           </div>
-          <ul className="list-disc pl-5 space-y-1 text-[11px]">
+          <ul className="list-disc pl-5 space-y-1 text-xs font-bold">
             {warnings.map((w, idx) => (
               <li key={idx}>{w}</li>
             ))}
@@ -121,27 +121,27 @@ export function BatchUploadSection({ onUploadSuccess }) {
       <form onSubmit={handleUpload} className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
         {/* Bank File Input */}
         <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-slate-700 mb-2">
+          <label className="block text-xs font-black uppercase tracking-wider text-black mb-2">
             Bank Settlements CSV
           </label>
           <input
             type="file"
             accept=".csv"
             onChange={(e) => setBankFile(e.target.files[0])}
-            className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#2563EB] hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg p-1.5"
+            className="w-full text-xs text-black font-bold file:mr-3 file:py-2 file:px-4 file:border-2 file:border-black file:text-xs file:font-black file:bg-black file:text-white file:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:file:bg-zinc-800 cursor-pointer border-2 border-black bg-zinc-50 p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
           />
         </div>
 
         {/* Ledger File Input */}
         <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-slate-700 mb-2">
+          <label className="block text-xs font-black uppercase tracking-wider text-black mb-2">
             Internal Ledger CSV
           </label>
           <input
             type="file"
             accept=".csv"
             onChange={(e) => setLedgerFile(e.target.files[0])}
-            className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#2563EB] hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg p-1.5"
+            className="w-full text-xs text-black font-bold file:mr-3 file:py-2 file:px-4 file:border-2 file:border-black file:text-xs file:font-black file:bg-black file:text-white file:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:file:bg-zinc-800 cursor-pointer border-2 border-black bg-zinc-50 p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
           />
         </div>
 
@@ -150,11 +150,7 @@ export function BatchUploadSection({ onUploadSuccess }) {
           <button
             type="submit"
             disabled={uploading}
-            className={`w-full py-2.5 px-4 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center space-x-2 transition-colors ${
-              uploading
-                ? 'bg-slate-700 text-slate-300 cursor-not-allowed'
-                : 'bg-[#2563EB] hover:bg-blue-600 text-white cursor-pointer'
-            }`}
+            className="w-full py-3 px-4 rounded-none text-xs font-black uppercase tracking-wider brutal-btn-black flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading ? (
               <>

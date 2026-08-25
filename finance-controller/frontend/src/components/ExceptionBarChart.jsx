@@ -8,13 +8,14 @@ import { ParentSize } from '@visx/responsive';
 
 const tooltipStyles = {
   ...defaultStyles,
-  backgroundColor: '#0B1F3A',
+  backgroundColor: '#000000',
   color: '#FFFFFF',
-  borderRadius: '8px',
+  borderRadius: '0px',
   padding: '8px 12px',
   fontSize: '12px',
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-  border: '1px solid rgba(255, 255, 255, 0.15)',
+  fontWeight: 'bold',
+  boxShadow: '4px 4px 0px 0px #000000',
+  border: '2px solid #FFFFFF',
   zIndex: 1000,
   pointerEvents: 'none',
 };
@@ -76,9 +77,11 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
                   y={barY}
                   width={barWidth}
                   height={barHeight}
-                  fill="#DC2626"
-                  rx={3}
-                  className="transition-opacity duration-150 hover:opacity-85 cursor-pointer"
+                  fill="#000000"
+                  stroke="#000000"
+                  strokeWidth={2}
+                  rx={0}
+                  className="transition-opacity duration-150 hover:opacity-80 cursor-pointer"
                   onMouseMove={(event) => {
                     const svg = event.currentTarget.ownerSVGElement;
                     const rect = svg.getBoundingClientRect();
@@ -92,13 +95,13 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
                 />
                 {/* Direct count label at end of bar */}
                 <text
-                  x={barWidth + 6}
+                  x={barWidth + 8}
                   y={barY + barHeight / 2}
                   dy="0.35em"
-                  fontSize={11}
-                  fontWeight={600}
-                  fill="#0B1F3A"
-                  className="font-mono tabular-nums"
+                  fontSize={12}
+                  fontWeight={900}
+                  fill="#000000"
+                  fontFamily="ui-monospace, monospace"
                 >
                   {d.count}
                 </text>
@@ -108,12 +111,13 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
 
           <AxisLeft
             scale={yScale}
-            stroke="transparent"
-            tickStroke="transparent"
+            stroke="#000000"
+            strokeWidth={2}
+            tickStroke="#000000"
             tickLabelProps={() => ({
-              fill: '#0B1F3A',
+              fill: '#000000',
               fontSize: 11,
-              fontWeight: 500,
+              fontWeight: 800,
               textAnchor: 'end',
               dy: '0.33em',
             })}
@@ -122,13 +126,16 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
           <AxisBottom
             top={yMax}
             scale={xScale}
-            stroke="#E2E8F0"
-            tickStroke="#E2E8F0"
-            numTicks={Math.min(maxCount, 5)}
+            stroke="#000000"
+            strokeWidth={2}
+            tickStroke="#000000"
+            tickFormat={(v) => `${v}`}
             tickLabelProps={() => ({
-              fill: '#64748B',
+              fill: '#000000',
               fontSize: 10,
+              fontWeight: 800,
               textAnchor: 'middle',
+              dy: '0.25em',
             })}
           />
         </Group>
@@ -136,10 +143,9 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
 
       {tooltipOpen && tooltipData && (
         <TooltipWithBounds top={tooltipTop} left={tooltipLeft} style={tooltipStyles}>
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-[#DC2626]" />
-            <span className="font-semibold">{tooltipData.category}:</span>
-            <span className="font-mono tabular-nums font-bold">{tooltipData.count} exception(s)</span>
+          <div className="font-mono text-xs">
+            <span className="font-extrabold uppercase">{tooltipData.category}:</span>{' '}
+            <span className="font-black text-white">{tooltipData.count} record(s)</span>
           </div>
         </TooltipWithBounds>
       )}

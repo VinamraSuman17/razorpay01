@@ -1,44 +1,27 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export function StatCard({ title, value, subtitle, icon: Icon, color = 'blue', trend, index = 0 }) {
-  const borderColors = {
-    blue: 'border-l-4 border-l-[#2563EB]',
-    emerald: 'border-l-4 border-l-[#16A34A]',
-    amber: 'border-l-4 border-l-[#D97706]',
-    red: 'border-l-4 border-l-[#DC2626]',
-    navy: 'border-l-4 border-l-[#0B1F3A]'
-  };
-
-  const iconBg = {
-    blue: 'bg-blue-50 text-[#2563EB]',
-    emerald: 'bg-emerald-50 text-[#16A34A]',
-    amber: 'bg-amber-50 text-[#D97706]',
-    red: 'bg-red-50 text-[#DC2626]',
-    navy: 'bg-slate-100 text-[#0B1F3A]'
-  };
-
+export function StatCard({ title, value, subtitle, icon: Icon, index = 0 }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.35, ease: 'easeOut', delay: index * 0.06 }}
-      className={`bg-white rounded-xl shadow-xs p-6 ${borderColors[color]} border border-slate-200 hover:border-slate-300 transition-colors`}
+      className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 rounded-none transition-transform hover:-translate-y-0.5"
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-wider text-slate-500">{title}</span>
+        <span className="text-xs font-black uppercase tracking-wider text-black">{title}</span>
         {Icon && (
-          <div className={`p-2 rounded-lg ${iconBg[color]}`}>
-            <Icon className="w-5 h-5" />
+          <div className="p-2 bg-black text-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
+            <Icon className="w-4 h-4 stroke-[2.5]" />
           </div>
         )}
       </div>
       <div className="mt-4 flex items-baseline justify-between">
-        <span className="text-2xl font-bold font-mono tabular-nums tracking-tight text-[#0B1F3A]">{value}</span>
-        {trend && <span className="text-xs font-medium text-slate-500">{trend}</span>}
+        <span className="text-3xl font-black font-mono tabular-nums tracking-tight text-black">{value}</span>
       </div>
-      {subtitle && <p className="mt-1 text-xs text-slate-500">{subtitle}</p>}
+      {subtitle && <p className="mt-2 text-xs font-medium text-zinc-600 border-t-2 border-black/10 pt-2">{subtitle}</p>}
     </motion.div>
   );
 }

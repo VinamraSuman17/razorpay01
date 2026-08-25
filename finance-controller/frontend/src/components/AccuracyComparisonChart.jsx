@@ -8,13 +8,14 @@ import { ParentSize } from '@visx/responsive';
 
 const tooltipStyles = {
   ...defaultStyles,
-  backgroundColor: '#0B1F3A',
+  backgroundColor: '#000000',
   color: '#FFFFFF',
-  borderRadius: '8px',
+  borderRadius: '0px',
   padding: '8px 12px',
   fontSize: '12px',
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-  border: '1px solid rgba(255, 255, 255, 0.15)',
+  fontWeight: 'bold',
+  boxShadow: '4px 4px 0px 0px #000000',
+  border: '2px solid #FFFFFF',
   zIndex: 1000,
   pointerEvents: 'none',
 };
@@ -56,7 +57,7 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
 
   if (width < 10 || height < 10) return null;
 
-  const margin = { top: 25, right: 15, bottom: 40, left: 45 };
+  const margin = { top: 35, right: 15, bottom: 40, left: 45 };
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
 
@@ -74,17 +75,24 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
   });
 
   const yScale = scaleLinear({
-    domain: [0, 110],
+    domain: [0, 115],
     range: [yMax, 0],
   });
 
   const colorScale = scaleOrdinal({
     domain: keys,
-    range: ['#94A3B8', '#2563EB'],
+    range: ['#A1A1AA', '#000000'],
   });
 
   return (
     <div className="relative w-full h-full">
+      {/* Delta Callout Annotation Pill */}
+      <div className="absolute top-0 right-2 z-10">
+        <span className="px-2.5 py-1 text-[11px] font-black uppercase bg-black text-white border-1.5 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          +{delta}pp Lift
+        </span>
+      </div>
+
       <svg width={width} height={height}>
         <Group top={margin.top} left={margin.left}>
           <BarGroup
@@ -101,17 +109,21 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
               barGroups.map((barGroup) => (
                 <Group key={`bar-group-${barGroup.index}-${barGroup.x0}`} left={barGroup.x0}>
                   {barGroup.bars.map((bar) => {
-                    const solidColor = bar.key === 'Full AI Pipeline' ? '#2563EB' : '#94A3B8';
+                    const value = bar.value;
+                    const formattedVal = `${value.toFixed(0)}%`;
+
                     return (
-                      <Group key={`bar-container-${barGroup.index}-${bar.index}`}>
+                      <Group key={`bar-group-bar-${barGroup.index}-${bar.index}-${bar.value}-${bar.key}`}>
                         <rect
                           x={bar.x}
                           y={bar.y}
                           width={bar.width}
                           height={bar.height}
-                          fill={solidColor}
-                          rx={3}
-                          className="transition-opacity duration-150 hover:opacity-85 cursor-pointer"
+                          fill={bar.color}
+                          stroke="#000000"
+                          strokeWidth={2}
+                          rx={0}
+                          className="transition-opacity duration-150 hover:opacity-80 cursor-pointer"
                           onMouseMove={(event) => {
                             const svg = event.currentTarget.ownerSVGElement;
                             const rect = svg.getBoundingClientRect();
@@ -119,26 +131,27 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
                               tooltipLeft: event.clientX - rect.left,
                               tooltipTop: event.clientY - rect.top,
                               tooltipData: {
-                                metric: data[barGroup.index].metric,
+                                metric: barGroup.x0,
                                 key: bar.key,
                                 value: bar.value,
-                                color: solidColor,
+                                color: bar.color,
                               },
                             });
                           }}
                           onMouseLeave={hideTooltip}
                         />
-                        {/* Direct percentage label on top of bar */}
+
+                        {/* Direct Percentage Label above each bar */}
                         <text
                           x={bar.x + bar.width / 2}
-                          y={bar.y - 4}
+                          y={bar.y - 6}
                           textAnchor="middle"
-                          fontSize={10}
-                          fontWeight={600}
-                          fill="#0B1F3A"
-                          className="font-mono tabular-nums"
+                          fontSize={11}
+                          fontWeight={900}
+                          fill="#000000"
+                          fontFamily="ui-monospace, monospace"
                         >
-                          {bar.value.toFixed(0)}%
+                          {formattedVal}
                         </text>
                       </Group>
                     );
@@ -150,12 +163,14 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
 
           <AxisLeft
             scale={yScale}
-            stroke="#E2E8F0"
-            tickStroke="#E2E8F0"
-            tickFormat={(val) => `${val}%`}
+            stroke="#000000"
+            strokeWidth={2}
+            tickStroke="#000000"
+            tickFormat={(v) => `${v}%`}
             tickLabelProps={() => ({
-              fill: '#64748B',
+              fill: '#000000',
               fontSize: 10,
+              fontWeight: 800,
               textAnchor: 'end',
               dy: '0.33em',
             })}
@@ -164,44 +179,28 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
           <AxisBottom
             top={yMax}
             scale={x0Scale}
-            stroke="#E2E8F0"
-            tickStroke="#E2E8F0"
+            stroke="#000000"
+            strokeWidth={2}
+            tickStroke="#000000"
             tickLabelProps={() => ({
-              fill: '#0B1F3A',
+              fill: '#000000',
               fontSize: 11,
-              fontWeight: 600,
+              fontWeight: 900,
               textAnchor: 'middle',
-              dy: '0.5em',
+              dy: '0.25em',
             })}
           />
         </Group>
       </svg>
 
-      {/* Delta Callout Badge */}
-      <div className="absolute top-0 right-2 px-2 py-0.5 rounded-full bg-[#16A34A]/15 text-[#16A34A] text-[10px] font-bold font-mono">
-        +{delta}pp Lift
-      </div>
-
-      {/* Bottom Legend */}
-      <div className="absolute bottom-0 right-2 flex items-center space-x-3 text-[11px] font-medium text-slate-600">
-        <div className="flex items-center space-x-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#94A3B8]" />
-          <span>Plain Rules</span>
-        </div>
-        <div className="flex items-center space-x-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#2563EB]" />
-          <span>Full AI Pipeline</span>
-        </div>
-      </div>
-
       {tooltipOpen && tooltipData && (
         <TooltipWithBounds top={tooltipTop} left={tooltipLeft} style={tooltipStyles}>
-          <div className="space-y-1">
-            <div className="text-slate-300 text-[11px] font-semibold">{tooltipData.metric}</div>
-            <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tooltipData.color }} />
-              <span className="font-medium">{tooltipData.key}:</span>
-              <span className="font-mono tabular-nums font-bold text-white">{tooltipData.value}%</span>
+          <div className="font-mono text-xs">
+            <span className="font-black uppercase">{tooltipData.metric}</span>
+            <div className="flex items-center space-x-1.5 mt-0.5">
+              <span className="w-2.5 h-2.5 border border-white" style={{ backgroundColor: tooltipData.color }} />
+              <span className="font-extrabold">{tooltipData.key}:</span>
+              <span className="font-black text-white font-mono">{tooltipData.value.toFixed(1)}%</span>
             </div>
           </div>
         </TooltipWithBounds>
