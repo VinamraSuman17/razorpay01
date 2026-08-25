@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, User, Sparkles } from 'lucide-react';
+import { Send, Bot, User, Sparkles, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function SettlementQA({ onAskQuestion, onAsk }) {
@@ -53,11 +53,11 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-6 overflow-hidden flex flex-col rounded-none"
+      className="bg-[#FAFAFA] border-2 border-[#18181B] shadow-[4px_4px_0px_0px_#18181B] mb-6 overflow-hidden flex flex-col rounded-none"
     >
-      <div className="p-4 border-b-2 border-black bg-black text-white flex items-center justify-between">
+      <div className="p-4 border-b-2 border-[#18181B] bg-[#18181B] text-[#FAFAFA] flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="p-1.5 bg-white text-black border-2 border-white">
+          <div className="p-1.5 bg-[#FAFAFA] text-[#18181B] border-2 border-[#FAFAFA]">
             <Bot className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
@@ -65,22 +65,22 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
             <p className="text-xs text-zinc-300 font-medium">Grounded NL query engine using DuckDB audit trail & Gemini 3.5 synthesis</p>
           </div>
         </div>
-        <span className="text-xs font-mono font-bold bg-zinc-800 border-1.5 border-white px-3 py-1 text-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.4)]">
+        <span className="text-xs font-mono font-bold bg-zinc-800 border-1.5 border-[#FAFAFA] px-3 py-1 text-[#FAFAFA] shadow-[2px_2px_0px_0px_rgba(250,250,250,0.3)]">
           Model: gemini-3.5-flash-lite
         </span>
       </div>
 
       {/* Suggested Quick Questions */}
-      <div className="p-4 bg-zinc-100 border-b-2 border-black flex flex-wrap gap-2 items-center">
-        <span className="text-xs font-black uppercase tracking-wider text-black flex items-center space-x-1">
-          <Sparkles className="w-4 h-4 text-black" />
+      <div className="p-4 bg-zinc-200 border-b-2 border-[#18181B] flex flex-wrap gap-2 items-center">
+        <span className="text-xs font-black uppercase tracking-wider text-[#18181B] flex items-center space-x-1">
+          <Sparkles className="w-4 h-4 text-[#18181B]" />
           <span>Quick Ask:</span>
         </span>
         {sampleQuestions.map((q, idx) => (
           <button
             key={idx}
             onClick={() => handleSend(q)}
-            className="text-xs font-extrabold px-3 py-1.5 bg-white text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] cursor-pointer"
+            className="text-xs font-extrabold px-3 py-1.5 bg-[#FAFAFA] text-[#18181B] border-2 border-[#18181B] shadow-[2px_2px_0px_0px_#18181B] hover:translate-x-[1px] hover:translate-y-[1px] cursor-pointer"
           >
             {q}
           </button>
@@ -88,7 +88,7 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
       </div>
 
       {/* Conversation Thread */}
-      <div className="p-5 min-h-[220px] max-h-[360px] overflow-y-auto space-y-4 bg-zinc-50 border-b-2 border-black">
+      <div className="p-5 min-h-[220px] max-h-[360px] overflow-y-auto space-y-4 bg-zinc-100/70 border-b-2 border-[#18181B]">
         {chatHistory.length === 0 ? (
           <div className="text-center py-10 text-zinc-600 font-bold text-xs">
             Ask any question about bank settlements, matching logic, platform fee deductions, or exception recommendations.
@@ -100,25 +100,25 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
               className={`flex items-start space-x-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {msg.role === 'assistant' && (
-                <div className="p-1.5 bg-black text-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0 mt-0.5">
+                <div className="p-1.5 bg-[#18181B] text-[#FAFAFA] border-2 border-[#18181B] shadow-[2px_2px_0px_0px_#18181B] shrink-0 mt-0.5">
                   <Bot className="w-4 h-4" />
                 </div>
               )}
 
               <div
-                className={`p-4 text-xs max-w-2xl leading-relaxed border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+                className={`p-4 text-xs max-w-2xl leading-relaxed border-2 border-[#18181B] shadow-[3px_3px_0px_0px_#18181B] ${
                   msg.role === 'user'
-                    ? 'bg-black text-white font-bold'
-                    : 'bg-white text-black font-medium'
+                    ? 'bg-[#18181B] text-[#FAFAFA] font-bold'
+                    : 'bg-[#FAFAFA] text-[#18181B] font-medium'
                 }`}
               >
                 {msg.role === 'user' ? (
                   <p>{msg.content}</p>
                 ) : (
-                  <div className="prose prose-xs max-w-none text-black">
+                  <div className="prose prose-xs max-w-none text-[#18181B]">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                     {msg.sqlQuery && (
-                      <details className="mt-3 text-[11px] bg-black text-white p-3 border-2 border-black font-mono shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                      <details className="mt-3 text-[11px] bg-[#18181B] text-[#FAFAFA] p-3 border-2 border-[#18181B] font-mono shadow-[2px_2px_0px_0px_#18181B]">
                         <summary className="cursor-pointer text-zinc-300 font-black uppercase mb-1">Generated SQL Query</summary>
                         <code>{msg.sqlQuery}</code>
                       </details>
@@ -128,7 +128,7 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
               </div>
 
               {msg.role === 'user' && (
-                <div className="p-1.5 bg-black text-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0 mt-0.5">
+                <div className="p-1.5 bg-[#18181B] text-[#FAFAFA] border-2 border-[#18181B] shadow-[2px_2px_0px_0px_#18181B] shrink-0 mt-0.5">
                   <User className="w-4 h-4" />
                 </div>
               )}
@@ -137,24 +137,27 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
         )}
 
         {loading && (
-          <div className="flex items-center space-x-2 text-black font-bold text-xs py-2">
-            <Bot className="w-4 h-4 animate-spin text-black" />
+          <div className="flex items-center space-x-2 text-[#18181B] font-bold text-xs py-2">
+            <RefreshCw className="w-4 h-4 animate-spin text-[#18181B]" />
             <span>Analyzing reconciliation database and synthesizing response...</span>
           </div>
         )}
       </div>
 
-      {/* Input Box */}
+      {/* Input Form */}
       <form
-        onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-        className="p-4 flex items-center space-x-3 bg-white"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSend();
+        }}
+        className="p-4 flex items-center space-x-3 bg-[#FAFAFA]"
       >
         <input
           type="text"
           placeholder="Ask a question about a settlement (e.g. 'Why was STL0068 matched?')..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          className="flex-1 px-4 py-2.5 text-xs font-bold text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:bg-zinc-50"
+          className="flex-1 px-4 py-2.5 text-xs font-bold text-[#18181B] border-2 border-[#18181B] shadow-[2px_2px_0px_0px_#18181B] focus:outline-none focus:bg-zinc-100"
         />
         <button
           type="submit"

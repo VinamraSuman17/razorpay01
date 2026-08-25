@@ -6,14 +6,14 @@ import { ParentSize } from '@visx/responsive';
 
 const tooltipStyles = {
   ...defaultStyles,
-  backgroundColor: '#000000',
-  color: '#FFFFFF',
+  backgroundColor: '#18181B',
+  color: '#FAFAFA',
   borderRadius: '0px',
   padding: '8px 12px',
   fontSize: '12px',
   fontWeight: 'bold',
-  boxShadow: '4px 4px 0px 0px #000000',
-  border: '2px solid #FFFFFF',
+  boxShadow: '4px 4px 0px 0px #18181B',
+  border: '2px solid #FAFAFA',
   zIndex: 1000,
   pointerEvents: 'none',
 };
@@ -29,9 +29,9 @@ function DonutChartInner({ width, height, matchesCount = 0, needsReviewCount = 0
   } = useTooltip();
 
   const data = [
-    { label: 'Auto-Matched', value: matchesCount, color: '#000000' },
+    { label: 'Auto-Matched', value: matchesCount, color: '#18181B' },
     { label: 'Needs Review', value: needsReviewCount, color: '#71717A' },
-    { label: 'Exceptions', value: exceptionsCount, color: '#E4E4E7' },
+    { label: 'Exceptions', value: exceptionsCount, color: '#D4D4D8' },
   ].filter(d => d.value >= 0);
 
   const total = data.reduce((acc, d) => acc + d.value, 0);
@@ -65,7 +65,7 @@ function DonutChartInner({ width, height, matchesCount = 0, needsReviewCount = 0
                     key={label}
                     d={pie.path(arc) || ''}
                     fill={color}
-                    stroke="#000000"
+                    stroke="#18181B"
                     strokeWidth={2}
                     className="transition-opacity duration-150 hover:opacity-85 cursor-pointer"
                     onMouseMove={(event) => {
@@ -88,7 +88,7 @@ function DonutChartInner({ width, height, matchesCount = 0, needsReviewCount = 0
           <text
             textAnchor="middle"
             dy="-0.15em"
-            className="fill-black font-black text-3xl font-mono tabular-nums"
+            className="fill-[#18181B] font-black text-3xl font-mono tabular-nums"
           >
             {total}
           </text>

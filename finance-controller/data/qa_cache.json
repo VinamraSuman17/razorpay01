@@ -1,6 +1,6 @@
 {
   "show me details for settlement stl0003": {
-    "answer": "Here are the details for settlement **STL0003**:\n\n* **Settlement ID:** STL0003\n* **Date:** 2026-07-02\n* **Gross Amount:** \u20b9500.00 (50,000 paise)\n* **Fees Deducted:** \u20b911.80\n* **Net Amount:** \u20b9488.20\n* **UTR Reference:** REF0003\n* **Payer Account:** Gamma Inc\n* **Description:** Payment for ORD0003\n* **Currency:** INR\n\n### Exception & Resolution Status\nThis record is currently unresolved and categorized as an **ORPHAN_BANK_SETTLEMENT** with **MEDIUM** priority. \n\n* **Reason:** Bank settlement STL0003 on 2026-07-02 (net \u20b9488.20, UTR: 'REF0003', Payer: 'Gamma Inc') has no matching candidate in the internal ledger for reference 'REF0003' or amount \u20b9488.20.\n* **Suggested Action:** Contact the payment gateway team to verify if the order entry for UTR 'REF0003' was omitted from the internal ledger.",
+    "answer": "Settlement STL0003 (\u20b9488.20, UTR: 'REF0003', Date: 2026-07-02) is currently unresolved. Unresolved Exception Info: Category=ORPHAN_BANK_SETTLEMENT, Priority=MEDIUM, Reason: Bank settlement STL0003 on 2026-07-02 (net \u20b9488.20, UTR: 'REF0003', Payer: 'Gamma Inc') has no matching candidate in internal ledger for reference 'REF0003' or amount \u20b9488.20. Suggested Action: Contact payment gateway team to verify if order entry for UTR 'REF0003' was omitted from internal ledger.",
     "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, NULL AS order_id, NULL AS rule_applied, NULL AS confidence, NULL AS timestamp, NULL AS expected_amount, NULL AS customer_reference, NULL AS invoice_date, NULL AS expected_settlement_date, NULL AS customer_name, NULL AS ledger_currency, NULL AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
     "extracted_entity": {
       "filter_type": "settlement_id",
@@ -9,12 +9,12 @@
     "data_found": true,
     "row_count": 1
   },
-  "what is the status of settlement stl0024?": {
-    "answer": "The settlement **STL0024** is successfully reconciled and has a ledger status of **settled**. \n\nHere are the key financial and reconciliation details:\n\n* **Settlement Details:** \n  * **Settlement ID:** STL0024\n  * **Settlement Date:** 2026-07-23\n  * **Payer Account / Customer:** Mangal-Sampath\n  * **Bank Settlement Amount:** \u20b93,387,174.00 (Net Amount: \u20b93,387,174.00; Fees Deducted: \u20b90.00)\n  * **Bank UTR Reference:** `REF36026064`\n\n* **Matching Ledger Order Details:**\n  * **Order ID:** ORD0024\n  * **Invoice Date:** 2026-07-21\n  * **Expected Amount:** \u20b93,387,174.00\n  * **Ledger Customer Reference:** `REF36026064`\n\n* **Reconciliation & Discrepancy Analysis:**\n  * **Rule Applied:** `EXACT_REFERENCE_MATCH` with a **100% confidence score** (1.0).\n  * **Reference Comparison:** The bank UTR reference (`REF36026064`) and the ledger customer reference (`REF36026064`) match perfectly with no discrepancies.\n  * **Amount Discrepancy:** There is a \u20b90.00 gross difference, as the bank net amount of \u20b93,387,174.00 perfectly matches the expected ledger amount of \u20b93,387,174.00.",
-    "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
+  "how many settlements are still open": {
+    "answer": "Based on the reconciled database, there is currently **1** open settlement.",
+    "sql_query": "SELECT count(*) AS count FROM bank_settlements WHERE net_amount < 0 OR description ILIKE ?",
     "extracted_entity": {
-      "filter_type": "settlement_id",
-      "value": "STL0024"
+      "filter_type": "category_count",
+      "value": "open settlements"
     },
     "data_found": true,
     "row_count": 1

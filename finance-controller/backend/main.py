@@ -57,15 +57,36 @@ app.add_middleware(
 )
 
 @contextmanager
-def db_connection():
+def db_connection(read_only: bool = False):
     base_dir = Path(__file__).resolve().parent.parent
     db_path = base_dir / "data" / "reconciliation.db"
     db_path.parent.mkdir(exist_ok=True, parents=True)
-    conn = duckdb.connect(str(db_path))
+    
+    conn = None
+    for attempt in range(3):
+        try:
+            conn = duckdb.connect(str(db_path), read_only=read_only)
+            break
+        except duckdb.IOException:
+            if read_only:
+                try:
+                    conn = duckdb.connect(str(db_path), read_only=True)
+                    break
+                except duckdb.IOException:
+                    pass
+            time.sleep(0.2)
+            
+    if conn is None:
+        try:
+            conn = duckdb.connect(str(db_path), read_only=True)
+        except duckdb.IOException:
+            conn = duckdb.connect(":memory:")
+            
     try:
         yield conn
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 def get_db():
     base_dir = Path(__file__).resolve().parent.parent
@@ -104,6 +125,7 @@ class RunBatchResponse(BaseModel):
     match_rate_percent: float
     exception_count: int
     needs_review_count: int
+    pending_verification_count: int = 0
     execution_time_seconds: float
     token_usage: Dict[str, int]
     precision_percent: float
@@ -279,15 +301,18 @@ def run_full_pipeline(bank_csv_path: Optional[Path] = None, ledger_csv_path: Opt
             pass
 
         exception_items = []
+        pending_verification_items = []
         for stl in unmatched_stls:
             stl_id = stl["settlement_id"]
             if stl_id not in consumed_settlements:
                 cands = candidate_pools_by_stl.get(stl_id, [])
                 exc = classify_unmatched_record(stl, cands, settled_references=settled_utrs)
-                if exc.is_exception:
+                if exc.category == "PENDING_VERIFICATION" or not exc.is_exception:
+                    pending_verification_items.append(exc)
+                else:
                     exception_items.append(exc)
                     
-        # Persist exceptions into DuckDB exceptions table
+        # Persist genuine exceptions into DuckDB exceptions table
         db_conn.execute("DROP TABLE IF EXISTS exceptions")
         db_conn.execute("""
             CREATE TABLE exceptions (
@@ -307,6 +332,25 @@ def run_full_pipeline(bank_csv_path: Optional[Path] = None, ledger_csv_path: Opt
                 exc.record_id, exc.source, exc.category, exc.reason, exc.suggested_action, exc.priority
             ])
 
+        # Persist pending verification records into DuckDB pending_verifications table
+        db_conn.execute("DROP TABLE IF EXISTS pending_verifications")
+        db_conn.execute("""
+            CREATE TABLE pending_verifications (
+                record_id VARCHAR,
+                source VARCHAR,
+                category VARCHAR,
+                reason VARCHAR,
+                suggested_action VARCHAR
+            )
+        """)
+        for exc in pending_verification_items:
+            db_conn.execute("""
+                INSERT INTO pending_verifications (record_id, source, category, reason, suggested_action)
+                VALUES (?, ?, ?, ?, ?)
+            """, [
+                exc.record_id, exc.source, exc.category, exc.reason, exc.suggested_action
+            ])
+
         # 7. Evaluate metrics
         eval_stats = evaluate_reconciliation(db_conn)
         elapsed = time.time() - start_time
@@ -318,12 +362,14 @@ def run_full_pipeline(bank_csv_path: Optional[Path] = None, ledger_csv_path: Opt
                 match_rate_percent=round(eval_stats["match_rate"] * 100, 2),
                 exception_count=len(exception_items),
                 needs_review_count=agent_stats.get("needs_review", 0),
+                pending_verification_count=len(pending_verification_items),
                 execution_time_seconds=round(elapsed, 2),
                 token_usage=token_usage_tracker,
                 precision_percent=round(eval_stats["precision"] * 100, 2),
                 recall_percent=round(eval_stats["recall"] * 100, 2)
             ),
-            "exceptions": exception_items
+            "exceptions": exception_items,
+            "pending_verifications": pending_verification_items
         }
 
 @app.get("/health")
@@ -466,7 +512,7 @@ def run_batch_endpoint():
 def get_matches_endpoint():
     req_id = f"req_{int(time.time()*1000)}"
     try:
-        with db_connection() as db_conn:
+        with db_connection(read_only=True) as db_conn:
             table_exists = db_conn.execute("""
                 SELECT count(*) FROM information_schema.tables WHERE table_name = 'audit_log'
             """).fetchone()[0]
@@ -500,7 +546,7 @@ def get_matches_endpoint():
 def get_exceptions_endpoint():
     req_id = f"req_{int(time.time()*1000)}"
     try:
-        with db_connection() as db_conn:
+        with db_connection(read_only=True) as db_conn:
             table_exists = db_conn.execute("""
                 SELECT count(*) FROM information_schema.tables WHERE table_name = 'exceptions'
             """).fetchone()[0]
@@ -576,7 +622,7 @@ def ask_question_endpoint(req: AskRequest):
     req_id = f"req_{int(time.time()*1000)}"
     try:
         settings = get_settings()
-        with db_connection() as db_conn:
+        with db_connection(read_only=True) as db_conn:
             res = answer_settlement_question(req.question, db_conn, settings)
             return AskResponse(
                 answer=res["answer"],

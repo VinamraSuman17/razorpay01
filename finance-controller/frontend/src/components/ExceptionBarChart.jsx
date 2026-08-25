@@ -8,14 +8,14 @@ import { ParentSize } from '@visx/responsive';
 
 const tooltipStyles = {
   ...defaultStyles,
-  backgroundColor: '#000000',
-  color: '#FFFFFF',
+  backgroundColor: '#18181B',
+  color: '#FAFAFA',
   borderRadius: '0px',
   padding: '8px 12px',
   fontSize: '12px',
   fontWeight: 'bold',
-  boxShadow: '4px 4px 0px 0px #000000',
-  border: '2px solid #FFFFFF',
+  boxShadow: '4px 4px 0px 0px #18181B',
+  border: '2px solid #FAFAFA',
   zIndex: 1000,
   pointerEvents: 'none',
 };
@@ -77,8 +77,8 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
                   y={barY}
                   width={barWidth}
                   height={barHeight}
-                  fill="#000000"
-                  stroke="#000000"
+                  fill="#18181B"
+                  stroke="#18181B"
                   strokeWidth={2}
                   rx={0}
                   className="transition-opacity duration-150 hover:opacity-80 cursor-pointer"
@@ -100,7 +100,7 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
                   dy="0.35em"
                   fontSize={12}
                   fontWeight={900}
-                  fill="#000000"
+                  fill="#18181B"
                   fontFamily="ui-monospace, monospace"
                 >
                   {d.count}
@@ -111,11 +111,11 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
 
           <AxisLeft
             scale={yScale}
-            stroke="#000000"
+            stroke="#18181B"
             strokeWidth={2}
-            tickStroke="#000000"
+            tickStroke="#18181B"
             tickLabelProps={() => ({
-              fill: '#000000',
+              fill: '#18181B',
               fontSize: 11,
               fontWeight: 800,
               textAnchor: 'end',
@@ -126,12 +126,12 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
           <AxisBottom
             top={yMax}
             scale={xScale}
-            stroke="#000000"
+            stroke="#18181B"
             strokeWidth={2}
-            tickStroke="#000000"
+            tickStroke="#18181B"
             tickFormat={(v) => `${v}`}
             tickLabelProps={() => ({
-              fill: '#000000',
+              fill: '#18181B',
               fontSize: 10,
               fontWeight: 800,
               textAnchor: 'middle',
@@ -145,7 +145,7 @@ function ExceptionBarChartInner({ width, height, exceptionsList = [] }) {
         <TooltipWithBounds top={tooltipTop} left={tooltipLeft} style={tooltipStyles}>
           <div className="font-mono text-xs">
             <span className="font-extrabold uppercase">{tooltipData.category}:</span>{' '}
-            <span className="font-black text-white">{tooltipData.count} record(s)</span>
+            <span className="font-black text-[#FAFAFA]">{tooltipData.count} record(s)</span>
           </div>
         </TooltipWithBounds>
       )}

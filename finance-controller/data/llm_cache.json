@@ -1,135 +1,44 @@
 {
-  "9bfd349586b614f42080d86e0c510fd46ce432b3a748283ab4eee38ad4884bd7": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "The settlement is a chargeback reversal for 'Sachar Group' with a reference 'REF17605381' and an amount of -591,312,400 INR. None of the shortlisted candidates (ORD0013, ORD0026, ORD0014) match the payer name, the reference number, or the settlement amount. The candidates represent unrelated settled orders.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "749ceec3eaec1673582b009ad0ea840522b0659cc2d5e772d9564f9adddc3345": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "The settlement amount (-343,150,100 paise) does not match any of the shortlisted candidate order amounts, even after considering the amount tolerance. Furthermore, the UTR references and customer names do not align with the settlement details.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "ad0ce928b48218acd3e873ece8819fba64426a1d636e457431f3862156303556": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "The settlement amount of 152,295,700 paise does not match any of the shortlisted candidates' expected amounts (49,239,400, 549,207,300, and 838,086,500 paise). The differences are significantly outside the allowed tolerance, and there is no evidence linking the 'Bajaj Group' payer to any of the customer names.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "e382b9081de60f6d2721f61a7dfa58f4ed246512ea07227eb8b8b98b5a1280df": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "The settlement amount of 620,207,600 paise does not match any of the shortlisted candidates' expected amounts, and the differences are significantly outside the allowed tolerance. Additionally, the payer account and reference numbers do not align with any of the provided orders.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "7e15656edede19d2423d156ae8ec300f274835acb97b8b964dcb1b930aa4014d": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "The settlement amount of -81982400 INR does not match any of the shortlisted candidates' expected amounts, even after considering the provided tolerances. Furthermore, the customer names and UTR references do not show any significant correlation with the settlement details.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "55202ab1a874e3100f0e749236d6c402bbe818aa71a2ba3eeed1bcdf766774d8": {
-    "decision": "match",
-    "matched_order_id": "ORD0014",
-    "confidence": 0.98,
-    "reasoning": "The settlement amount matches the expected amount of ORD0014 exactly. The customer name 'Mukhopadhyay-Dua' is an exact match. The UTR reference 'REF58986679' and the order reference 'REF58986697' show a minor digit transposition (679 vs 697), which is a common clerical error. Given the exact amount and name match, this is a high-confidence fuzzy reference match.",
-    "rule_category": "FUZZY_REFERENCE"
-  },
-  "c03881f35aa96645e5ce61d3e22b0881172c1399ab7d224e3968c222f41a2168": {
-    "decision": "match",
-    "matched_order_id": "ORD0015",
-    "confidence": 0.98,
-    "reasoning": "The settlement amount matches the expected amount of ORD0015 exactly. The payer account name 'Rajagopalan-Yohannan' is an exact match. The UTR reference 'REF3319888T' in the settlement is a minor character variation (T vs 7) of the customer reference 'REF33198887' in the order, which is a common OCR or manual entry error. Given the exact amount and name match, this is a high-confidence fuzzy reference match.",
-    "rule_category": "FUZZY_REFERENCE"
-  },
-  "53dd2388fde4834c2f844f0122d48ab73db8ca7a92632b2887714157ac65b07d": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "The settlement is a chargeback reversal for 'Nair Inc' with reference 'REF56238551'. None of the shortlisted candidates match the customer name, reference, or amount within the allowed tolerance. The differences in amounts are significant and do not align with any of the provided orders.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "988ed7b554f5cdb2dcf30e562fc92dd766f78fc2bf82db37b00f5ed7e20f8064": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "The settlement amount of 376,792,000 paise does not match any of the shortlisted candidates' expected amounts, even after considering the tolerance. The differences are significantly larger than the allowed tolerance of 500 paise. Additionally, there is no correlation between the payer name/reference and the candidate records.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "ab3fd8bc9cdd93dfc538b6c46df86258784a0a2001364677816e27e08c7901c3": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 1.0,
-    "reasoning": "None of the shortlisted candidates have an expected amount that matches the settlement amount of 761,800,100 paise within the allowed tolerance. The differences are significantly large, and there is no evidence linking the settlement to any of the provided orders.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "e2aa459b3f89137869fb6999cc29a2074c928b0c2720d83febf0ade4ab5e0f21": {
-    "decision": "match",
-    "matched_order_id": "ORD0018",
-    "confidence": 0.98,
-    "reasoning": "The settlement amount matches the expected amount of ORD0018 exactly. The payer account name is an exact match. The UTR reference 'REF53993351' in the settlement is highly similar to the customer reference 'REF53993315' in the order (only a minor transposition of the last two digits), which is a common clerical error. Given the exact amount and name match, this is a clear fuzzy reference match.",
-    "rule_category": "FUZZY_REFERENCE"
-  },
-  "9a2db5eb1428b434bc0ee60b8995d9322dcab9b3dd385fe67c843d8f7a65903a": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "The settlement is a chargeback reversal for 'Narain-Soni' with reference 'REF85337983'. None of the shortlisted candidates (ORD0013, ORD0015, ORD0018) match the customer name, reference, or amount. The amounts are significantly different and there is no logical connection between the settlement and the provided ledger records.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "7c215844ce8739703af25049536ebedd32d774dd847e3759e4c19b103f7ce995": {
-    "decision": "match",
-    "matched_order_id": "ORD0016",
-    "confidence": 0.95,
-    "reasoning": "The settlement amount matches the expected amount of ORD0016 exactly. The customer name is an exact match. The UTR reference 'REFA1434781' in the settlement is a minor variation of the customer reference 'REF81434781' in the order (transposition of 'A' and '8'), which is a common clerical error. Given the exact amount and name match, this is a high-confidence fuzzy reference match.",
-    "rule_category": "FUZZY_REFERENCE"
-  },
-  "d03d2b86d713229b222ac0aca67e28e4664bb94b645117e8284115172f23857f": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "None of the shortlisted candidates match the settlement amount or reference. The settlement amount of 320,340,800 INR does not align with any of the expected amounts (439,368,900 INR, 24,472,200 INR, or 49,239,400 INR), and the UTR reference 'REF67659526' does not match any of the customer references provided.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "56b030cc6dc8c2e8d711e93327953882762e872a35464de59d43695a5dd6624f": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "The settlement amount (-736,019,600 paise) does not match any of the shortlisted candidates' expected amounts. Furthermore, the payer name 'Gera LLC' does not match any of the customer names, and the UTR reference 'REF28287270' does not match any of the provided customer references. The settlement is explicitly described as a 'Chargeback reversal', which does not align with the provided ledger orders.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "26be6a631ba3c10b3899ea22873c50ef4fd57b7f7f0cc209071e0713d648076d": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "None of the shortlisted candidates have an expected amount that matches the settlement amount within the allowed tolerance. The differences are significantly larger than the 500 paise tolerance.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
-  "eaaf4ec65a2f4f7314ccc62d3c29db76374a3ac24d5ee1c1f46db013a52f977a": {
-    "decision": "no_match",
-    "matched_order_id": null,
-    "confidence": 0.0,
-    "reasoning": "The settlement amount of 375,517,100 does not match either of the shortlisted candidates (ORD0050: 116,452,700; ORD0016: 229,302,500). The differences are significant and far exceed the allowed tolerance. Additionally, there is no correlation between the payer account 'Naik-Kara' and the customer names in the candidates.",
-    "rule_category": "UNMATCHED_EXCEPTION"
-  },
   "bf5fae41c7179508c0e3aa5adf6adb7b4e3b07b47519f2948c9d4f680082b8b7": {
     "decision": "no_match",
     "matched_order_id": null,
     "confidence": 0.0,
-    "reasoning": "The settlement amount of 363,608,400 paise does not match the expected amounts of any of the shortlisted candidates (ORD0075, ORD0085, ORD0087). Furthermore, the payer name 'Yohannan, Hegde and Patla' does not match any of the customer names in the candidate list, and the UTR reference 'REF16934060' does not correspond to any of the provided customer references.",
+    "reasoning": "The settlement amount of -363,608,400 INR (chargeback reversal) does not match any of the shortlisted candidates in terms of amount, reference (REF16934060), payer name (Yohannan, Hegde and Patla), or date. The closest candidate by amount, ORD0075, has a difference of 15,395,200 paise, which exceeds the tolerance of 500 paise.",
     "rule_category": "UNMATCHED_EXCEPTION"
   },
   "3b861442d612273a7bdfaac3fabb0188669d31c8601a85fc2c4fc0a34c9ad546": {
     "decision": "no_match",
     "matched_order_id": null,
-    "confidence": 1.0,
-    "reasoning": "None of the shortlisted candidates have an expected amount within the reconciliation tolerance of the settlement amount (82533700). The differences are significantly larger than the allowed 500 paise tolerance. Additionally, there is no correlation between the payer name/UTR reference and the candidate records.",
+    "confidence": 0.0,
+    "reasoning": "None of the shortlisted candidates match the settlement. The settlement date (2026-07-01) predates all candidate invoice dates (the earliest being 2026-07-09). Additionally, the settlement amount of 82,533,700 INR does not align with any candidate amounts (with differences of 44,651,700 paise and 390,760,300 paise for the INR candidates), and there are no matching references or customer names.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "eb92280b917a8c5e8c63d41c5fb8a90708220ec4be83f8dee5deef0ce44570f9": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement amount of 514,817,500 INR does not match any of the shortlisted candidates. The difference between the settlement amount and the closest candidate ORD0075 (379,003,600 INR) is 135,813,900 paise, which is well outside the acceptable tolerance. Furthermore, the payer 'Shere Group' and reference 'REF71545168' do not match any candidate details, and the description indicates a duplicate credit, making this an unmatched exception.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "9ce4acf20ec2f605d6efcb9b7e2c91b3440cc42932bdeb047fe76afe8ca0a627": {
+    "decision": "match",
+    "matched_order_id": "ORD0077",
+    "confidence": 0.95,
+    "reasoning": "The settlement amount of 304,587,000 paise and customer name 'Dixit LLC' match ORD0077 exactly. The settlement date (2026-07-06) also aligns perfectly with the expected settlement date. The UTR reference 'REF13493681' has a minor digit transposition at the end compared to the customer reference 'REF13493618' (81 vs 18), which is a common typo, making this a highly confident match.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "1b22152ce4f4398ef16a48821c7e70e879e9d612456b309d6683178965500b58": {
+    "decision": "match",
+    "matched_order_id": "ORD0076",
+    "confidence": 0.98,
+    "reasoning": "The settlement amount matches ORD0076 exactly (473,294,000 paise). The customer name 'Mandal-Setty' is an exact match. The settlement date (2026-07-10) aligns perfectly with the expected settlement date. The UTR reference 'REF06797483' has a single-digit typo compared to the customer reference 'REF06797403' (8 vs 0), which is a common transmission error. This represents a highly confident match.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "f395cbdcc4307e513ea42c1746c2461204eed1b4f53b4ea308fb979aa13ec933": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The only candidate order (ORD0077) has a significant amount mismatch of 497,559,500 paise, which exceeds the tolerance of 500 paise. Additionally, the customer name and references do not match.",
     "rule_category": "UNMATCHED_EXCEPTION"
   }
 }

@@ -5,91 +5,106 @@ import { ExceptionBarChart } from './ExceptionBarChart';
 import { AccuracyComparisonChart } from './AccuracyComparisonChart';
 
 export function DashboardCharts({ matchesCount, exceptionsCount, needsReviewCount, exceptionsList, summary }) {
-  const donutData = [
-    { label: 'Auto-Matched', value: matchesCount, color: '#000000' },
-    { label: 'Needs Review', value: needsReviewCount, color: '#71717A' },
-    { label: 'Exceptions', value: exceptionsCount, color: '#E4E4E7' }
-  ];
-
-  const totalRecords = summary?.total_bank_settlements || (matchesCount + needsReviewCount + exceptionsCount);
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-      {/* 1. Visx Donut Chart */}
+      {/* Donut Chart Card */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.35, ease: 'easeOut', delay: 0.05 }}
-        className="bg-white p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between rounded-none"
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="bg-[#FAFAFA] border-2 border-[#18181B] shadow-[4px_4px_0px_0px_#18181B] p-6 rounded-none flex flex-col justify-between"
       >
         <div>
-          <h3 className="text-sm font-black uppercase text-black">Reconciliation Breakdown</h3>
-          <p className="text-xs font-medium text-zinc-600 mb-4">Auto-Matched vs Needs Review vs Exceptions</p>
+          <h3 className="text-sm font-black uppercase text-[#18181B] tracking-wider">
+            Reconciliation Breakdown
+          </h3>
+          <p className="text-xs text-zinc-600 font-medium mt-1">
+            Status distribution of processed records
+          </p>
         </div>
-        <div className="h-52 w-full">
+
+        <div className="h-56 w-full my-4">
           <DonutChart
             matchesCount={matchesCount}
             needsReviewCount={needsReviewCount}
             exceptionsCount={exceptionsCount}
           />
         </div>
-        <div className="pt-3 border-t-2 border-black mt-3">
-          <div className="flex justify-center space-x-3 text-xs font-bold text-black mb-2">
-            {donutData.map((d, i) => (
-              <div key={i} className="flex items-center space-x-1.5 px-2 py-0.5 border-1.5 border-black bg-zinc-100 shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)]">
-                <span className="w-2.5 h-2.5 border border-black" style={{ backgroundColor: d.color }} />
-                <span className="text-[11px] uppercase font-extrabold">{d.label}: <strong className="font-mono tabular-nums text-black font-black">{d.value}</strong></span>
-              </div>
-            ))}
+
+        <div className="pt-3 border-t-2 border-[#18181B]/10 grid grid-cols-3 gap-2 text-center">
+          <div>
+            <span className="block text-[10px] uppercase font-extrabold text-zinc-500">Auto-Match</span>
+            <span className="text-sm font-mono font-black text-[#18181B]">{matchesCount}</span>
           </div>
-          <p className="text-[11px] text-zinc-600 text-center font-mono font-bold">
-            Based on completed run — {totalRecords} settlements
-          </p>
+          <div>
+            <span className="block text-[10px] uppercase font-extrabold text-zinc-500">Needs Rev</span>
+            <span className="text-sm font-mono font-black text-[#18181B]">{needsReviewCount}</span>
+          </div>
+          <div>
+            <span className="block text-[10px] uppercase font-extrabold text-zinc-500">Exceptions</span>
+            <span className="text-sm font-mono font-black text-[#18181B]">{exceptionsCount}</span>
+          </div>
         </div>
       </motion.div>
 
-      {/* 2. Visx Exception Categories Horizontal Bar Chart */}
+      {/* Exception Categories Bar Chart Card */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.35, ease: 'easeOut', delay: 0.1 }}
-        className="bg-white p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between rounded-none"
+        transition={{ duration: 0.35, ease: 'easeOut', delay: 0.08 }}
+        className="bg-[#FAFAFA] border-2 border-[#18181B] shadow-[4px_4px_0px_0px_#18181B] p-6 rounded-none flex flex-col justify-between"
       >
         <div>
-          <h3 className="text-sm font-black uppercase text-black">Exceptions by Category</h3>
-          <p className="text-xs font-medium text-zinc-600 mb-4">Sorted by frequency count descending</p>
+          <h3 className="text-sm font-black uppercase text-[#18181B] tracking-wider">
+            Exception Categories
+          </h3>
+          <p className="text-xs text-zinc-600 font-medium mt-1">
+            Root-cause volume breakdown across operations
+          </p>
         </div>
-        <div className="h-52 w-full">
+
+        <div className="h-56 w-full my-4">
           <ExceptionBarChart exceptionsList={exceptionsList} />
         </div>
-        <div className="pt-3 border-t-2 border-black mt-3">
-          <p className="text-[11px] text-zinc-600 text-center font-mono font-bold">
-            Operational exceptions by root cause classification
-          </p>
+
+        <div className="pt-3 border-t-2 border-[#18181B]/10 flex items-center justify-between text-xs font-bold text-zinc-600">
+          <span>Active Issues:</span>
+          <span className="font-mono font-black text-[#18181B]">{exceptionsList.length} items</span>
         </div>
       </motion.div>
 
-      {/* 3. Visx Baseline vs Full Pipeline Accuracy Comparison Chart */}
+      {/* Accuracy Comparison Card */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.35, ease: 'easeOut', delay: 0.15 }}
-        className="bg-white p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between rounded-none"
+        transition={{ duration: 0.35, ease: 'easeOut', delay: 0.16 }}
+        className="bg-[#FAFAFA] border-2 border-[#18181B] shadow-[4px_4px_0px_0px_#18181B] p-6 rounded-none flex flex-col justify-between"
       >
         <div>
-          <h3 className="text-sm font-black uppercase text-black">Accuracy & Coverage (%)</h3>
-          <p className="text-xs font-medium text-zinc-600 mb-4">Deterministic Rules vs Full AI Pipeline</p>
+          <h3 className="text-sm font-black uppercase text-[#18181B] tracking-wider">
+            Rules vs AI Pipeline Lift
+          </h3>
+          <p className="text-xs text-zinc-600 font-medium mt-1">
+            Accuracy comparison against legacy rule engine
+          </p>
         </div>
-        <div className="h-52 w-full">
+
+        <div className="h-56 w-full my-4">
           <AccuracyComparisonChart summary={summary} />
         </div>
-        <div className="pt-3 border-t-2 border-black mt-3">
-          <p className="text-[11px] text-zinc-600 text-center font-mono font-bold">
-            Deterministic rules vs multi-stage Gemini LLM pipeline
-          </p>
+
+        <div className="pt-3 border-t-2 border-[#18181B]/10 flex items-center justify-between text-xs">
+          <div className="flex items-center space-x-2">
+            <span className="w-2.5 h-2.5 bg-zinc-400 border border-[#18181B]" />
+            <span className="font-bold text-zinc-600 text-[10px] uppercase">Plain Rules</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="w-2.5 h-2.5 bg-[#18181B] border border-[#18181B]" />
+            <span className="font-black text-[#18181B] text-[10px] uppercase">Full AI Pipeline</span>
+          </div>
         </div>
       </motion.div>
     </div>

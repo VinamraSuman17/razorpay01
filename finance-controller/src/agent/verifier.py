@@ -14,7 +14,25 @@ from unittest.mock import MagicMock
 
 logger = logging.getLogger(__name__)
 
-DEPLETED_MODELS = set()
+DEPLETED_MODELS: Dict[str, float] = {}
+
+def get_active_models(candidate_models: List[str]) -> List[str]:
+    """Returns models that are not depleted, automatically clearing 60-second RPM cooldowns."""
+    now = time.time()
+    active = []
+    seen = set()
+    for m in candidate_models:
+        if not m or m in seen:
+            continue
+        seen.add(m)
+        if m in DEPLETED_MODELS:
+            # Clear depletion if 60 seconds have passed (RPM window reset)
+            if now - DEPLETED_MODELS[m] > 60.0:
+                del DEPLETED_MODELS[m]
+                active.append(m)
+        else:
+            active.append(m)
+    return active
 
 from src.agent.tools import (
     calculate_fee_adjusted_amount,
@@ -113,11 +131,17 @@ def verify_single_settlement(
     candidate_models = [
         getattr(settings.gemini, "model_name", None),
         "gemini-3.5-flash-lite",
+        "gemini-3.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b",
         "gemini-3.1-flash-lite",
         "gemini-flash-lite-latest"
     ]
-    seen = set()
-    models = [m for m in candidate_models if m and m not in DEPLETED_MODELS and not (m in seen or seen.add(m))]
+    models = get_active_models(candidate_models)
     if is_test_mock:
         # For custom/mocked clients in tests, use only the first configured model name
         models = [candidate_models[0]]
@@ -261,22 +285,14 @@ def verify_single_settlement(
                     f"LLM API error in verifier for model '{model_name}'. Exception Type: {type(e).__name__}, Message: {str(e)}\nTraceback:\n{tb}"
                 )
                 if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                    DEPLETED_MODELS[model_name] = time.time()
                     if "PerDay" in str(e) or "limit: 500" in str(e):
-                        logger.warning(f"Daily quota limit hit for model {model_name}. Skipping across all future calls...")
-                        DEPLETED_MODELS.add(model_name)
-                        skip_model = True
-                        break
-                    if total_attempts >= MAX_TOTAL_ATTEMPTS:
-                        logger.warning(f"Total retry budget ({MAX_TOTAL_ATTEMPTS}) reached for settlement '{settlement.get('settlement_id')}'. Failing fast.")
-                        return VerificationResult(
-                            decision="no_match",
-                            confidence=0.0,
-                            reasoning="Gemini verification unavailable — quota exhausted, flagged for manual review",
-                            rule_category="QUOTA_EXHAUSTED_REVIEW"
-                        )
-                    logger.warning(f"429 Rate limit hit for model {model_name} (attempt {total_attempts}/{MAX_TOTAL_ATTEMPTS}). Sleeping 5s before attempt...")
-                    time.sleep(5)
-                    continue
+                        logger.warning(f"Daily quota limit hit for model {model_name}. Marking model as depleted...")
+                    else:
+                        logger.warning(f"429 Rate limit hit for model {model_name}. Switching to next model in ladder (60s cooldown)...")
+                        print(f"429 Rate limit hit for model {model_name}. Switching to next fallback model in ladder...")
+                    skip_model = True
+                    break
                 skip_model = True
                 break
 
@@ -300,10 +316,13 @@ def run_agent_verification(
     Runs Gemini verification across all unmatched settlements with fuzzy candidates.
     Classifies decisions according to confidence thresholds.
     """
+    DEPLETED_MODELS.clear()
+    
     stats = {
         "auto_matched": 0,
         "needs_review": 0,
-        "exceptions": 0
+        "exceptions": 0,
+        "pending_verification": 0
     }
     
     auto_thresh = settings.thresholds.auto_match_confidence
@@ -336,6 +355,9 @@ def run_agent_verification(
         else:
             if res.rule_category == "QUOTA_EXHAUSTED_REVIEW":
                 stl["quota_exhausted_reason"] = res.reasoning
-            stats["exceptions"] += 1
+                stl["status"] = "pending_verification"
+                stats["pending_verification"] += 1
+            else:
+                stats["exceptions"] += 1
             
     return stats
