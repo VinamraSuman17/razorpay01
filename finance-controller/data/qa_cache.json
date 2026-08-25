@@ -8,5 +8,15 @@
     },
     "data_found": true,
     "row_count": 1
+  },
+  "what is the status of settlement stl0024?": {
+    "answer": "The settlement **STL0024** is successfully reconciled and has a ledger status of **settled**. \n\nHere are the key financial and reconciliation details:\n\n* **Settlement Details:** \n  * **Settlement ID:** STL0024\n  * **Settlement Date:** 2026-07-23\n  * **Payer Account / Customer:** Mangal-Sampath\n  * **Bank Settlement Amount:** \u20b93,387,174.00 (Net Amount: \u20b93,387,174.00; Fees Deducted: \u20b90.00)\n  * **Bank UTR Reference:** `REF36026064`\n\n* **Matching Ledger Order Details:**\n  * **Order ID:** ORD0024\n  * **Invoice Date:** 2026-07-21\n  * **Expected Amount:** \u20b93,387,174.00\n  * **Ledger Customer Reference:** `REF36026064`\n\n* **Reconciliation & Discrepancy Analysis:**\n  * **Rule Applied:** `EXACT_REFERENCE_MATCH` with a **100% confidence score** (1.0).\n  * **Reference Comparison:** The bank UTR reference (`REF36026064`) and the ledger customer reference (`REF36026064`) match perfectly with no discrepancies.\n  * **Amount Discrepancy:** There is a \u20b90.00 gross difference, as the bank net amount of \u20b93,387,174.00 perfectly matches the expected ledger amount of \u20b93,387,174.00.",
+    "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
+    "extracted_entity": {
+      "filter_type": "settlement_id",
+      "value": "STL0024"
+    },
+    "data_found": true,
+    "row_count": 1
   }
 }
