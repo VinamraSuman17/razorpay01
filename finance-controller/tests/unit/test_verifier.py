@@ -87,3 +87,21 @@ def test_fx_currency_mismatch_tool_calling(mock_settings):
     tool_names = [t.__name__ for t in config.tools]
     assert "apply_fx_conversion" in tool_names
     assert "calculate_fee_adjusted_amount" in tool_names
+
+def test_verifier_mock_client_speed(mock_settings):
+    import time
+    # Set requests_per_minute to 1 (which would normally delay 60 seconds per call)
+    mock_settings.gemini.requests_per_minute = 1
+    
+    mock_client = MagicMock()
+    mock_resp = MagicMock()
+    mock_resp.text = '{"decision": "no_match", "confidence": 0.0, "reasoning": "mock speed test", "rule_category": "UNMATCHED_EXCEPTION"}'
+    mock_resp.usage_metadata = None
+    mock_client.models.generate_content.return_value = mock_resp
+    
+    t0 = time.time()
+    res = verify_single_settlement({"settlement_id": "STL_SPEED"}, [{"order_id": "ORD_SPEED"}], mock_settings, client=mock_client)
+    elapsed = time.time() - t0
+    
+    assert res.decision == "no_match"
+    assert elapsed < 1.0  # Must complete under 1 second without rate limit sleep

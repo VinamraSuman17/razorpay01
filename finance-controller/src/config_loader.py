@@ -6,10 +6,45 @@ from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 
-# Load env variables from .env if present in project or workspace root
-base_proj_dir = Path(__file__).resolve().parent.parent
-load_dotenv(base_proj_dir / ".env", override=True)
-load_dotenv(base_proj_dir.parent / ".env", override=True)
+def mask_api_key(key: Optional[str]) -> str:
+    if not key or not key.strip():
+        return "<NOT SET>"
+    k = key.strip()
+    if len(k) < 10:
+        return f"{k[:2]}...{k[-2:]}"
+    return f"{k[:6]}...{k[-4:]}"
+
+def get_client_masked_key(client=None, settings=None) -> str:
+    key = None
+    if client and hasattr(client, "_api_client") and hasattr(client._api_client, "api_key"):
+        key = getattr(client._api_client, "api_key", None)
+    if not key:
+        reload_environment()
+        key = os.getenv("GEMINI_API_KEY")
+    if not key and settings and hasattr(settings, "gemini_api_key"):
+        key = getattr(settings, "gemini_api_key", None)
+    return mask_api_key(key) if key else "[NO_KEY_FOUND]"
+
+def reload_environment() -> list[str]:
+    """
+    Scans candidate .env file locations (workspace root, project root, backend subfolder)
+    and loads them with override=True so updated .env values take precedence over stale OS env vars.
+    """
+    base_proj_dir = Path(__file__).resolve().parent.parent
+    candidate_envs = [
+        base_proj_dir.parent / ".env",          # Workspace root (e.g. RazorPay/.env)
+        base_proj_dir / ".env",                 # Project root (finance-controller/.env)
+        base_proj_dir / "backend" / ".env",     # Backend subfolder (finance-controller/backend/.env)
+    ]
+    loaded_from = []
+    for env_file in candidate_envs:
+        if env_file.exists():
+            load_dotenv(env_file, override=True)
+            loaded_from.append(str(env_file))
+    return loaded_from
+
+# Initial reload on module import
+_loaded_env_files = reload_environment()
 
 class ReconciliationConfig(BaseModel):
     amount_tolerance_paise: int

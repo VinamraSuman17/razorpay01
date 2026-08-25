@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import re
 import duckdb
 import logging
@@ -10,6 +11,8 @@ from google import genai
 from google.genai import types
 
 from src.exceptions.classifier import classify_unmatched_record
+from src.agent.rate_limiter import enforce_proactive_rate_limit
+from src.config_loader import get_client_masked_key
 
 logger = logging.getLogger(__name__)
 
@@ -123,9 +126,12 @@ def call_gemini_with_fallback(
     if response_mime_type:
         config.response_mime_type = response_mime_type
         
+    rpm = getattr(settings.gemini, "requests_per_minute", 15) or 15
+    masked_key = get_client_masked_key(client, settings)
     for model_name in models:
         try:
-            log_msg = f"[GEMINI_API_CALL] Executing Gemini API call using model '{model_name}' for {task_desc}"
+            enforce_proactive_rate_limit(rpm=rpm, is_test_mock=False)
+            log_msg = f"[GEMINI_API_CALL] (Q&A) model='{model_name}' key='{masked_key}' task='{task_desc}'"
             logger.info(log_msg)
             print(log_msg)
             
@@ -145,6 +151,9 @@ def call_gemini_with_fallback(
             err_msg = f"[GEMINI_API_RETRY] Model '{model_name}' failed for {task_desc}. Exception Type: {type(e).__name__}, Message: {str(e)}"
             logger.warning(err_msg)
             print(err_msg)
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                logger.warning(f"429 Rate limit hit in Q&A for model {model_name}. Sleeping 30s before fallback...")
+                time.sleep(30)
             continue
     return None
 
@@ -453,15 +462,12 @@ def answer_settlement_question(
         rows = cursor.fetchall()
         
     if not rows:
-        res = {
+        return {
             "answer": f"No matching record or data was found for entity '{val}' in the reconciled database.",
             "sql_query": sql_executed,
             "extracted_entity": entity_info,
             "data_found": False
         }
-        _qa_cache[cache_key] = res
-        _save_qa_cache()
-        return res
         
     # Check unresolved / exception queue with bug fix for double periods
     exception_note = ""
@@ -469,10 +475,13 @@ def answer_settlement_question(
     matched_order_or_stl = rich_context.get("audit_match", {}).get("matched_order_id")
     
     if filter_type == "settlement_id" and not matched_order_or_stl:
-        if exceptions_table_exists and len(first_row) >= 15 and first_row[13]:
-            exc_cat, exc_reason, exc_action = first_row[13], first_row[14], first_row[15]
-            clean_reason = exc_reason.rstrip(".")
-            clean_action = exc_action.rstrip(".")
+        row_dict = dict(zip(columns, first_row))
+        exc_cat = row_dict.get("exception_category")
+        exc_reason = row_dict.get("exception_reason")
+        exc_action = row_dict.get("exception_suggested_action")
+        if exc_cat and exc_reason and exc_action:
+            clean_reason = str(exc_reason).rstrip(".")
+            clean_action = str(exc_action).rstrip(".")
             exception_note = f"Unresolved Exception Info: Category={exc_cat}, Reason: {clean_reason}. Suggested Action: {clean_action}."
             rich_context["unresolved_exception"] = {
                 "category": exc_cat, "reason": clean_reason, "suggested_action": clean_action

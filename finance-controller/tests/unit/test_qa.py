@@ -102,4 +102,20 @@ def test_qa_settlement_joins_internal_ledger(db_conn, settings):
     assert "invoice_date" in sql_query
     assert "expected_settlement_date" in sql_query
 
+def test_qa_cache_behavior_positive_vs_negative(db_conn, settings):
+    import src.qa.settlement_qa as qa_mod
+    qa_mod._qa_cache = {}
+    
+    # Negative query for non-existent record
+    neg_q = "Show details for settlement STL999999"
+    neg_res = answer_settlement_question(neg_q, db_conn, settings)
+    assert neg_res["data_found"] is False
+    assert neg_q.strip().lower() not in qa_mod._qa_cache
+    
+    # Positive query for existing record
+    pos_q = "Show me details for settlement STL0003"
+    pos_res = answer_settlement_question(pos_q, db_conn, settings)
+    assert pos_res["data_found"] is True
+    assert pos_q.strip().lower() in qa_mod._qa_cache
+
 

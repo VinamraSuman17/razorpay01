@@ -22,3 +22,8 @@ def test_ask_endpoint(client):
     data = response.json()
     assert "answer" in data
     assert "data_found" in data
+
+def test_health_endpoint(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}

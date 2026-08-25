@@ -107,3 +107,61 @@ def test_out_of_tolerance_no_match(db_conn, mock_settings):
     assert run_exact_matching(db_conn, consumed_settlements, consumed_orders, mock_settings) == 0
     # Tolerance matcher should skip both because date limit is exceeded or rounding exceeds 500 paise limit
     assert run_tolerance_matching(db_conn, consumed_settlements, consumed_orders, mock_settings) == 0
+
+def test_money_tolerance_boundaries(db_conn, mock_settings):
+    from src.matching.tolerance import run_tolerance_matching
+    # Settlement 1: Exactly 500 paise (Rs. 5.00) diff -> MATCHES
+    # Settlement 2: Exactly 501 paise diff -> NO MATCH
+    db_conn.execute("""
+        INSERT INTO bank_settlements (settlement_id, date, amount, utr_reference, payer_account, fees_deducted, net_amount, description, currency)
+        VALUES 
+        ('STL_TOL_500', '2026-07-02', 100500, 'REF_500', 'Payer T1', 0, 100500, 'Exact 500 paise diff', 'INR'),
+        ('STL_TOL_501', '2026-07-02', 100501, 'REF_501', 'Payer T2', 0, 100501, '501 paise diff', 'INR');
+    """)
+    db_conn.execute("""
+        INSERT INTO internal_ledger (order_id, invoice_date, expected_amount, customer_name, customer_reference, expected_settlement_date, tax_amount, currency, status)
+        VALUES 
+        ('ORD_TOL_500', '2026-07-01', 100000, 'Cust T1', 'REF_500', '2026-07-02', 0, 'INR', 'pending'),
+        ('ORD_TOL_501', '2026-07-01', 100000, 'Cust T2', 'REF_501', '2026-07-02', 0, 'INR', 'pending');
+    """)
+    
+    # Run tolerance matching
+    matched = run_tolerance_matching(db_conn, set(), set(), mock_settings)
+    assert matched == 1
+    
+    # Check audit log
+    matched_stls = [r[0] for r in db_conn.execute("SELECT settlement_id FROM audit_log").fetchall()]
+    assert "STL_TOL_500" in matched_stls
+    assert "STL_TOL_501" not in matched_stls
+
+def test_partial_matcher_guards(db_conn, mock_settings):
+    from src.matching.partial import run_partial_matching
+    from src.audit.logger import init_audit_db
+    init_audit_db(db_conn)
+    # Settlement 1 & 2 (zero/neg): Group with zero/neg net amount -> REJECTED from shortfall match
+    # Settlement 3 & 4 (partial group): Two partial settlements (30000 + 20000 = 50000 paise vs expected net ~97640 paise) -> ACCEPTED
+    db_conn.execute("""
+        INSERT INTO bank_settlements (settlement_id, date, amount, utr_reference, payer_account, fees_deducted, net_amount, description, currency)
+        VALUES 
+        ('STL_ZERO_1', '2026-07-02', 0, 'REF_ZERO', 'Payer Z', 0, 0, 'Zero amount 1', 'INR'),
+        ('STL_ZERO_2', '2026-07-02', 0, 'REF_ZERO', 'Payer Z', 0, 0, 'Zero amount 2', 'INR'),
+        ('STL_NEG_1', '2026-07-02', -2500, 'REF_NEG', 'Payer N', 0, -2500, 'Negative chargeback 1', 'INR'),
+        ('STL_NEG_2', '2026-07-02', -2500, 'REF_NEG', 'Payer N', 0, -2500, 'Negative chargeback 2', 'INR'),
+        ('STL_PARTIAL_1', '2026-07-02', 30000, 'REF_PARTIAL', 'Payer P', 0, 30000, 'Partial payment 1', 'INR'),
+        ('STL_PARTIAL_2', '2026-07-02', 20000, 'REF_PARTIAL', 'Payer P', 0, 20000, 'Partial payment 2', 'INR');
+    """)
+    db_conn.execute("""
+        INSERT INTO internal_ledger (order_id, invoice_date, expected_amount, customer_name, customer_reference, expected_settlement_date, tax_amount, currency, status)
+        VALUES 
+        ('ORD_ZERO', '2026-07-01', 100000, 'Cust Z', 'REF_ZERO', '2026-07-02', 0, 'INR', 'pending'),
+        ('ORD_NEG', '2026-07-01', 100000, 'Cust N', 'REF_NEG', '2026-07-02', 0, 'INR', 'pending'),
+        ('ORD_PARTIAL', '2026-07-01', 100000, 'Cust P', 'REF_PARTIAL', '2026-07-02', 0, 'INR', 'pending');
+    """)
+    
+    run_partial_matching(db_conn, set(), set(), mock_settings)
+    
+    matched_stls = [r[0] for r in db_conn.execute("SELECT settlement_id FROM audit_log WHERE rule_applied = 'PARTIAL_SETTLEMENT_SHORTFALL'").fetchall()]
+    assert "STL_PARTIAL_1" in matched_stls
+    assert "STL_PARTIAL_2" in matched_stls
+    assert "STL_ZERO_1" not in matched_stls
+    assert "STL_NEG_1" not in matched_stls

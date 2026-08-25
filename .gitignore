@@ -19,6 +19,8 @@ frontend/dist/
 logs/
 *.log
 *.db
+finance-controller/data/uploads/
+*_backup.json
 
 # Agent & System Metadata
 .agents/

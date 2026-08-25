@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
 
-export function SettlementQA({ onAskQuestion }) {
+export function SettlementQA({ onAskQuestion, onAsk }) {
+  const askFn = onAskQuestion || onAsk;
   const [question, setQuestion] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,10 @@ export function SettlementQA({ onAskQuestion }) {
     setLoading(true);
 
     try {
-      const res = await onAskQuestion(query);
+      if (typeof askFn !== 'function') {
+        throw new Error('Question handler (onAskQuestion) is not connected.');
+      }
+      const res = await askFn(query);
       const botMsg = {
         role: 'assistant',
         content: res.answer,

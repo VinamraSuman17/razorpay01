@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 export function MatchesTable({ matches }) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredMatches = matches.filter(m =>
-    m.settlement_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.rule_applied.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMatches = (matches || []).filter(m =>
+    (m?.settlement_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (m?.order_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (m?.rule_applied || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

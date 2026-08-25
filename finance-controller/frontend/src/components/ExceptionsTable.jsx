@@ -37,14 +37,14 @@ export function ExceptionsTable({ exceptions }) {
               exceptions.map((exc, idx) => (
                 <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
                   <td className="py-2.5 px-4 font-mono-tabular font-bold text-[#0B1F3A]">{exc.record_id}</td>
-                  <td className="py-2.5 px-4 font-mono-tabular capitalize text-slate-500">{exc.source.replace('_', ' ')}</td>
+                  <td className="py-2.5 px-4 font-mono-tabular capitalize text-slate-500">{(exc?.source || '').replace(/_/g, ' ')}</td>
                   <td className="py-2.5 px-4 font-mono-tabular">
-                    <span className={`px-2 py-0.5 rounded font-bold text-[10px] uppercase ${priorityBadges[exc.priority] || priorityBadges.LOW}`}>
-                      {exc.priority}
+                    <span className={`px-2 py-0.5 rounded font-bold text-[10px] uppercase ${priorityBadges[exc?.priority] || priorityBadges.LOW}`}>
+                      {exc?.priority}
                     </span>
                   </td>
                   <td className="py-2.5 px-4 font-mono-tabular font-semibold text-slate-800">
-                    {exc.category.replace('_', ' ')}
+                    {(exc?.category || '').replace(/_/g, ' ')}
                   </td>
                   <td className="py-2.5 px-4 text-slate-600 max-w-sm leading-snug">{exc.reason}</td>
                   <td className="py-2.5 px-4 text-blue-700 font-medium max-w-xs leading-snug">{exc.suggested_action}</td>

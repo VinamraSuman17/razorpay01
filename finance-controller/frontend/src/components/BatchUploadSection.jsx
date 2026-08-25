@@ -25,22 +25,33 @@ export function BatchUploadSection({ onUploadSuccess }) {
     formData.append('bank_file', bankFile);
     formData.append('ledger_file', ledgerFile);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout
+
     try {
       const res = await fetch('/upload-batch', {
         method: 'POST',
-        body: formData
+        body: formData,
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       const text = await res.text();
-      let data = {};
+      let data = null;
       try {
         data = JSON.parse(text);
       } catch (e) {
-        throw new Error(text || 'Upload server error');
+        // Non-JSON HTML response (e.g. proxy 502/413)
       }
 
       if (!res.ok) {
-        throw new Error(data.detail || 'Upload and validation failed.');
+        const errorMsg = data?.detail || data?.message || (
+          res.status === 502 ? 'Server gateway timeout (502). Reconciliation took longer than expected. Please try again.' :
+          res.status === 413 ? 'Uploaded file is too large (413). Maximum allowed size per file is 10 MB.' :
+          res.status === 400 ? 'Invalid file upload (400). Please check your CSV files.' :
+          `Upload failed with server error (${res.status}). Please try again.`
+        );
+        throw new Error(errorMsg);
       }
 
       setSuccessMsg(data.message || `Batch ${data.batch_id} validated (${data.bank_valid_records} bank rows, ${data.ledger_valid_records} ledger rows) and reconciled!`);
@@ -49,7 +60,12 @@ export function BatchUploadSection({ onUploadSuccess }) {
       }
       onUploadSuccess(data.summary);
     } catch (err) {
-      setErrorMsg(err.message);
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        setErrorMsg('Upload request timed out after 10 minutes. The server is still processing in the background.');
+      } else {
+        setErrorMsg(err.message);
+      }
     } finally {
       setUploading(false);
     }
@@ -99,17 +115,13 @@ export function BatchUploadSection({ onUploadSuccess }) {
           <label className="block text-xs font-semibold text-slate-700 mb-1">
             Bank Settlements CSV
           </label>
-          <div className="relative border border-dashed border-slate-300 rounded-lg p-2.5 bg-slate-50 hover:bg-slate-100/80 transition-colors">
+          <div className="relative">
             <input
               type="file"
               accept=".csv"
-              onChange={(e) => setBankFile(e.target.files[0] || null)}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onChange={(e) => setBankFile(e.target.files[0])}
+              className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#2563EB] hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg py-1 px-2"
             />
-            <div className="flex items-center space-x-2 text-xs text-slate-600">
-              <FileText className="w-4 h-4 text-[#2563EB]" />
-              <span className="truncate">{bankFile ? bankFile.name : 'Choose bank_settlements.csv...'}</span>
-            </div>
           </div>
         </div>
 
@@ -118,31 +130,31 @@ export function BatchUploadSection({ onUploadSuccess }) {
           <label className="block text-xs font-semibold text-slate-700 mb-1">
             Internal Ledger CSV
           </label>
-          <div className="relative border border-dashed border-slate-300 rounded-lg p-2.5 bg-slate-50 hover:bg-slate-100/80 transition-colors">
+          <div className="relative">
             <input
               type="file"
               accept=".csv"
-              onChange={(e) => setLedgerFile(e.target.files[0] || null)}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onChange={(e) => setLedgerFile(e.target.files[0])}
+              className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#2563EB] hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg py-1 px-2"
             />
-            <div className="flex items-center space-x-2 text-xs text-slate-600">
-              <FileText className="w-4 h-4 text-[#2563EB]" />
-              <span className="truncate">{ledgerFile ? ledgerFile.name : 'Choose internal_ledger.csv...'}</span>
-            </div>
           </div>
         </div>
 
-        {/* Upload & Reconcile Button */}
-        <div>
+        {/* Submit Button */}
+        <div className="md:col-span-1">
           <button
             type="submit"
-            disabled={uploading || !bankFile || !ledgerFile}
-            className="w-full py-2.5 px-4 bg-[#0B1F3A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-2 disabled:opacity-50 transition-colors"
+            disabled={uploading}
+            className={`w-full py-2 px-3 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center space-x-2 transition-all ${
+              uploading
+                ? 'bg-slate-700 text-slate-300 cursor-not-allowed'
+                : 'bg-[#0B1F3A] hover:bg-slate-800 text-white cursor-pointer active:scale-98'
+            }`}
           >
             {uploading ? (
               <>
-                <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
-                <span>Validating...</span>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Reconciliation in progress, this can take a few minutes...</span>
               </>
             ) : (
               <>

@@ -22,6 +22,8 @@ from src.agent.tools import (
     calculate_difference
 )
 from src.audit.logger import log_match
+from src.agent.rate_limiter import enforce_proactive_rate_limit
+from src.config_loader import get_client_masked_key, reload_environment
 
 # Token Usage Tracker
 token_usage_tracker = {
@@ -95,8 +97,9 @@ def verify_single_settlement(
             logger.info(f"LLM Cache Hit for settlement {settlement.get('settlement_id')}")
             return VerificationResult(**cached_item)
 
-    is_test_mock = bool(client)
+    is_test_mock = isinstance(client, MagicMock) or type(client).__name__ == "MagicMock"
     if not client:
+        reload_environment()
         api_key = os.getenv("GEMINI_API_KEY") or getattr(settings, "gemini_api_key", None)
         if not api_key:
             return VerificationResult(
@@ -141,22 +144,33 @@ def verify_single_settlement(
         response_mime_type="application/json"
     )
     
-    # Respect rate limit Throttling (only when actually making live API calls)
-    rpm = settings.gemini.requests_per_minute or 15
-    delay = 60.0 / rpm
+    # Respect proactive rate limiting (only when actually making live API calls)
+    rpm = getattr(settings.gemini, "requests_per_minute", 15) or 15
+    masked_key = get_client_masked_key(client, settings)
+    
+    total_attempts = 0
+    MAX_TOTAL_ATTEMPTS = 3
     
     for model_name in models:
         skip_model = False
         for attempt in range(2):
-            if skip_model:
+            if skip_model or total_attempts >= MAX_TOTAL_ATTEMPTS:
                 break
-            time.sleep(delay)
+            total_attempts += 1
             try:
                 contents = [user_prompt]
                 resp_text = ""
                 
                 # Turn loop for tool calls (up to 3 tool execution turns)
                 for turn in range(4):
+                    enforce_proactive_rate_limit(rpm=rpm, is_test_mock=is_test_mock)
+                    log_msg = (
+                        f"[GEMINI_API_CALL] (Verifier) model='{model_name}' turn={turn} attempt={attempt} total_attempts={total_attempts}/{MAX_TOTAL_ATTEMPTS} "
+                        f"key='{masked_key}' stl='{settlement.get('settlement_id')}'"
+                    )
+                    logger.info(log_msg)
+                    print(log_msg)
+
                     response = client.models.generate_content(
                         model=model_name,
                         contents=contents,
@@ -224,7 +238,7 @@ def verify_single_settlement(
                 return result
                 
             except (json.JSONDecodeError, ValidationError) as e:
-                if attempt == 0:
+                if attempt == 0 and total_attempts < MAX_TOTAL_ATTEMPTS:
                     user_prompt += f"\n\nPrevious response was invalid JSON or schema error: {str(e)}. Output ONLY valid JSON."
                     continue
                 logger.warning(f"Failed to parse LLM response from model '{model_name}': {str(e)}")
@@ -252,7 +266,16 @@ def verify_single_settlement(
                         DEPLETED_MODELS.add(model_name)
                         skip_model = True
                         break
-                    time.sleep(12)
+                    if total_attempts >= MAX_TOTAL_ATTEMPTS:
+                        logger.warning(f"Total retry budget ({MAX_TOTAL_ATTEMPTS}) reached for settlement '{settlement.get('settlement_id')}'. Failing fast.")
+                        return VerificationResult(
+                            decision="no_match",
+                            confidence=0.0,
+                            reasoning="Gemini verification unavailable — quota exhausted, flagged for manual review",
+                            rule_category="QUOTA_EXHAUSTED_REVIEW"
+                        )
+                    logger.warning(f"429 Rate limit hit for model {model_name} (attempt {total_attempts}/{MAX_TOTAL_ATTEMPTS}). Sleeping 5s before attempt...")
+                    time.sleep(5)
                     continue
                 skip_model = True
                 break
@@ -260,8 +283,8 @@ def verify_single_settlement(
     return VerificationResult(
         decision="no_match",
         confidence=0.0,
-        reasoning="LLM API error or no valid response returned from models",
-        rule_category="UNMATCHED_EXCEPTION"
+        reasoning="Gemini verification unavailable — quota exhausted, flagged for manual review",
+        rule_category="QUOTA_EXHAUSTED_REVIEW"
     )
 
 def run_agent_verification(

@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import duckdb
 
@@ -29,7 +29,7 @@ def log_match(
     """
     Records a match immediately to both DuckDB audit_log table and local JSONL audit trail file.
     """
-    timestamp = datetime.utcnow().isoformat() + "Z"
+    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     
     # 1. Insert into DuckDB
     init_audit_db(db_conn)

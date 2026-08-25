@@ -11,8 +11,9 @@ def reset_current_batch():
     yield
     main_module.CURRENT_BATCH_DIR = orig
 
-def test_run_batch_without_upload_returns_400():
+def test_run_batch_without_upload_returns_400(monkeypatch):
     """Confirm /run-batch returns HTTP 400 when no dataset has been uploaded yet."""
+    monkeypatch.setattr(main_module, "resolve_current_batch_dir", lambda: None)
     client = TestClient(app)
     res = client.post("/run-batch")
     assert res.status_code == 400
@@ -85,3 +86,39 @@ def test_upload_custom_dataset_with_malformed_row():
     assert summary["total_bank_settlements"] == 5
     assert summary["matched_count"] == 5
     assert summary["match_rate_percent"] == 100.0
+
+def test_upload_oversized_file_returns_413():
+    client = TestClient(app)
+    # 10.1 MB buffer
+    oversized_bytes = b"a" * (10 * 1024 * 1024 + 1024)
+    normal_bytes = b"settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,description,currency\n"
+    
+    files = {
+        "bank_file": ("bank.csv", io.BytesIO(oversized_bytes), "text/csv"),
+        "ledger_file": ("ledger.csv", io.BytesIO(normal_bytes), "text/csv")
+    }
+    res = client.post("/upload-batch", files=files)
+    assert res.status_code == 413
+    assert "File too large" in res.json()["detail"]
+
+def test_upload_non_csv_filename_returns_400():
+    client = TestClient(app)
+    csv_bytes = b"settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,description,currency\n"
+    files = {
+        "bank_file": ("bank.txt", io.BytesIO(csv_bytes), "text/plain"),
+        "ledger_file": ("ledger.csv", io.BytesIO(csv_bytes), "text/csv")
+    }
+    res = client.post("/upload-batch", files=files)
+    assert res.status_code == 400
+    assert "File must be a CSV" in res.json()["detail"]
+
+def test_upload_empty_file_returns_400():
+    client = TestClient(app)
+    csv_bytes = b"settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,description,currency\n"
+    files = {
+        "bank_file": ("bank.csv", io.BytesIO(b""), "text/csv"),
+        "ledger_file": ("ledger.csv", io.BytesIO(csv_bytes), "text/csv")
+    }
+    res = client.post("/upload-batch", files=files)
+    assert res.status_code == 400
+    assert "File is empty" in res.json()["detail"]

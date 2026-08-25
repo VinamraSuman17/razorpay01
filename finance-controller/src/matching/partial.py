@@ -90,7 +90,7 @@ def run_partial_matching(
                 log_match(db_conn, stl_id, order_id, "PARTIAL_SETTLEMENT_MATCH", confidence=1.0)
                 match_count += 1
             consumed_orders.add(order_id)
-        elif total_bank_net < expected_fee_net:
+        elif total_bank_net > 0 and (expected_fee_net - total_bank_net) < expected_fee_net:
             # Short partial payment match with explicit underpayment flag!
             underpaid_paise = expected_fee_net - total_bank_net
             underpaid_inr = underpaid_paise / 100.0
