@@ -110,7 +110,11 @@ def call_gemini_with_fallback(
     candidate_models = [
         getattr(settings.gemini, "model_name", None),
         "gemini-3.5-flash-lite",
-        "gemini-3.1-flash-lite"
+        "gemini-3.1-flash-lite",
+        "gemini-flash-lite-latest",
+        "gemini-3.6-flash",
+        "gemini-3.7-flash",
+        "gemini-flash-latest"
     ]
     # Deduplicate preserving order
     seen = set()
@@ -447,6 +451,40 @@ def answer_settlement_question(
             columns = [d[0] for d in cursor.description]
             rows = cursor.fetchall()
             
+    elif filter_type == "general_query":
+        # Pull high-level reconciliation summary & active exceptions context for broad natural language questions
+        sql_executed = "SELECT COUNT(*) FROM bank_settlements"
+        total_bank = db_conn.execute("SELECT COUNT(*) FROM bank_settlements").fetchone()[0]
+        total_ledger = db_conn.execute("SELECT COUNT(*) FROM internal_ledger").fetchone()[0]
+        
+        matched_cnt = 0
+        if audit_exists:
+            matched_cnt = db_conn.execute("SELECT COUNT(*) FROM audit_log").fetchone()[0]
+            
+        exceptions_list = []
+        if exceptions_table_exists:
+            exc_rows = db_conn.execute("""
+                SELECT record_id, priority, category, reason, suggested_action 
+                FROM exceptions 
+                ORDER BY priority ASC, category ASC
+            """).fetchall()
+            for er in exc_rows:
+                exceptions_list.append({
+                    "record_id": er[0], "priority": er[1], "category": er[2],
+                    "reason": er[3], "suggested_action": er[4]
+                })
+                
+        rich_context["batch_reconciliation_summary"] = {
+            "total_bank_settlements": total_bank,
+            "total_internal_orders": total_ledger,
+            "reconciled_matches_count": matched_cnt,
+            "unresolved_exceptions_count": len(exceptions_list),
+            "match_rate_percent": round((matched_cnt / total_bank * 100), 2) if total_bank > 0 else 0.0,
+            "active_exceptions": exceptions_list
+        }
+        columns = ["total_bank_settlements", "total_orders", "matches", "exceptions"]
+        rows = [[total_bank, total_ledger, matched_cnt, len(exceptions_list)]]
+        
     else:
         sql_executed = (
             "SELECT settlement_id, date, net_amount, utr_reference, payer_account, description "
@@ -535,6 +573,11 @@ def answer_settlement_question(
         elif filter_type == "category_count":
             cnt = first_row[0] if len(first_row) == 1 else first_row[1]
             final_answer = f"Found {cnt} record(s) matching category or filter '{val}'."
+        elif filter_type == "general_query":
+            summary = rich_context.get("batch_reconciliation_summary", {})
+            exc_count = summary.get("unresolved_exceptions_count", 0)
+            match_rate = summary.get("match_rate_percent", 0.0)
+            final_answer = f"Reconciliation Summary: {summary.get('reconciled_matches_count', 0)} of {summary.get('total_bank_settlements', 0)} settlements matched ({match_rate}% match rate). There are currently {exc_count} active exception(s) requiring attention."
         else:
             final_answer = f"Found {len(rows)} matching record(s) for entity '{val}' in reconciled database."
 

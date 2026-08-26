@@ -40,5 +40,40 @@
     "confidence": 0.0,
     "reasoning": "The only candidate order (ORD0077) has a significant amount mismatch of 497,559,500 paise, which exceeds the tolerance of 500 paise. Additionally, the customer name and references do not match.",
     "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "59179eb21ba97f3074d8eade83da3321d8144126cb0bc89569e4efca67420cdb": {
+    "decision": "match",
+    "matched_order_id": "ORD0009",
+    "confidence": 0.98,
+    "reasoning": "The settlement amount matches the expected amount of ORD0009 exactly. The customer name is an exact match. The UTR reference 'REF89809045' in the settlement is a minor transposition of the customer reference 'REF89809054' in the order (digits 4 and 5 swapped), which is a common clerical error. Given the exact amount and name match, this is a clear fuzzy reference match.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "55202ab1a874e3100f0e749236d6c402bbe818aa71a2ba3eeed1bcdf766774d8": {
+    "decision": "match",
+    "matched_order_id": "ORD1014",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 41,750,000,000 INR matches the converted value of the ORD1014 order (500,000,000 USD * 83.5 FX rate). The UTR reference 'REF1014' and customer name 'Omni Traders' match perfectly with the order details.",
+    "rule_category": "FX_CONVERSION"
+  },
+  "2eb2e86bb31db6cfc8d6430b27181da27671d9ea840764220f822517657a089e": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement amount (-12,000,000,000 paise) does not match any of the shortlisted candidates' expected amounts, even after considering the provided tolerances. Furthermore, the payer account 'Zeta Group' does not match any of the customer names, and the UTR reference 'REF1006' does not correspond to any of the customer references provided in the candidates.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "e2aa459b3f89137869fb6999cc29a2074c928b0c2720d83febf0ade4ab5e0f21": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement amount of 250,000,000,000 paise does not match any of the shortlisted candidates' expected amounts (500,000,000,000, 600,000,000,000, or 500,000,000 paise). Furthermore, the payer account 'Beta LLC' does not match any of the customer names, and the UTR reference 'REF1002' does not correspond to any of the provided order references.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "ce4a8663887d4a85b583e8811b963f73bb0583af6884fa948733bd476cd5f3fd": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement amount (270,000,000.00 INR) does not match the expected order amount (450,000,000.00 INR). The difference is 180,000,000.00 INR, which significantly exceeds the allowed tolerance. Additionally, the payer name and reference do not align with the candidate order.",
+    "rule_category": "UNMATCHED_EXCEPTION"
   }
 }

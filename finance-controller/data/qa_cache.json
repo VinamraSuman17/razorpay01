@@ -8,5 +8,95 @@
     },
     "data_found": true,
     "row_count": 1
+  },
+  "tell more about stl0005": {
+    "answer": "Settlement ID **STL0005** (dated **2026-07-21**) was successfully matched to internal order **ORD0005** with a confidence score of **100%** (1.0) using the **EXACT_REFERENCE_MATCH** rule on 2026-08-26. \n\nHere are the key details of the transaction:\n* **Financial Breakdown:** The bank settlement amount is **\u20b918,47,823.00** (`net_amount_inr` and `gross_amount_inr`), with **\u20b90.00** in platform fees deducted. The expected amount in the ledger for order `ORD0005` is also **\u20b918,47,823.00**. Note that while the gross amounts match perfectly, there is a net versus expected variance note indicating a difference of **\u20b943,608.62**.\n* **References:** The bank UTR reference (`utr_reference`) is **`REF87207439`** and the ledger customer reference (`customer_reference`) is **`REF87207439`**. They match perfectly with no discrepancies.\n* **Payer & Customer:** Payer account **Chakrabarti-Puri** corresponds to customer **Chakrabarti-Puri**, and the ledger status is marked as **settled**.",
+    "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
+    "extracted_entity": {
+      "filter_type": "settlement_id",
+      "value": "STL0005"
+    },
+    "data_found": true,
+    "row_count": 1
+  },
+  "which ones need someone to look at them today": {
+    "answer": "Based on the current reconciliation batch summary, there are 0 unresolved exceptions requiring manual review today. Out of 14 total bank settlements and 11 internal orders, 8 matches have been successfully reconciled (giving a match rate of 57.14%), leaving no active exceptions in the system.",
+    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
+    "extracted_entity": {
+      "filter_type": "general_query",
+      "value": "which ones need someone to look at them today"
+    },
+    "data_found": true,
+    "row_count": 1
+  },
+  "is anything urgent right now": {
+    "answer": "Based on the current reconciliation batch summary, there are no urgent issues or unresolved exceptions requiring immediate attention. \n\nHere is the current status:\n- **Total Bank Settlements:** 14\n- **Total Internal Orders:** 11\n- **Reconciled Matches:** 8\n- **Unresolved Exceptions:** 0\n- **Match Rate:** 57.14%\n\nSince there are 0 active exceptions, everything is currently balanced without any urgent discrepancies to resolve.",
+    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
+    "extracted_entity": {
+      "filter_type": "general_query",
+      "value": "is anything urgent right now"
+    },
+    "data_found": true,
+    "row_count": 1
+  },
+  "give me a quick summary of today's reconciliation run": {
+    "answer": "Here is a quick summary of today's reconciliation run:\n\n- **Total Bank Settlements:** 14\n- **Total Internal Orders:** 11\n- **Reconciled Matches:** 8\n- **Unresolved Exceptions:** 0\n- **Match Rate:** 57.14%",
+    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
+    "extracted_entity": {
+      "filter_type": "general_query",
+      "value": "today's reconciliation run"
+    },
+    "data_found": true,
+    "row_count": 1
+  },
+  "did everything go smoothly or were there problems": {
+    "answer": "Based on the batch reconciliation summary, not everything went smoothly; the overall match rate is relatively low at 57.14%. \n\nHere is the breakdown of the batch:\n- **Total Bank Settlements:** 14\n- **Total Internal Orders:** 11\n- **Reconciled Matches:** 8\n- **Unresolved Exceptions:** 0 (though no active exceptions are currently flagged, the lower match rate indicates unmatched records or discrepancies between the total bank settlements and internal orders).",
+    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
+    "extracted_entity": {
+      "filter_type": "general_query",
+      "value": "did everything go smoothly or were there problems"
+    },
+    "data_found": true,
+    "row_count": 1
+  },
+  "what's the biggest issue in this batch": {
+    "answer": "Based on the batch reconciliation summary, the biggest issue in this batch is the low match rate of **57.14%**. Out of 14 total bank settlements and 11 internal orders, only 8 matches have been successfully reconciled, leaving several records unmatched.",
+    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
+    "extracted_entity": {
+      "filter_type": "general_query",
+      "value": "biggest issue in this batch"
+    },
+    "data_found": true,
+    "row_count": 1
+  },
+  "how much money is tied up in unresolved settlements": {
+    "answer": "Based on the current reconciliation batch summary, there are no unresolved exceptions (`unresolved_exceptions_count` is 0), meaning there is currently \u20b90 tied up in unresolved settlements. Out of 14 total bank settlements and 11 internal orders, 8 matches have been successfully reconciled, with no active exceptions pending.",
+    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
+    "extracted_entity": {
+      "filter_type": "general_query",
+      "value": "how much money is tied up in unresolved settlements"
+    },
+    "data_found": true,
+    "row_count": 1
+  },
+  "what advicdeyou give me for this data, what are the things to take care in the future": {
+    "answer": "Based on the current reconciliation batch summary (which shows a 76.0% match rate with 19 matched records and 4 unresolved exceptions), here is my advice and the key areas to monitor and take care of in the future:\n\n### 1. Address Current High-Priority Exceptions Immediately\n* **Chargeback Reversal (`STL0017`):** A negative settlement of **-\u20b9120,000,000.00** occurred on 2026-07-17 under UTR `'REF1006'`. *Action:* Debit the merchant ledger account or file a chargeback dispute with the acquirer bank immediately.\n* **Duplicate Settlement (`STL0018`):** Settlement `STL0018` for **\u20b9250,000,000.00** (UTR `'REF1002'`, dated 2026-07-18) is a duplicate entry for an already reconciled transaction. *Action:* Flag this entry as a duplicate and reverse the credit in the bank reconciliation journal.\n* **Orphan Bank Settlement (`STL0019`):** Settlement `STL0019` for **\u20b9340,000,000.00** (UTR `'MISC8888'`, \"Unknown Payer\") on 2026-07-19 has no matching internal ledger entry. *Action:* Coordinate with the payment gateway team to verify if the corresponding order entry was omitted.\n* **Ambiguous Discrepancy (`STL0020`):** Settlement `STL0020` for **\u20b9270,000,000.00** on 2026-07-20 references order `ORD1099`, but the amount differs by **\u20b91,693,800,000.00** against the expected net amount (after a 2.36% fee on the expected **\u20b9450,000,000.00**). *Action:* Review the fee agreement or investigate unrecorded partial refunds or adjustments.\n\n---\n\n### 2. Best Practices & Things to Take Care of in the Future\n\n* **Strengthen Data Entry & Ingestion Validation:**\n  * Implement stricter pre-ingestion checks on internal ledger order creations to prevent missing entries (which lead to orphan settlements like `STL0019`).\n  * Enforce uniqueness constraints on UTR references at the ingestion layer to automatically flag and block duplicate bank files (preventing duplicates like `STL0018`).\n* **Automate Chargeback & Reversal Tracking:**\n  * Set up automated tagging for negative bank settlements so that chargebacks and reversals (such as `STL0017`) instantly trigger merchant debit workflows rather than waiting for manual exception review.\n* **Enhance Fee & Net Amount Tolerance Rules:**\n  * Configure automated alerts for fee percentage deviations (similar to the discrepancy seen in `STL0020` with `ORD1099`) to ensure gateway fee deductions match contract terms in real-time, catching partial refunds or unexpected deductions early.\n* **Improve Match Rate Thresholds:**\n  * Aim to increase your match rate well above the current 76.0% by establishing standard naming and reference formats across payment gateways and internal order management systems to minimize fuzzy or broken reference matches.",
+    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
+    "extracted_entity": {
+      "filter_type": "general_query",
+      "value": "what advicdeyou give me for this data, what are the things to take care in the future"
+    },
+    "data_found": true,
+    "row_count": 1
+  },
+  "show me total bank settlements count": {
+    "answer": "The total count of bank settlements is 5.",
+    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
+    "extracted_entity": {
+      "filter_type": "general_query",
+      "value": "total bank settlements count"
+    },
+    "data_found": true,
+    "row_count": 1
   }
 }
