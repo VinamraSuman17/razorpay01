@@ -53,7 +53,7 @@ export function BatchUploadSection({ onUploadSuccess }) {
           if (statusRes.ok) {
             const statusData = await statusRes.json();
             if (statusData.progress_message) {
-              setSuccessMsg(`Status: ${statusData.progress_message}`);
+              setSuccessMsg(`STATUS: ${statusData.progress_message}`);
             }
             if (statusData.status === 'COMPLETED') {
               clearInterval(pollInterval);
@@ -83,36 +83,36 @@ export function BatchUploadSection({ onUploadSuccess }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="bg-[#FAFAFA] border-2 border-[#18181B] shadow-[4px_4px_0px_0px_#18181B] p-6 mb-6 rounded-none"
+      className="bg-[#FAFAFA] border-2 border-[#1E3A8A] shadow-[4px_4px_0px_0px_#0F172A] p-6 mb-6 rounded-none"
     >
-      <div className="flex items-center space-x-3 mb-6 pb-4 border-b-2 border-[#18181B]">
-        <div className="p-2 bg-[#18181B] text-[#FAFAFA] border-2 border-[#18181B] shadow-[2px_2px_0px_0px_rgba(24,24,27,0.3)]">
+      <div className="flex items-center space-x-3 mb-6 pb-4 border-b-2 border-[#1E3A8A]">
+        <div className="p-2 bg-[#1D4ED8] text-[#FAFAFA] border-2 border-[#2563EB] shadow-[2px_2px_0px_0px_#0F172A]">
           <Upload className="w-5 h-5 stroke-[2.5]" />
         </div>
         <div>
-          <h3 className="text-lg font-black uppercase text-[#18181B]">Supply Custom Dataset Batch</h3>
-          <p className="text-xs font-medium text-zinc-600">Upload Bank Settlements and Internal Ledger CSV files to validate and reconcile a new dataset</p>
+          <h3 className="text-lg font-black uppercase text-[#0F172A]">Supply Custom Dataset Batch</h3>
+          <p className="text-xs font-medium text-slate-600">Upload Bank Settlements and Internal Ledger CSV files to validate and reconcile a new dataset</p>
         </div>
       </div>
 
       {errorMsg && (
-        <div className="mb-6 p-4 bg-zinc-900 text-[#FAFAFA] border-2 border-[#18181B] shadow-[3px_3px_0px_0px_#18181B] text-xs flex items-start space-x-3">
-          <AlertCircle className="w-5 h-5 text-[#FAFAFA] shrink-0 mt-0.5" />
+        <div className="mb-6 p-4 bg-[#0F172A] text-red-200 border-2 border-red-500 shadow-[3px_3px_0px_0px_#0F172A] text-xs flex items-start space-x-3">
+          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
           <div className="flex-1 font-mono tabular-nums font-bold leading-relaxed">{errorMsg}</div>
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-6 p-4 bg-[#18181B] text-[#FAFAFA] border-2 border-[#18181B] shadow-[3px_3px_0px_0px_#18181B] text-xs flex items-center space-x-3">
-          <CheckCircle2 className="w-5 h-5 text-[#FAFAFA] shrink-0" />
+        <div className="mb-6 p-4 bg-[#0F172A] text-[#FAFAFA] border-2 border-[#1E3A8A] shadow-[3px_3px_0px_0px_#0F172A] text-xs flex items-center space-x-3">
+          <CheckCircle2 className="w-5 h-5 text-[#60A5FA] shrink-0" />
           <span className="font-extrabold uppercase tracking-wide">{successMsg}</span>
         </div>
       )}
 
       {warnings && warnings.length > 0 && (
-        <div className="mb-6 p-4 bg-zinc-200 border-2 border-[#18181B] shadow-[3px_3px_0px_0px_#18181B] text-xs font-mono tabular-nums text-[#18181B]">
-          <div className="font-black uppercase mb-2 flex items-center space-x-1.5 text-[#18181B]">
-            <AlertCircle className="w-4 h-4 text-[#18181B]" />
+        <div className="mb-6 p-4 bg-slate-200 border-2 border-[#1E3A8A] shadow-[3px_3px_0px_0px_#0F172A] text-xs font-mono tabular-nums text-[#0F172A]">
+          <div className="font-black uppercase mb-2 flex items-center space-x-1.5 text-[#0F172A]">
+            <AlertCircle className="w-4 h-4 text-[#1D4ED8]" />
             <span>Validation Warnings ({warnings.length} rejected row(s)):</span>
           </div>
           <ul className="list-disc pl-5 space-y-1 text-xs font-bold">
@@ -126,27 +126,27 @@ export function BatchUploadSection({ onUploadSuccess }) {
       <form onSubmit={handleUpload} className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
         {/* Bank File Input */}
         <div className="md:col-span-2">
-          <label className="block text-xs font-black uppercase tracking-wider text-[#18181B] mb-2">
+          <label className="block text-xs font-black uppercase tracking-wider text-[#0F172A] mb-2">
             Bank Settlements CSV
           </label>
           <input
             type="file"
             accept=".csv"
             onChange={(e) => setBankFile(e.target.files[0])}
-            className="w-full text-xs text-[#18181B] font-bold file:mr-3 file:py-2 file:px-4 file:border-2 file:border-[#18181B] file:text-xs file:font-black file:bg-[#18181B] file:text-[#FAFAFA] file:shadow-[2px_2px_0px_0px_#18181B] hover:file:bg-zinc-800 cursor-pointer border-2 border-[#18181B] bg-zinc-100 p-2 shadow-[2px_2px_0px_0px_#18181B]"
+            className="w-full text-xs text-[#0F172A] font-bold file:mr-3 file:py-2 file:px-4 file:border-2 file:border-[#1E3A8A] file:text-xs file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[2px_2px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border-2 border-[#1E3A8A] bg-slate-100 p-2 shadow-[2px_2px_0px_0px_#0F172A]"
           />
         </div>
 
         {/* Ledger File Input */}
         <div className="md:col-span-2">
-          <label className="block text-xs font-black uppercase tracking-wider text-[#18181B] mb-2">
+          <label className="block text-xs font-black uppercase tracking-wider text-[#0F172A] mb-2">
             Internal Ledger CSV
           </label>
           <input
             type="file"
             accept=".csv"
             onChange={(e) => setLedgerFile(e.target.files[0])}
-            className="w-full text-xs text-[#18181B] font-bold file:mr-3 file:py-2 file:px-4 file:border-2 file:border-[#18181B] file:text-xs file:font-black file:bg-[#18181B] file:text-[#FAFAFA] file:shadow-[2px_2px_0px_0px_#18181B] hover:file:bg-zinc-800 cursor-pointer border-2 border-[#18181B] bg-zinc-100 p-2 shadow-[2px_2px_0px_0px_#18181B]"
+            className="w-full text-xs text-[#0F172A] font-bold file:mr-3 file:py-2 file:px-4 file:border-2 file:border-[#1E3A8A] file:text-xs file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[2px_2px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border-2 border-[#1E3A8A] bg-slate-100 p-2 shadow-[2px_2px_0px_0px_#0F172A]"
           />
         </div>
 
@@ -155,16 +155,16 @@ export function BatchUploadSection({ onUploadSuccess }) {
           <button
             type="submit"
             disabled={uploading}
-            className="w-full py-3 px-4 rounded-none text-xs font-black uppercase tracking-wider brutal-btn-black flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 rounded-none text-xs font-black uppercase tracking-wider brutal-btn-black flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {uploading ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw className="w-4 h-4 animate-spin text-white" />
                 <span>Reconciling...</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-current" />
+                <Play className="w-4 h-4 fill-current text-white" />
                 <span>Run Batch Reconciliation</span>
               </>
             )}

@@ -75,34 +75,34 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[#F4F4F5] text-black">
-        {/* Header - Pure Black Solid Neubrutalist Bar */}
-        <header className="bg-[#18181B] text-[#FAFAFA] py-4 px-6 border-b-2 border-[#18181B] sticky top-0 z-50 shadow-[0_3px_0_0_#18181B]">
+      <div className="min-h-screen bg-[#F1F5F9] text-[#0F172A]">
+        {/* Header - Deep Sapphire Midnight Blue Bar */}
+        <header className="bg-[#0F172A] text-[#FAFAFA] py-4 px-6 border-b-2 border-[#1E3A8A] sticky top-0 z-50 shadow-[0_4px_0_0_#0F172A]">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-[#FAFAFA] text-[#18181B] border-2 border-[#FAFAFA]">
+              <div className="p-2 bg-[#1D4ED8] text-white border-2 border-[#2563EB] shadow-[2px_2px_0px_0px_#0F172A]">
                 <Activity className="w-5 h-5 stroke-[3]" />
               </div>
               <div>
-                <h1 className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                <h1 className="text-lg font-black uppercase tracking-tight flex items-center gap-2 text-white">
                   Razorpay Autonomous Finance Controller
-                  <span className="text-[10px] bg-[#FAFAFA] text-[#18181B] border-1.5 border-[#FAFAFA] px-2 py-0.5 font-mono uppercase font-black shadow-[2px_2px_0px_0px_rgba(250,250,250,0.3)]">
+                  <span className="text-[10px] bg-[#1D4ED8] text-white border border-[#2563EB] px-2 py-0.5 font-mono uppercase font-black shadow-[2px_2px_0px_0px_#0F172A]">
                     v1.0 Production
                   </span>
                 </h1>
-                <p className="text-xs text-zinc-300 font-medium">Autonomous Bank Settlement & Internal Ledger Matching Engine</p>
+                <p className="text-xs text-blue-200/80 font-medium">Autonomous Bank Settlement & Internal Ledger Matching Engine</p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3">
               {lastRunTime ? (
-                <div className="hidden sm:flex items-center space-x-2 text-xs text-[#FAFAFA] bg-zinc-900 px-3.5 py-1.5 border-2 border-[#FAFAFA] font-mono font-bold shadow-[2px_2px_0px_0px_rgba(250,250,250,0.3)]">
-                  <Clock className="w-4 h-4 text-[#FAFAFA]" />
+                <div className="hidden sm:flex items-center space-x-2 text-xs text-[#FAFAFA] bg-[#1E293B] px-3.5 py-1.5 border-2 border-[#1E3A8A] font-mono font-bold shadow-[2px_2px_0px_0px_#0F172A]">
+                  <Clock className="w-4 h-4 text-[#60A5FA]" />
                   <span>Last Run: {new Date(lastRunTime).toLocaleTimeString()}</span>
                 </div>
               ) : (
-                <div className="hidden sm:flex items-center space-x-2 text-xs text-zinc-300 bg-zinc-900 px-3.5 py-1.5 border-2 border-[#FAFAFA] font-mono font-bold shadow-[2px_2px_0px_0px_rgba(250,250,250,0.3)]">
-                  <span className="w-2.5 h-2.5 rounded-none bg-[#FAFAFA] border border-[#FAFAFA]" />
+                <div className="hidden sm:flex items-center space-x-2 text-xs text-blue-200 bg-[#1E293B] px-3.5 py-1.5 border-2 border-[#1E3A8A] font-mono font-bold shadow-[2px_2px_0px_0px_#0F172A]">
+                  <span className="w-2.5 h-2.5 rounded-none bg-[#2563EB] border border-[#60A5FA]" />
                   <span>Awaiting Dataset Upload</span>
                 </div>
               )}
@@ -117,12 +117,12 @@ export default function App() {
 
           {/* No Dataset Warning Alert */}
           {noDataAlert && (
-            <div className="mb-6 p-4 bg-[#18181B] text-[#FAFAFA] border-2 border-[#18181B] shadow-[3px_3px_0px_0px_#18181B] text-xs flex items-start space-x-3 font-bold">
-              <AlertTriangle className="w-5 h-5 text-[#FAFAFA] shrink-0 mt-0.5" />
+            <div className="mb-6 p-4 bg-[#0F172A] text-[#FAFAFA] border-2 border-[#1E3A8A] shadow-[4px_4px_0px_0px_#0F172A] text-xs flex items-start space-x-3 font-bold">
+              <AlertTriangle className="w-5 h-5 text-[#60A5FA] shrink-0 mt-0.5" />
               <div className="flex-1 font-mono leading-relaxed">{noDataAlert}</div>
               <button
                 onClick={() => setNoDataAlert(null)}
-                className="text-[#FAFAFA] hover:text-zinc-300 font-black text-sm px-1 cursor-pointer"
+                className="text-[#FAFAFA] hover:text-blue-300 font-black text-sm px-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -137,15 +137,15 @@ export default function App() {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-zinc-200 border-2 border-[#18181B] shadow-[3px_3px_0px_0px_#18181B] text-xs flex items-center justify-between font-bold text-[#18181B]"
+              className="mb-6 p-4 bg-slate-200 border-2 border-[#1E3A8A] shadow-[4px_4px_0px_0px_#0F172A] text-xs flex items-center justify-between font-bold text-[#0F172A]"
             >
               <div className="flex items-center space-x-2.5">
-                <Clock className="w-4 h-4 text-zinc-700 shrink-0 stroke-[2.5]" />
+                <Clock className="w-4 h-4 text-slate-700 shrink-0 stroke-[2.5]" />
                 <span>
                   {summary.pending_verification_count} record{summary.pending_verification_count > 1 ? 's' : ''} awaiting AI verification — will resolve automatically once capacity is available
                 </span>
               </div>
-              <span className="text-[10px] uppercase font-mono px-2.5 py-0.5 bg-[#18181B] text-[#FAFAFA] border border-[#18181B] font-extrabold shadow-[1.5px_1.5px_0px_0px_#18181B]">
+              <span className="text-[10px] uppercase font-mono px-2.5 py-0.5 bg-[#1D4ED8] text-white border border-[#2563EB] font-extrabold shadow-[1.5px_1.5px_0px_0px_#0F172A]">
                 Deferred / Auto-Retry
               </span>
             </motion.div>
@@ -157,16 +157,16 @@ export default function App() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="bg-[#FAFAFA] border-2 border-[#18181B] shadow-[5px_5px_0px_0px_#18181B] p-12 text-center my-6 rounded-none"
+              className="bg-[#FAFAFA] border-2 border-[#1E3A8A] shadow-[5px_5px_0px_0px_#0F172A] p-12 text-center my-6 rounded-none"
             >
-              <div className="w-16 h-16 bg-[#18181B] text-[#FAFAFA] border-2 border-[#18181B] flex items-center justify-center mx-auto mb-4 shadow-[4px_4px_0px_0px_#18181B]">
+              <div className="w-16 h-16 bg-[#1D4ED8] text-white border-2 border-[#2563EB] flex items-center justify-center mx-auto mb-4 shadow-[4px_4px_0px_0px_#0F172A]">
                 <UploadCloud className="w-8 h-8 stroke-[2.5]" />
               </div>
-              <h3 className="text-lg font-black uppercase text-[#18181B] mb-1">No Reconciliation Dataset Uploaded</h3>
-              <p className="text-xs font-medium text-zinc-600 max-w-md mx-auto mb-6 leading-relaxed">
+              <h3 className="text-lg font-black uppercase text-[#0F172A] mb-1">No Reconciliation Dataset Uploaded</h3>
+              <p className="text-xs font-medium text-slate-600 max-w-md mx-auto mb-6 leading-relaxed">
                 Upload your Bank Settlements CSV and Internal Ledger CSV using the file picker above to validate schema and run automated multi-tier reconciliation.
               </p>
-              <div className="inline-flex items-center space-x-2 text-xs font-black uppercase text-[#18181B] bg-zinc-200 px-4 py-2.5 border-2 border-[#18181B] shadow-[3px_3px_0px_0px_#18181B]">
+              <div className="inline-flex items-center space-x-2 text-xs font-black uppercase text-[#0F172A] bg-slate-200 px-4 py-2.5 border-2 border-[#1E3A8A] shadow-[3px_3px_0px_0px_#0F172A]">
                 <span>Select two CSV files above and click "Run Batch Reconciliation"</span>
               </div>
             </motion.div>
