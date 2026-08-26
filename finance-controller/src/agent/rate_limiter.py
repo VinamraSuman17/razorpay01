@@ -19,9 +19,9 @@ def enforce_proactive_rate_limit(rpm: int = 15, is_test_mock: bool = False) -> f
     if is_test_mock:
         return 0.0
 
-    # Cap to 12 RPM (5.0s spacing) for safe margin under 15 RPM free tier limit
-    effective_rpm = min(rpm, 12)
-    target_interval = 60.0 / max(1, effective_rpm)  # 5.0s interval
+    # Cap to 10 RPM (6.0s spacing) for safe margin under 15 RPM free tier limit
+    effective_rpm = min(rpm, 10)
+    target_interval = 60.0 / max(1, effective_rpm)  # 6.0s interval
 
     with _last_call_lock:
         now = time.time()

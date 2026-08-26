@@ -131,15 +131,7 @@ def verify_single_settlement(
     candidate_models = [
         getattr(settings.gemini, "model_name", None),
         "gemini-3.5-flash-lite",
-        "gemini-3.5-flash",
-        "gemini-2.5-flash-lite",
-        "gemini-2.5-flash",
-        "gemini-2.0-flash-lite",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-8b",
-        "gemini-3.1-flash-lite",
-        "gemini-flash-lite-latest"
+        "gemini-3.1-flash-lite"
     ]
     models = get_active_models(candidate_models)
     if is_test_mock:

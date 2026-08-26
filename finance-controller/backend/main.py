@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from contextlib import contextmanager
 import duckdb
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ValidationError
 import csv
@@ -63,30 +63,34 @@ def db_connection(read_only: bool = False):
     db_path.parent.mkdir(exist_ok=True, parents=True)
     
     conn = None
-    for attempt in range(3):
+    max_attempts = 10 if not read_only else 5
+    for attempt in range(max_attempts):
         try:
             conn = duckdb.connect(str(db_path), read_only=read_only)
             break
         except duckdb.IOException:
-            if read_only:
-                try:
-                    conn = duckdb.connect(str(db_path), read_only=True)
-                    break
-                except duckdb.IOException:
-                    pass
-            time.sleep(0.2)
+            time.sleep(0.3)
             
     if conn is None:
-        try:
-            conn = duckdb.connect(str(db_path), read_only=True)
-        except duckdb.IOException:
-            conn = duckdb.connect(":memory:")
+        if read_only:
+            try:
+                conn = duckdb.connect(str(db_path), read_only=True)
+            except duckdb.IOException:
+                conn = duckdb.connect(":memory:")
+        else:
+            raise duckdb.IOException(
+                f"Cannot acquire write access to database file ({db_path}). "
+                "The database is currently locked by another process."
+            )
             
     try:
         yield conn
     finally:
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 def get_db():
     base_dir = Path(__file__).resolve().parent.parent
@@ -376,12 +380,31 @@ def run_full_pipeline(bank_csv_path: Optional[Path] = None, ledger_csv_path: Opt
 def health_endpoint():
     return {"status": "ok"}
 
-@app.post("/upload-batch", response_model=UploadBatchResponse)
+BATCH_JOBS: Dict[str, Dict[str, Any]] = {}
+
+def execute_pipeline_background(batch_id: str, bank_path: Path, ledger_path: Path):
+    """Executes reconciliation pipeline in background worker thread."""
+    global BATCH_JOBS
+    try:
+        BATCH_JOBS[batch_id]["status"] = "PROCESSING"
+        BATCH_JOBS[batch_id]["progress_message"] = "Reconciling dataset..."
+        res = run_full_pipeline(bank_csv_path=bank_path, ledger_csv_path=ledger_path)
+        BATCH_JOBS[batch_id]["status"] = "COMPLETED"
+        BATCH_JOBS[batch_id]["progress_message"] = "Reconciliation complete."
+        BATCH_JOBS[batch_id]["summary"] = res["summary"]
+    except Exception as e:
+        logger.exception(f"Background reconciliation failed for batch {batch_id}: {e}")
+        BATCH_JOBS[batch_id]["status"] = "FAILED"
+        BATCH_JOBS[batch_id]["error"] = str(e)
+        BATCH_JOBS[batch_id]["progress_message"] = f"Reconciliation failed: {e}"
+
+@app.post("/upload-batch")
 def upload_batch_endpoint(
+    background_tasks: BackgroundTasks,
     bank_file: UploadFile = File(...),
     ledger_file: UploadFile = File(...)
 ):
-    global CURRENT_BATCH_DIR
+    global CURRENT_BATCH_DIR, BATCH_JOBS
     req_id = f"req_{int(time.time()*1000)}"
     try:
         bank_name = (bank_file.filename or "").lower()
@@ -454,7 +477,6 @@ def upload_batch_endpoint(
                 f.write(ledger_bytes)
                 
         CURRENT_BATCH_DIR = batch_dir
-        pipeline_res = run_full_pipeline(bank_csv_path=bank_path, ledger_csv_path=ledger_path)
         
         warnings = []
         if bank_errors:
@@ -462,20 +484,35 @@ def upload_batch_endpoint(
         if ledger_errors:
             warnings.extend([f"[Internal Ledger] {e}" for e in ledger_errors])
             
-        msg = f"Batch {batch_id} validated ({len(bank_valid)} bank rows, {len(ledger_valid)} ledger rows) and reconciled."
+        msg = f"Batch {batch_id} validated ({len(bank_valid)} bank rows, {len(ledger_valid)} ledger rows). Reconciliation started in background."
         if warnings:
             msg += f" {len(warnings)} row(s) were rejected due to validation errors."
             
-        return UploadBatchResponse(
-            batch_id=batch_id,
-            message=msg,
-            bank_valid_records=len(bank_valid),
-            bank_invalid_records=len(bank_errors),
-            ledger_valid_records=len(ledger_valid),
-            ledger_invalid_records=len(ledger_errors),
-            validation_warnings=warnings if warnings else None,
-            summary=pipeline_res["summary"]
-        )
+        BATCH_JOBS[batch_id] = {
+            "batch_id": batch_id,
+            "status": "QUEUED",
+            "progress_message": "Starting batch reconciliation...",
+            "bank_valid_records": len(bank_valid),
+            "bank_invalid_records": len(bank_errors),
+            "ledger_valid_records": len(ledger_valid),
+            "ledger_invalid_records": len(ledger_errors),
+            "validation_warnings": warnings if warnings else None,
+            "summary": None,
+            "error": None
+        }
+
+        background_tasks.add_task(execute_pipeline_background, batch_id, bank_path, ledger_path)
+            
+        return {
+            "batch_id": batch_id,
+            "status": "QUEUED",
+            "message": msg,
+            "bank_valid_records": len(bank_valid),
+            "bank_invalid_records": len(bank_errors),
+            "ledger_valid_records": len(ledger_valid),
+            "ledger_invalid_records": len(ledger_errors),
+            "validation_warnings": warnings if warnings else None
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -485,8 +522,8 @@ def upload_batch_endpoint(
             detail=f"Internal server error. Check server logs. (Request ID: {req_id})"
         )
 
-@app.post("/run-batch", response_model=RunBatchResponse)
-def run_batch_endpoint():
+@app.post("/run-batch")
+def run_batch_endpoint(background_tasks: BackgroundTasks):
     req_id = f"req_{int(time.time()*1000)}"
     try:
         batch_dir = resolve_current_batch_dir()
@@ -497,8 +534,22 @@ def run_batch_endpoint():
             )
         bank_p = batch_dir / "bank_settlements.csv"
         ledger_p = batch_dir / "internal_ledger.csv"
-        pipeline_res = run_full_pipeline(bank_csv_path=bank_p, ledger_csv_path=ledger_p)
-        return pipeline_res["summary"]
+        
+        batch_id = f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        BATCH_JOBS[batch_id] = {
+            "batch_id": batch_id,
+            "status": "QUEUED",
+            "progress_message": "Starting reconciliation run...",
+            "summary": None,
+            "error": None
+        }
+
+        background_tasks.add_task(execute_pipeline_background, batch_id, bank_p, ledger_p)
+        return {
+            "batch_id": batch_id,
+            "status": "QUEUED",
+            "message": f"Reconciliation run {batch_id} queued in background."
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -507,6 +558,12 @@ def run_batch_endpoint():
             status_code=500,
             detail=f"Internal server error. Check server logs. (Request ID: {req_id})"
         )
+
+@app.get("/run-batch/{batch_id}/status")
+def get_batch_status_endpoint(batch_id: str):
+    if batch_id not in BATCH_JOBS:
+        raise HTTPException(status_code=404, detail=f"Batch job '{batch_id}' not found.")
+    return BATCH_JOBS[batch_id]
 
 @app.get("/matches", response_model=List[MatchRecord])
 def get_matches_endpoint():

@@ -110,11 +110,7 @@ def call_gemini_with_fallback(
     candidate_models = [
         getattr(settings.gemini, "model_name", None),
         "gemini-3.5-flash-lite",
-        "gemini-3.1-flash-lite",
-        "gemini-3.1-flash-lite-preview",
-        "gemini-flash-lite-latest",
-        "gemini-3.5-flash",
-        "gemini-3.6-flash"
+        "gemini-3.1-flash-lite"
     ]
     # Deduplicate preserving order
     seen = set()
@@ -513,6 +509,7 @@ def answer_settlement_question(
         f"Reconciliation Data & Audit Context:\n{json.dumps(rich_context if rich_context else {'columns': columns, 'rows': [list(r) for r in rows[:10]]}, indent=2)}"
     )
     
+    is_fallback = False
     final_answer = ""
     if client:
         res_text = call_gemini_with_fallback(
@@ -525,6 +522,7 @@ def answer_settlement_question(
             
     # Deterministic fallback ONLY if all Gemini model calls failed or key missing
     if not final_answer:
+        is_fallback = True
         logger.warning("[QA_SYNTHESIS] All Gemini models failed or key missing. Falling back to template synthesis.")
         print("[QA_SYNTHESIS] All Gemini models failed or key missing. Falling back to template synthesis.")
         if filter_type == "settlement_id":
@@ -548,6 +546,9 @@ def answer_settlement_question(
         "row_count": len(rows)
     }
 
-    _qa_cache[cache_key] = res
-    _save_qa_cache()
+    # Only persist genuinely Gemini-synthesized answers to cache
+    if not is_fallback:
+        _qa_cache[cache_key] = res
+        _save_qa_cache()
+
     return res

@@ -1,14 +1,4 @@
 {
-  "show me details for settlement stl0003": {
-    "answer": "Settlement STL0003 (\u20b9488.20, UTR: 'REF0003', Date: 2026-07-02) is currently unresolved. Unresolved Exception Info: Category=ORPHAN_BANK_SETTLEMENT, Priority=MEDIUM, Reason: Bank settlement STL0003 on 2026-07-02 (net \u20b9488.20, UTR: 'REF0003', Payer: 'Gamma Inc') has no matching candidate in internal ledger for reference 'REF0003' or amount \u20b9488.20. Suggested Action: Contact payment gateway team to verify if order entry for UTR 'REF0003' was omitted from internal ledger.",
-    "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, NULL AS order_id, NULL AS rule_applied, NULL AS confidence, NULL AS timestamp, NULL AS expected_amount, NULL AS customer_reference, NULL AS invoice_date, NULL AS expected_settlement_date, NULL AS customer_name, NULL AS ledger_currency, NULL AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
-    "extracted_entity": {
-      "filter_type": "settlement_id",
-      "value": "STL0003"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
   "how many settlements are still open": {
     "answer": "Based on the reconciled database, there is currently **1** open settlement.",
     "sql_query": "SELECT count(*) AS count FROM bank_settlements WHERE net_amount < 0 OR description ILIKE ?",

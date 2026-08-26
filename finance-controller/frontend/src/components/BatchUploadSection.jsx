@@ -32,42 +32,47 @@ export function BatchUploadSection({ onUploadSuccess }) {
     try {
       const res = await fetch('/upload-batch', {
         method: 'POST',
-        body: formData,
-        signal: controller.signal
+        body: formData
       });
-      clearTimeout(timeoutId);
 
-      const text = await res.text();
-      let data = null;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        // Non-JSON HTML response
-      }
+      const data = await res.json();
 
       if (!res.ok) {
-        const errorMsg = data?.detail || data?.message || (
-          res.status === 502 ? 'Server gateway timeout (502). Reconciliation took longer than expected. Please try again.' :
-          res.status === 413 ? 'Uploaded file is too large (413). Maximum allowed size per file is 10 MB.' :
-          res.status === 400 ? 'Invalid file upload (400). Please check your CSV files.' :
-          `Upload failed with server error (${res.status}). Please try again.`
-        );
-        throw new Error(errorMsg);
+        throw new Error(data?.detail || data?.message || `Upload failed (${res.status})`);
       }
 
-      setSuccessMsg(data.message || `Batch ${data.batch_id} validated (${data.bank_valid_records} bank rows, ${data.ledger_valid_records} ledger rows) and reconciled!`);
+      const batchId = data.batch_id;
       if (data.validation_warnings && data.validation_warnings.length > 0) {
         setWarnings(data.validation_warnings);
       }
-      onUploadSuccess(data.summary);
+
+      // Poll background status every 2 seconds
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusRes = await fetch(`/run-batch/${batchId}/status`);
+          if (statusRes.ok) {
+            const statusData = await statusRes.json();
+            if (statusData.progress_message) {
+              setSuccessMsg(`Status: ${statusData.progress_message}`);
+            }
+            if (statusData.status === 'COMPLETED') {
+              clearInterval(pollInterval);
+              setUploading(false);
+              setSuccessMsg(`Batch ${batchId} reconciled successfully! (${data.bank_valid_records} bank rows, ${data.ledger_valid_records} ledger rows)`);
+              onUploadSuccess(statusData.summary);
+            } else if (statusData.status === 'FAILED') {
+              clearInterval(pollInterval);
+              setUploading(false);
+              setErrorMsg(statusData.error || 'Reconciliation failed in background.');
+            }
+          }
+        } catch (pollErr) {
+          console.error('Status polling error:', pollErr);
+        }
+      }, 2000);
+
     } catch (err) {
-      clearTimeout(timeoutId);
-      if (err.name === 'AbortError') {
-        setErrorMsg('Upload request timed out after 10 minutes. The server is still processing in the background.');
-      } else {
-        setErrorMsg(err.message);
-      }
-    } finally {
+      setErrorMsg(err.message);
       setUploading(false);
     }
   };

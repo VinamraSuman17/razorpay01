@@ -81,11 +81,13 @@ def test_upload_custom_dataset_with_malformed_row():
     assert len(data["validation_warnings"]) == 1
     assert "Invalid date format" in data["validation_warnings"][0]
 
-    # Verify reconciliation summary on good rows
-    summary = data["summary"]
-    assert summary["total_bank_settlements"] == 5
-    assert summary["matched_count"] == 5
-    assert summary["match_rate_percent"] == 100.0
+    # Verify batch_id returned for background job
+    assert "batch_id" in data
+    batch_id = data["batch_id"]
+
+    # Poll batch status endpoint
+    status_res = client.get(f"/run-batch/{batch_id}/status")
+    assert status_res.status_code == 200
 
 def test_upload_oversized_file_returns_413():
     client = TestClient(app)
