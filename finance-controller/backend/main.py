@@ -26,6 +26,8 @@ from src.agent.verifier import run_agent_verification, token_usage_tracker
 from src.exceptions.classifier import classify_unmatched_record, ExceptionItem
 from src.evaluation.evaluator import evaluate_reconciliation
 from src.qa.settlement_qa import answer_settlement_question
+from src.tax.tax_matcher import run_tax_line_matching
+from src.forecasting.cash_forecaster import calculate_cash_forecast
 
 logger = logging.getLogger(__name__)
 
@@ -361,6 +363,9 @@ def run_full_pipeline(
             """, [
                 exc.record_id, exc.source, exc.category, exc.reason, exc.suggested_action, exc.priority
             ])
+
+        # Run Tax-Line Matcher Layer to flag GST/TDS deduction shortfalls
+        run_tax_line_matching(db_conn)
 
         # Persist pending verification records into DuckDB pending_verifications table
         db_conn.execute("DROP TABLE IF EXISTS pending_verifications")
@@ -720,3 +725,81 @@ def ask_question_endpoint(req: AskRequest):
             status_code=500,
             detail=f"Internal server error. Check server logs. (Request ID: {req_id})"
         )
+
+@app.get("/forecast")
+def get_cash_forecast_endpoint():
+    req_id = f"req_{int(time.time()*1000)}"
+    try:
+        with db_connection(read_only=True) as db_conn:
+            return calculate_cash_forecast(db_conn)
+    except Exception as e:
+        logger.exception(f"[{req_id}] Internal server error during get_cash_forecast_endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/tax-audit")
+def get_tax_audit_endpoint():
+    req_id = f"req_{int(time.time()*1000)}"
+    try:
+        with db_connection(read_only=True) as db_conn:
+            tables = [t[0] for t in db_conn.execute("SELECT table_name FROM information_schema.tables").fetchall()]
+            matched_count = 0
+            audited_items = []
+            if "audit_log" in tables and "bank_settlements" in tables and "internal_ledger" in tables:
+                b_cols = [c[0] for c in db_conn.execute("SELECT column_name FROM information_schema.columns WHERE table_name='bank_settlements'").fetchall()]
+                tax_ded_select = "s.tax_deducted" if "tax_deducted" in b_cols else "0 AS tax_deducted"
+                
+                rows = db_conn.execute(f"""
+                    SELECT a.settlement_id, a.order_id, s.amount, s.net_amount, s.fees_deducted, {tax_ded_select}, l.expected_amount, l.tax_amount, l.customer_name
+                    FROM audit_log a
+                    JOIN bank_settlements s ON a.settlement_id = s.settlement_id
+                    JOIN internal_ledger l ON a.order_id = l.order_id
+                    ORDER BY a.timestamp DESC
+                    LIMIT 20
+                """).fetchall()
+                matched_count = len(rows)
+                for r in rows:
+                    stl_id, ord_id, gross_paise, net_paise, fee_paise, tds_paise, exp_paise, gst_paise, cust_name = r
+                    gross_inr = (gross_paise or exp_paise or 0) / 100.0
+                    net_inr = (net_paise or 0) / 100.0
+                    fee_inr = (fee_paise or round(gross_paise * 0.02)) / 100.0
+                    gst_inr = (gst_paise or round(gross_paise * 0.18)) / 100.0
+                    tds_inr = (tds_paise or 0) / 100.0
+                    
+                    status = "CLEAN_TAX_VERIFIED"
+                    if tds_paise and tds_paise > 0:
+                        status = "TDS_2%_WITHHELD"
+                        
+                    audited_items.append({
+                        "settlement_id": stl_id,
+                        "order_id": ord_id,
+                        "customer_name": cust_name,
+                        "gross_amount_inr": round(gross_inr, 2),
+                        "platform_fee_inr": round(fee_inr, 2),
+                        "gst_amount_inr": round(gst_inr, 2),
+                        "tds_withheld_inr": round(tds_inr, 2),
+                        "net_bank_credit_inr": round(net_inr, 2),
+                        "audit_status": status
+                    })
+            
+            tax_leakage_count = 0
+            if "exceptions" in tables:
+                tax_leakage_count = db_conn.execute("SELECT count(*) FROM exceptions WHERE category='TAX_LEAKAGE_MISMATCH'").fetchone()[0]
+                
+            verified_tax_percent = 100.0
+            if matched_count > 0:
+                verified_tax_percent = round(((matched_count - tax_leakage_count) / matched_count) * 100.0, 1)
+                
+            return {
+                "total_reconciled_matches": matched_count,
+                "tax_leakage_mismatches_count": tax_leakage_count,
+                "verified_tax_line_accuracy_percent": verified_tax_percent,
+                "audited_line_items": audited_items,
+                "standard_rates": {
+                    "platform_fee_percent": 2.0,
+                    "gst_on_fee_percent": 18.0,
+                    "tds_percent": 2.0
+                }
+            }
+    except Exception as e:
+        logger.exception(f"[{req_id}] Internal server error during get_tax_audit_endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -98,5 +98,15 @@
     },
     "data_found": true,
     "row_count": 1
+  },
+  "tell me more about the stl0016 why it is gicving that exception and how do we settle it for the future give me steps to be followed": {
+    "answer": "Settlement **STL0016** (dated **2026-07-05** for **\u20b969,44,664.00**, UTR: `REF85468020`) is currently raising a **DUPLICATE_SETTLEMENT** exception because it represents a duplicate credit entry in the bank statement for a UTR reference (`REF85468020`) that has already been reconciled against an existing order.\n\n### Why this exception occurred:\n- **Duplicate Credit:** The bank description explicitly notes `\"Settlement for REF85468020 (duplicate credit)\"`. \n- **System Guardrails:** The reconciliation platform flagged this as a duplicate because `REF85468020` was previously processed, preventing double-counting or inflating ledger balances.\n\n---\n\n### Steps to be followed to settle this now and for the future:\n\n#### 1. Immediate Resolution (How to settle STL0016):\n- **Flag as Duplicate:** Mark settlement record `STL0016` as a duplicate entry within the reconciliation system.\n- **Reverse the Credit:** Post a reversal entry in the bank reconciliation journal to offset the duplicate credit of **\u20b969,44,664.00**.\n- **Close Exception:** Resolve the exception category `DUPLICATE_SETTLEMENT` once the journal adjustment is verified and balanced.\n\n#### 2. Preventive Steps for the Future:\n- **Bank Feed Validation:** Set up automated pre-ingestion checks to scan incoming bank feeds for duplicate UTR references (`REF85468020`) before they hit the reconciliation engine.\n- **Partner/Gateway Alerts:** Flag recurring duplicate payout issues with the banking partner (Butala, Kunda and Magar) to prevent duplicate settlement files from being generated at the source.\n- **Automated Rule Enhancement:** Configure ingestion rules to automatically tag entries containing duplicate keywords in the description (such as `\"duplicate credit\"`) into a review queue before automated matching rules are triggered.",
+    "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
+    "extracted_entity": {
+      "filter_type": "settlement_id",
+      "value": "STL0016"
+    },
+    "data_found": true,
+    "row_count": 1
   }
 }

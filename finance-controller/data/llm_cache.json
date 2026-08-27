@@ -124,5 +124,33 @@
     "confidence": 0.0,
     "reasoning": "The settlement amount of 258,961,000 paise does not match the expected amounts of either candidate order (ORD0006: 491,221,700 paise; ORD0011: 18,238,200 paise). Furthermore, there is no similarity in customer names or references between the settlement and the provided candidates.",
     "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "f95955b3132ea5313e5050120146a1f4f423fc534967abe96f94163cd99d2bec": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement is a chargeback reversal for 'Pioneer Auto' with reference 'REF1065' and amount 5,205,210,000. None of the shortlisted candidates have an amount that matches the settlement amount within the allowed tolerance, nor do they share the same reference. While ORD1052 matches the customer name 'Pioneer Auto', the amount difference is significant (1,344,350,000 paise).",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "97cf502fa42530d546c89bcecc5bfdceee973296d9d1fbe6e8b184ca25b57ba4": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 1.0,
+    "reasoning": "The settlement amount (24,177,700.00 INR) does not match the expected amount of the candidate order (138,474,900.00 INR). The difference is significant and far exceeds the allowed tolerance.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "5735f8346ff86073acadbf1ef6b49a859c04816da67c84f19f697551759494a0": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement amount of 6,092,310,000 does not match any of the shortlisted order amounts within the allowed tolerance. Furthermore, the payer name 'Falcon Logistics' does not match any of the customer names (Nimbus Media, Orion Pharma, Indus Apparel), and the UTR reference 'REF1064' does not correspond to any of the provided order references.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "c3105f75ed8aba58895935922b63da89c3b6efdd919b9eef8530146a20f54745": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement amount (net_amount: 12,934,100,000) does not match any of the shortlisted candidates' expected amounts within the allowed tolerance. Furthermore, the payer name 'Ganges Foods' does not match any of the customer names, and the settlement description explicitly flags this as a 'Duplicate settlement for REF1059', which does not correspond to any of the provided order references.",
+    "rule_category": "UNMATCHED_EXCEPTION"
   }
 }

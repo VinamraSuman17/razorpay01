@@ -8,22 +8,28 @@ import { MatchesTable } from './components/MatchesTable';
 import { ExceptionsTable } from './components/ExceptionsTable';
 import { SettlementQA } from './components/SettlementQA';
 import { BatchUploadSection } from './components/BatchUploadSection';
+import { CashForecastWidget } from './components/CashForecastWidget';
+import { TaxAuditWidget } from './components/TaxAuditWidget';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
   const [summary, setSummary] = useState(null);
   const [matches, setMatches] = useState([]);
   const [exceptions, setExceptions] = useState([]);
+  const [forecast, setForecast] = useState(null);
+  const [taxAudit, setTaxAudit] = useState(null);
   const [lastRunTime, setLastRunTime] = useState(null);
   const [hasDataset, setHasDataset] = useState(false);
   const [noDataAlert, setNoDataAlert] = useState(null);
 
-  // Fetch matches and exceptions from FastAPI backend after dataset upload
+  // Fetch matches, exceptions, forecast, and tax audit from FastAPI backend
   const fetchData = async () => {
     try {
-      const [matchRes, excRes] = await Promise.all([
+      const [matchRes, excRes, forecastRes, taxRes] = await Promise.all([
         fetch('/matches'),
-        fetch('/exceptions')
+        fetch('/exceptions'),
+        fetch('/forecast'),
+        fetch('/tax-audit')
       ]);
 
       if (matchRes.ok) {
@@ -37,6 +43,16 @@ export default function App() {
       if (excRes.ok) {
         const eData = await excRes.json();
         setExceptions(eData);
+      }
+
+      if (forecastRes.ok) {
+        const fData = await forecastRes.json();
+        setForecast(fData);
+      }
+
+      if (taxRes.ok) {
+        const tData = await taxRes.json();
+        setTaxAudit(tData);
       }
     } catch (err) {
       console.error('Error fetching backend data:', err);
@@ -224,6 +240,12 @@ export default function App() {
                   index={3}
                 />
               </div>
+
+              {/* Forward Cash Forecaster Widget */}
+              <CashForecastWidget forecast={forecast} />
+
+              {/* Tax Audit Breakdown Widget */}
+              <TaxAuditWidget taxAudit={taxAudit} />
 
               {/* Visx Charts Section */}
               <DashboardCharts

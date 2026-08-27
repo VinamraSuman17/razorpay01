@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class ExceptionItem(BaseModel):
     record_id: str
-    source: Literal["bank_settlement", "internal_ledger"]
+    source: Literal["bank_settlement", "internal_ledger", "tax_line_matcher"]
     category: str
     reason: str
     suggested_action: str

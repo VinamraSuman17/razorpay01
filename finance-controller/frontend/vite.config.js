@@ -12,6 +12,8 @@ export default defineConfig({
       '/run-batch': 'http://localhost:8000',
       '/matches': 'http://localhost:8000',
       '/exceptions': 'http://localhost:8000',
+      '/forecast': 'http://localhost:8000',
+      '/tax-audit': 'http://localhost:8000',
       '/ask': 'http://localhost:8000',
     }
   }
