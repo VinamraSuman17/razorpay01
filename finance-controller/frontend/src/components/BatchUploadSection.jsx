@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Upload, AlertCircle, CheckCircle2, RefreshCw, Play } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Upload, AlertCircle, CheckCircle2, RefreshCw, Play, Terminal } from 'lucide-react';
 
 export function BatchUploadSection({ onUploadSuccess }) {
   const [bankFile, setBankFile] = useState(null);
@@ -9,6 +9,7 @@ export function BatchUploadSection({ onUploadSuccess }) {
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [warnings, setWarnings] = useState([]);
+  const [liveLogs, setLiveLogs] = useState([]);
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -21,13 +22,11 @@ export function BatchUploadSection({ onUploadSuccess }) {
     setErrorMsg(null);
     setSuccessMsg(null);
     setWarnings([]);
+    setLiveLogs(['[INIT] Uploading dataset files to backend pipeline...']);
 
     const formData = new FormData();
     formData.append('bank_file', bankFile);
     formData.append('ledger_file', ledgerFile);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout
 
     try {
       const res = await fetch('/upload-batch', {
@@ -46,30 +45,35 @@ export function BatchUploadSection({ onUploadSuccess }) {
         setWarnings(data.validation_warnings);
       }
 
-      // Poll background status every 2 seconds
+      // Poll background status every 1.5 seconds for real-time live action feed
       const pollInterval = setInterval(async () => {
         try {
           const statusRes = await fetch(`/run-batch/${batchId}/status`);
           if (statusRes.ok) {
             const statusData = await statusRes.json();
-            if (statusData.progress_message) {
+            if (statusData?.recent_logs && statusData.recent_logs.length > 0) {
+              setLiveLogs(statusData.recent_logs);
+            }
+            if (statusData?.progress_message) {
               setSuccessMsg(`STATUS: ${statusData.progress_message}`);
             }
-            if (statusData.status === 'COMPLETED') {
+            if (statusData?.status === 'COMPLETED') {
               clearInterval(pollInterval);
               setUploading(false);
               setSuccessMsg(`Batch ${batchId} reconciled successfully! (${data.bank_valid_records} bank rows, ${data.ledger_valid_records} ledger rows)`);
-              onUploadSuccess(statusData.summary);
-            } else if (statusData.status === 'FAILED') {
+              if (typeof onUploadSuccess === 'function') {
+                onUploadSuccess(statusData.summary);
+              }
+            } else if (statusData?.status === 'FAILED') {
               clearInterval(pollInterval);
               setUploading(false);
-              setErrorMsg(statusData.error || 'Reconciliation failed in background.');
+              setErrorMsg(statusData.error || 'Reconciliation failed in background worker.');
             }
           }
         } catch (pollErr) {
           console.error('Status polling error:', pollErr);
         }
-      }, 2000);
+      }, 1500);
 
     } catch (err) {
       setErrorMsg(err.message);
@@ -102,12 +106,44 @@ export function BatchUploadSection({ onUploadSuccess }) {
         </div>
       )}
 
-      {successMsg && (
+      {successMsg && !uploading && (
         <div className="mb-6 p-4 bg-[#0F172A] text-[#FAFAFA] border-2 border-[#1E3A8A] shadow-[3px_3px_0px_0px_#0F172A] text-xs flex items-center space-x-3">
           <CheckCircle2 className="w-5 h-5 text-[#60A5FA] shrink-0" />
           <span className="font-extrabold uppercase tracking-wide">{successMsg}</span>
         </div>
       )}
+
+      {/* Live Processing Terminal Action Feed */}
+      <AnimatePresence>
+        {uploading && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-6 bg-[#050814] text-[#60A5FA] border-2 border-[#2563EB] p-4 shadow-[4px_4px_0px_0px_#0F172A]"
+          >
+            <div className="flex items-center justify-between border-b border-[#1E3A8A] pb-2 mb-3">
+              <div className="flex items-center space-x-2">
+                <Terminal className="w-4 h-4 text-[#60A5FA]" />
+                <span className="text-xs font-black uppercase tracking-wider text-white">Live Pipeline Execution Feed</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#60A5FA]" />
+                <span className="text-[10px] font-mono font-bold uppercase text-blue-300">Processing Active Batch...</span>
+              </div>
+            </div>
+
+            <div className="font-mono text-xs space-y-1.5 max-h-36 overflow-y-auto">
+              {(liveLogs || []).map((log, idx) => (
+                <div key={idx} className="flex items-start space-x-2 text-slate-200">
+                  <span className="text-[#60A5FA] font-bold">›</span>
+                  <span>{log}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {warnings && warnings.length > 0 && (
         <div className="mb-6 p-4 bg-slate-200 border-2 border-[#1E3A8A] shadow-[3px_3px_0px_0px_#0F172A] text-xs font-mono tabular-nums text-[#0F172A]">

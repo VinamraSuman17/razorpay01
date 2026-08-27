@@ -75,5 +75,54 @@
     "confidence": 0.0,
     "reasoning": "The settlement amount (270,000,000.00 INR) does not match the expected order amount (450,000,000.00 INR). The difference is 180,000,000.00 INR, which significantly exceeds the allowed tolerance. Additionally, the payer name and reference do not align with the candidate order.",
     "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "37082551c3ac312aaaf8f3b690b9d6af165c8d863e84b4b02b2652f7583ca498": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 1.0,
+    "reasoning": "The settlement is a chargeback reversal for 'Seth Ltd' with reference 'REF95015261' for 31,589,200 INR. None of the shortlisted candidates (ORD0013, ORD0011, ORD0012) match the customer name, reference, or amount (even after considering potential FX conversions). The differences in amounts are significant and far exceed the reconciliation tolerance.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "1bd79231bf4f46b9601260937d4ff3e9f9a58a33601eec6965f9740bb9e6a1e4": {
+    "decision": "match",
+    "matched_order_id": "ORD0006",
+    "confidence": 0.98,
+    "reasoning": "The settlement amount matches the expected amount of ORD0006 exactly. The customer name 'Bir Group' is an exact match. The UTR reference 'REF8C429266' in the settlement is highly similar to the customer reference 'REF86429266' in the order (a minor character difference 'C' vs '6'), which is a common OCR or manual entry discrepancy. Given the exact amount and name match, this is a clear fuzzy reference match.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "43972499b175212f367efb51549cd55810b4ce2247a1e308d41be9551770175c": {
+    "decision": "match",
+    "matched_order_id": "ORD0008",
+    "confidence": 0.98,
+    "reasoning": "The settlement amount matches the expected amount of ORD0008 exactly. The payer name 'Sidhu-Deshmukh' is an exact match. The UTR reference 'REF94671264' has a minor digit transposition compared to the order reference 'REF94671246' (difference of 18), which is a common clerical error. Given the exact amount and name match, this is a high-confidence fuzzy reference match.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "40deb3c91281399e2a35dda4c61d0a04f61aa91126b0dccb076f3cecd72b5ce0": {
+    "decision": "match",
+    "matched_order_id": "ORD0005",
+    "confidence": 0.98,
+    "reasoning": "The settlement amount matches the expected amount of ORD0005 exactly. The customer name 'Bhasin-Swamy' is an exact match. The settlement reference 'REF0761872' is a minor variation of the customer reference 'REF00761872' (missing a leading zero), which is a common formatting difference. The settlement date is within the expected range.",
+    "rule_category": "FUZZY_REFERENCE"
+  },
+  "223009c80ad0a56250308b59b78a5ab713e8f9defd1d4f7c5cc088967b61a42d": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 803773700 does not match the expected amounts of either candidate order (152277700 and 238929400). The differences are significant and far exceed the allowed tolerance. Additionally, there is no correlation between the payer name/reference and the candidate order details.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "7c215844ce8739703af25049536ebedd32d774dd847e3759e4c19b103f7ce995": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement amount of 53,128,200 paise does not match any of the shortlisted order amounts, nor are there any obvious fee or FX adjustments that would reconcile these figures. Furthermore, the payer name 'Bhatia LLC' does not match any of the customer names in the candidate list, and the UTR references are entirely distinct.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "43876cb52a483c1faf8037a35f97603af0190921658271751acfc0ac5dfce335": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement amount of 258,961,000 paise does not match the expected amounts of either candidate order (ORD0006: 491,221,700 paise; ORD0011: 18,238,200 paise). Furthermore, there is no similarity in customer names or references between the settlement and the provided candidates.",
+    "rule_category": "UNMATCHED_EXCEPTION"
   }
 }

@@ -162,7 +162,7 @@ export default function App() {
               <div className="w-16 h-16 bg-[#1D4ED8] text-white border-2 border-[#2563EB] flex items-center justify-center mx-auto mb-4 shadow-[4px_4px_0px_0px_#0F172A]">
                 <UploadCloud className="w-8 h-8 stroke-[2.5]" />
               </div>
-              <h3 className="text-lg font-black uppercase text-[#0F172A] mb-1">No Reconciliation Dataset Uploaded</h3>
+              <h3 className="text-lg font-black uppercase text-[#0F172A] mb-1">No Reconciliation Dataset Loaded</h3>
               <p className="text-xs font-medium text-slate-600 max-w-md mx-auto mb-6 leading-relaxed">
                 Upload your Bank Settlements CSV and Internal Ledger CSV using the file picker above to validate schema and run automated multi-tier reconciliation.
               </p>
@@ -172,6 +172,27 @@ export default function App() {
             </motion.div>
           ) : (
             <>
+              {/* Zero-Exceptions Clean Reconciliation Banner */}
+              {(exceptions || []).length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mb-6 p-4 bg-[#0F172A] text-white border-2 border-[#2563EB] shadow-[4px_4px_0px_0px_#0F172A] flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-[#1D4ED8] text-white border border-[#60A5FA]">
+                      <CheckCircle className="w-5 h-5 stroke-[2.5]" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black uppercase text-white">Clean Reconciliation Achieved!</h4>
+                      <p className="text-xs text-blue-200 font-medium">All bank settlements matched internal ledger orders cleanly. 0 exceptions require manual intervention.</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-mono font-black uppercase bg-[#1D4ED8] text-white px-3 py-1 border border-[#60A5FA]">
+                    0 Exceptions in Queue
+                  </span>
+                </motion.div>
+              )}
               {/* Stat Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <StatCard

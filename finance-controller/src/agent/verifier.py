@@ -129,15 +129,26 @@ def verify_single_settlement(
         client = genai.Client(api_key=api_key)
         
     candidate_models = [
-        getattr(settings.gemini, "model_name", None),
         "gemini-3.5-flash-lite",
         "gemini-3.1-flash-lite",
-        "gemini-flash-lite-latest",
-        "gemini-3.6-flash",
-        "gemini-3.7-flash",
-        "gemini-flash-latest"
+        "gemini-flash-lite-latest"
     ]
     models = get_active_models(candidate_models)
+    
+    # If all models are in 60s rate-limit cooldown, wait for earliest cooldown reset so no record is left unverified
+    if not models and not is_test_mock and DEPLETED_MODELS:
+        now = time.time()
+        earliest_depletion = min(DEPLETED_MODELS.values())
+        elapsed_since_depletion = now - earliest_depletion
+        remaining_cooldown = max(1.0, 60.0 - elapsed_since_depletion + 1.0)
+        
+        logger.warning(f"[LADDER_COOLDOWN_WAIT] All models depleted. Sleeping {remaining_cooldown:.1f}s for RPM window reset...")
+        print(f"[MODEL LADDER] All Gemini models in cooldown. Sleeping {remaining_cooldown:.1f}s for window reset...")
+        time.sleep(remaining_cooldown)
+        
+        DEPLETED_MODELS.clear()
+        models = get_active_models(candidate_models)
+
     if is_test_mock:
         # For custom/mocked clients in tests, use only the first configured model name
         models = [candidate_models[0]]
@@ -283,14 +294,44 @@ def verify_single_settlement(
                 if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
                     DEPLETED_MODELS[model_name] = time.time()
                     if "PerDay" in str(e) or "limit: 500" in str(e):
-                        logger.warning(f"Daily quota limit hit for model {model_name}. Marking model as depleted...")
+                        logger.warning(f"Daily quota limit hit for model '{model_name}'. Marking model as depleted...")
                     else:
-                        logger.warning(f"429 Rate limit hit for model {model_name}. Switching to next model in ladder (60s cooldown)...")
-                        print(f"429 Rate limit hit for model {model_name}. Switching to next fallback model in ladder...")
+                        logger.warning(f"429 Rate limit hit for model '{model_name}'. Switching immediately to next fallback model in ladder (60s cooldown)...")
+                        print(f"429 Rate limit hit for model '{model_name}'. Switching immediately to next fallback model in ladder...")
                     skip_model = True
                     break
                 skip_model = True
                 break
+
+    # If all models in the ladder are currently in 60s cooldown, wait for the earliest model to reset
+    if not is_test_mock and DEPLETED_MODELS:
+        now = time.time()
+        earliest_depletion = min(DEPLETED_MODELS.values())
+        elapsed_since_depletion = now - earliest_depletion
+        remaining_cooldown = max(0.0, 60.0 - elapsed_since_depletion + 1.0)
+
+        if remaining_cooldown > 0 and remaining_cooldown <= 65.0:
+            logger.warning(f"[LADDER_COOLDOWN_WAIT] All models in ladder depleted. Waiting {remaining_cooldown:.1f}s for 60s RPM window reset...")
+            print(f"[MODEL LADDER] All Gemini models currently in cooldown. Waiting {remaining_cooldown:.1f}s for 60s window reset...")
+            time.sleep(remaining_cooldown)
+            
+            # Clear expired depletions and retry active models
+            get_active_models(candidate_models)
+            retry_models = get_active_models(candidate_models)
+            for model_name in retry_models:
+                try:
+                    enforce_proactive_rate_limit(rpm=rpm, is_test_mock=is_test_mock)
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=[user_prompt],
+                        config=config
+                    )
+                    resp_text = (getattr(response, "text", None) or "").strip()
+                    if resp_text:
+                        data = json.loads(resp_text)
+                        return VerificationResult(**data)
+                except Exception as recovery_err:
+                    logger.warning(f"Cooldown recovery attempt for model {model_name} failed: {recovery_err}")
 
     return VerificationResult(
         decision="no_match",

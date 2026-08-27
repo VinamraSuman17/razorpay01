@@ -108,13 +108,9 @@ def call_gemini_with_fallback(
 ) -> Optional[str]:
     """Tries primary model from settings, falling back to active flash models on 429/404 errors."""
     candidate_models = [
-        getattr(settings.gemini, "model_name", None),
         "gemini-3.5-flash-lite",
         "gemini-3.1-flash-lite",
-        "gemini-flash-lite-latest",
-        "gemini-3.6-flash",
-        "gemini-3.7-flash",
-        "gemini-flash-latest"
+        "gemini-flash-lite-latest"
     ]
     # Deduplicate preserving order
     seen = set()

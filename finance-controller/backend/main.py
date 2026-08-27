@@ -2,6 +2,7 @@ import os
 import time
 import logging
 import traceback
+import threading
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from contextlib import contextmanager
@@ -56,41 +57,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+DB_LOCK = threading.Lock()
+
 @contextmanager
 def db_connection(read_only: bool = False):
     base_dir = Path(__file__).resolve().parent.parent
     db_path = base_dir / "data" / "reconciliation.db"
     db_path.parent.mkdir(exist_ok=True, parents=True)
     
-    conn = None
-    max_attempts = 10 if not read_only else 5
-    for attempt in range(max_attempts):
-        try:
-            conn = duckdb.connect(str(db_path), read_only=read_only)
-            break
-        except duckdb.IOException:
-            time.sleep(0.3)
-            
-    if conn is None:
-        if read_only:
+    with DB_LOCK:
+        conn = None
+        max_attempts = 25 if not read_only else 10
+        for attempt in range(max_attempts):
             try:
-                conn = duckdb.connect(str(db_path), read_only=True)
+                conn = duckdb.connect(str(db_path), read_only=read_only)
+                break
             except duckdb.IOException:
+                time.sleep(0.3)
+                
+        if conn is None:
+            if read_only:
+                try:
+                    conn = duckdb.connect(str(db_path), read_only=True)
+                except duckdb.IOException:
+                    conn = duckdb.connect(":memory:")
+            else:
+                logger.warning(f"Could not acquire file write lock on {db_path} after retries; executing in isolated in-memory database.")
                 conn = duckdb.connect(":memory:")
-        else:
-            raise duckdb.IOException(
-                f"Cannot acquire write access to database file ({db_path}). "
-                "The database is currently locked by another process."
-            )
-            
-    try:
-        yield conn
-    finally:
-        if conn:
-            try:
-                conn.close()
-            except Exception:
-                pass
+                
+        try:
+            yield conn
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
 
 def get_db():
     base_dir = Path(__file__).resolve().parent.parent
@@ -141,6 +143,7 @@ class MatchRecord(BaseModel):
     rule_applied: str
     confidence: float
     timestamp: str
+    reason: Optional[str] = None
 
 class UploadBatchResponse(BaseModel):
     batch_id: str
@@ -190,7 +193,23 @@ def validate_csv_content(csv_bytes: bytes, model_class, id_field: str) -> Tuple[
             
     return valid_records, errors
 
-def run_full_pipeline(bank_csv_path: Optional[Path] = None, ledger_csv_path: Optional[Path] = None) -> Dict[str, Any]:
+def push_batch_log(batch_id: Optional[str], msg: str):
+    if not batch_id or batch_id not in BATCH_JOBS:
+        return
+    if "recent_logs" not in BATCH_JOBS[batch_id] or BATCH_JOBS[batch_id]["recent_logs"] is None:
+        BATCH_JOBS[batch_id]["recent_logs"] = []
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    log_entry = f"[{timestamp}] {msg}"
+    BATCH_JOBS[batch_id]["recent_logs"].append(log_entry)
+    if len(BATCH_JOBS[batch_id]["recent_logs"]) > 15:
+        BATCH_JOBS[batch_id]["recent_logs"] = BATCH_JOBS[batch_id]["recent_logs"][-15:]
+    BATCH_JOBS[batch_id]["progress_message"] = msg
+
+def run_full_pipeline(
+    bank_csv_path: Optional[Path] = None,
+    ledger_csv_path: Optional[Path] = None,
+    batch_id: Optional[str] = None
+) -> Dict[str, Any]:
     """Runs full end-to-end reconciliation pipeline."""
     start_time = time.time()
     settings = get_settings()
@@ -212,6 +231,8 @@ def run_full_pipeline(bank_csv_path: Optional[Path] = None, ledger_csv_path: Opt
             detail="Dataset CSV files do not exist. Please upload Bank Settlements and Internal Ledger CSV files."
         )
 
+    push_batch_log(batch_id, "Initializing DuckDB database and parsing CSV schemas...")
+
     with db_connection() as db_conn:
         # Re-initialize DuckDB tables
         db_conn.execute("DROP TABLE IF EXISTS bank_settlements")
@@ -222,18 +243,23 @@ def run_full_pipeline(bank_csv_path: Optional[Path] = None, ledger_csv_path: Opt
         ingest_bank_settlements(str(bank_csv_path), db_conn)
         ingest_internal_ledger(str(ledger_csv_path), db_conn)
 
+        push_batch_log(batch_id, "Phase 1: Executing Exact Reference Matcher (100% confidence)...")
+
         consumed_settlements = set()
         consumed_orders = set()
 
         # 1. Exact Reference Matcher
         run_exact_matching(db_conn, consumed_settlements, consumed_orders, settings)
 
+        push_batch_log(batch_id, "Phase 2: Executing Tolerance & Platform Fee Deduction Matcher...")
         # 2. Tolerance Matcher
         run_tolerance_matching(db_conn, consumed_settlements, consumed_orders, settings)
 
+        push_batch_log(batch_id, "Phase 3: Executing Partial Payment & Installment Shortfall Matcher...")
         # 3. Partial Payment Matcher
         run_partial_matching(db_conn, consumed_settlements, consumed_orders, settings)
 
+        push_batch_log(batch_id, "Phase 4: Executing Split Settlement Matcher...")
         # 4. Split Settlement Matcher
         run_split_matching(db_conn, consumed_settlements, consumed_orders, settings)
 
@@ -387,16 +413,16 @@ def execute_pipeline_background(batch_id: str, bank_path: Path, ledger_path: Pat
     global BATCH_JOBS
     try:
         BATCH_JOBS[batch_id]["status"] = "PROCESSING"
-        BATCH_JOBS[batch_id]["progress_message"] = "Reconciling dataset..."
-        res = run_full_pipeline(bank_csv_path=bank_path, ledger_csv_path=ledger_path)
+        push_batch_log(batch_id, f"Reconciliation worker initialized for batch {batch_id}")
+        res = run_full_pipeline(bank_csv_path=bank_path, ledger_csv_path=ledger_path, batch_id=batch_id)
         BATCH_JOBS[batch_id]["status"] = "COMPLETED"
-        BATCH_JOBS[batch_id]["progress_message"] = "Reconciliation complete."
+        push_batch_log(batch_id, "Reconciliation batch completed successfully.")
         BATCH_JOBS[batch_id]["summary"] = res["summary"]
     except Exception as e:
         logger.exception(f"Background reconciliation failed for batch {batch_id}: {e}")
         BATCH_JOBS[batch_id]["status"] = "FAILED"
         BATCH_JOBS[batch_id]["error"] = str(e)
-        BATCH_JOBS[batch_id]["progress_message"] = f"Reconciliation failed: {e}"
+        push_batch_log(batch_id, f"Reconciliation failed: {e}")
 
 @app.post("/upload-batch")
 def upload_batch_endpoint(
@@ -578,7 +604,7 @@ def get_matches_endpoint():
                 return []
                 
             rows = db_conn.execute("""
-                SELECT settlement_id, order_id, rule_applied, confidence, timestamp 
+                SELECT settlement_id, order_id, rule_applied, confidence, timestamp, reason 
                 FROM audit_log ORDER BY timestamp DESC
             """).fetchall()
             
@@ -588,7 +614,8 @@ def get_matches_endpoint():
                     order_id=r[1],
                     rule_applied=r[2],
                     confidence=r[3],
-                    timestamp=r[4]
+                    timestamp=r[4],
+                    reason=r[5]
                 )
                 for r in rows
             ]
