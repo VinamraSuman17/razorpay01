@@ -26,3 +26,5 @@ finance-controller/data/uploads/
 .agents/
 .claude/
 skills-lock.json
+scratch/
+finance-controller/scratch/

@@ -772,17 +772,21 @@ def get_tax_audit_endpoint():
                 matched_count = len(rows)
                 for r in rows:
                     stl_id, ord_id, gross_paise, net_paise, fee_paise, tds_paise, exp_paise, gst_paise, cust_name = r
-                    gross_inr = (gross_paise or exp_paise or 0) / 100.0
-                    net_inr = (net_paise or 0) / 100.0
+                    gross_inr = round((gross_paise or exp_paise or 0) / 100.0, 2)
+                    net_inr = round((net_paise or 0) / 100.0, 2)
                     
-                    raw_fee = fee_paise if (fee_paise is not None and fee_paise > 0) else round((gross_paise or 0) * 0.02)
-                    fee_inr = raw_fee / 100.0
-                    
-                    raw_gst = gst_paise if (gst_paise is not None and gst_paise > 0) else round((gross_paise or 0) * 0.18)
-                    gst_inr = raw_gst / 100.0
-                    
-                    raw_tds = tds_paise if tds_paise else 0
-                    tds_inr = raw_tds / 100.0
+                    # Convert fee, GST, and TDS strictly from paise to INR (/ 100.0)
+                    if fee_paise is not None and fee_paise > 0:
+                        fee_inr = round(fee_paise / 100.0, 2)
+                    else:
+                        fee_inr = round(gross_inr * 0.02, 2)
+                        
+                    if gst_paise is not None and gst_paise > 0:
+                        gst_inr = round(gst_paise / 100.0, 2)
+                    else:
+                        gst_inr = round(gross_inr * 0.18, 2)
+                        
+                    tds_inr = round((tds_paise or 0) / 100.0, 2)
                     
                     status = "CLEAN_TAX_VERIFIED"
                     if tds_paise and tds_paise > 0:

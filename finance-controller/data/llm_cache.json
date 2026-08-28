@@ -152,5 +152,12 @@
     "confidence": 0.0,
     "reasoning": "The settlement amount (net_amount: 12,934,100,000) does not match any of the shortlisted candidates' expected amounts within the allowed tolerance. Furthermore, the payer name 'Ganges Foods' does not match any of the customer names, and the settlement description explicitly flags this as a 'Duplicate settlement for REF1059', which does not correspond to any of the provided order references.",
     "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "49b4cfee85ce7952bd6ae5e942fe6cf811f5d82afd15f4c8bb0eaae44605e781": {
+    "decision": "match",
+    "matched_order_id": "ORD0075",
+    "confidence": 0.98,
+    "reasoning": "The settlement amount matches the expected amount of ORD0075 exactly. The payer name 'Borde and Sons' is an exact match. The UTR reference 'REF91334132' is highly similar to the customer reference 'REF91334123' (only a minor digit transposition at the end), which is a common occurrence in bank settlement references. Given the exact amount and name match, this is classified as a fuzzy reference match.",
+    "rule_category": "FUZZY_REFERENCE"
   }
 }

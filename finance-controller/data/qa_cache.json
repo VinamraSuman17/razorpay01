@@ -108,5 +108,15 @@
     },
     "data_found": true,
     "row_count": 1
+  },
+  "why was settlement stl0020 matched with order ord0020, and what was the platform fee deduction?": {
+    "answer": "Settlement `STL0020` was matched with order `ORD0020` under the **FEE_DEDUCTED_MATCH** rule with a 100% confidence score because the bank UTR reference (`REF0020`) and the ledger customer reference (`REF0020`) match perfectly, and the gross settlement amount of \u20b913,870,000,000.00 aligns exactly with the expected ledger amount. \n\nRegarding the platform fee deduction, a total fee of **\u20b9277,400,000.00** was deducted (approximately 2.36%), resulting in a net settlement amount of \u20b913,592,600,000.00 on 2026-08-01.",
+    "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
+    "extracted_entity": {
+      "filter_type": "settlement_id",
+      "value": "STL0020"
+    },
+    "data_found": true,
+    "row_count": 1
   }
 }
