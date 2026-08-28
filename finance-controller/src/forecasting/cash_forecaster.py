@@ -116,9 +116,12 @@ def calculate_customer_defaulter_analytics(db_conn: duckdb.DuckDBPyConnection) -
         # Reliability Score Formula: 100 - (Avg Lag * 4) - (Defaults * 20)
         score = max(0, min(100, round(100 - (avg_lag * 4) - (defaults * 20))))
 
-        if defaults > 0 or score < 70:
+        if defaults > 0:
             badge = "REPEAT_DEFAULTER"
             color = "ROSE"
+        elif score < 75:
+            badge = "CHRONIC_LAG"
+            color = "AMBER"
         elif score >= 90:
             badge = "HIGH_RELIABILITY"
             color = "EMERALD"

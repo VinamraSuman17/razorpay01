@@ -159,5 +159,40 @@
     "confidence": 0.98,
     "reasoning": "The settlement amount matches the expected amount of ORD0075 exactly. The payer name 'Borde and Sons' is an exact match. The UTR reference 'REF91334132' is highly similar to the customer reference 'REF91334123' (only a minor digit transposition at the end), which is a common occurrence in bank settlement references. Given the exact amount and name match, this is classified as a fuzzy reference match.",
     "rule_category": "FUZZY_REFERENCE"
+  },
+  "7e07ef31b915b6d1608100b48c8459b7e2872fcb2527737a3bca75ada1fa7103": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement is a chargeback/reversal debit for 'Acme Corp' with a value of 350,000,000,000 INR. None of the shortlisted candidates (ORD3050, ORD3051, ORD3052) match the payer name 'Acme Corp', nor do their amounts (1,200,000,000,000 INR) or tax amounts (216,000,000,000 INR) align with the settlement amount after any reasonable reconciliation logic.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "8dec7b38ccb64a202c092b4cab2d06502e1bab4a19cd8e2f4d6ce26c5fc55a4e": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 1.0,
+    "reasoning": "The settlement is a chargeback/reversal debit for 'Vortex Dynamics' with an amount of 350,000,000,000 INR. None of the shortlisted candidates (ORD3050, ORD3051, ORD3052) match the payer name 'Vortex Dynamics', nor do their expected amounts or tax amounts align with the settlement amount. The settlement appears to be an unrelated transaction.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "62fa2ca26b3816360d17ae574eae6577fff2ac723c19c83c673d7fe61afd2e99": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement is a chargeback/reversal debit for 'Pioneer Auto' with a specific UTR 'CHG3057'. None of the shortlisted candidates match the payer name, the amount, or the reference. The candidates are unrelated settled orders from different customers.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "757e39d04d86b29de0748b7080e253a8cfd44b5474864da256f871a72dcf5e3a": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 1.0,
+    "reasoning": "The settlement is a chargeback/reversal debit of 350,000,000,000 INR. None of the shortlisted candidates (ORD3048, ORD3050, ORD3051) have an amount that matches this chargeback, nor do their customer names (Pioneer Auto, Global Tech, Delta Systems) match the payer account (Raga Exports). The amounts are significantly different from the expected order amounts and tax amounts.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "796357e07f25b44308ded36d4db48196892ac59f836292cf1809652e600dc5c1": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 1.0,
+    "reasoning": "The settlement is a chargeback/reversal debit for 'Everest Textiles' with a UTR 'CHG3054'. None of the shortlisted candidates match the payer name ('Everest Textiles'), the reference ('CHG3054'), or the amount. The amounts in the candidates are significantly different from the settlement amount, and there is no logical connection between the chargeback and the provided settled orders.",
+    "rule_category": "UNMATCHED_EXCEPTION"
   }
 }

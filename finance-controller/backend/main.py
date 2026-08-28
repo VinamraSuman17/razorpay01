@@ -750,7 +750,7 @@ def get_cash_forecast_endpoint():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/tax-audit")
-def get_tax_audit_endpoint():
+def get_tax_audit_endpoint(fee_rate_percent: float = 2.0, gst_rate_percent: float = 18.0):
     req_id = f"req_{int(time.time()*1000)}"
     try:
         with db_connection(read_only=True) as db_conn:
@@ -775,17 +775,9 @@ def get_tax_audit_endpoint():
                     gross_inr = round((gross_paise or exp_paise or 0) / 100.0, 2)
                     net_inr = round((net_paise or 0) / 100.0, 2)
                     
-                    # Convert fee, GST, and TDS strictly from paise to INR (/ 100.0)
-                    if fee_paise is not None and fee_paise > 0:
-                        fee_inr = round(fee_paise / 100.0, 2)
-                    else:
-                        fee_inr = round(gross_inr * 0.02, 2)
-                        
-                    if gst_paise is not None and gst_paise > 0:
-                        gst_inr = round(gst_paise / 100.0, 2)
-                    else:
-                        gst_inr = round(gross_inr * 0.18, 2)
-                        
+                    # Dynamically compute Fee and GST based on configured rates
+                    fee_inr = round(gross_inr * (fee_rate_percent / 100.0), 2)
+                    gst_inr = round(gross_inr * (gst_rate_percent / 100.0), 2)
                     tds_inr = round((tds_paise or 0) / 100.0, 2)
                     
                     status = "CLEAN_TAX_VERIFIED"
@@ -818,8 +810,8 @@ def get_tax_audit_endpoint():
                 "verified_tax_line_accuracy_percent": verified_tax_percent,
                 "audited_line_items": audited_items,
                 "standard_rates": {
-                    "platform_fee_percent": 2.0,
-                    "gst_on_fee_percent": 18.0,
+                    "platform_fee_percent": fee_rate_percent,
+                    "gst_on_fee_percent": gst_rate_percent,
                     "tds_percent": 2.0
                 }
             }
