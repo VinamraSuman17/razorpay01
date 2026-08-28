@@ -1,0 +1,6 @@
+settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,tax_deducted,description,currency
+STL0201,2026-07-02,500000,REF2001,ACC_ACME,10000,490000,0,Payment from Acme Corp,INR
+STL0202,2026-07-03,750000,REF2002,ACC_ACME,15000,735000,0,Payment from Acme Corp,INR
+STL0203,2026-07-05,1000000,REF2003,ACC_GLOBAL,20000,980000,0,Payment from Global Tech,INR
+STL0204,2026-07-06,1200000,REF2004,ACC_GLOBAL,24000,1176000,0,Payment from Global Tech,INR
+STL0205,2026-07-08,800000,REF2005,ACC_NEXUS,16000,784000,0,Payment from Nexus Inc,INR

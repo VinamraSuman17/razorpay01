@@ -1,0 +1,7 @@
+order_id,invoice_date,expected_amount,customer_name,customer_reference,expected_settlement_date,tax_amount,currency,status
+ORD3001,2026-07-01,500000,Beta LLC,REF3001,2026-07-02,90000,INR,settled
+ORD3002,2026-07-03,750000,Beta LLC,REF3002,2026-07-04,135000,INR,settled
+ORD3003,2026-07-04,1000000,Delta Corp,REF3003,2026-07-05,180000,INR,settled
+ORD3004,2026-07-06,1200000,Delta Corp,REF3004,2026-07-07,216000,INR,settled
+ORD3005,2026-08-01,800000,Beta LLC,REF3005,2026-08-02,144000,INR,unsettled
+ORD3006,2026-08-02,1100000,Delta Corp,REF3006,2026-08-03,198000,INR,unsettled

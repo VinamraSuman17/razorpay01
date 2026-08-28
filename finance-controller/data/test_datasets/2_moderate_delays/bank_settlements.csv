@@ -1,0 +1,5 @@
+settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,tax_deducted,description,currency
+STL0301,2026-07-06,500000,REF3001,ACC_BETA,10000,490000,0,Payment from Beta LLC,INR
+STL0302,2026-07-08,750000,REF3002,ACC_BETA,15000,735000,0,Payment from Beta LLC,INR
+STL0303,2026-07-09,1000000,REF3003,ACC_DELTA,20000,980000,0,Payment from Delta Corp,INR
+STL0304,2026-07-11,1200000,REF3004,ACC_DELTA,24000,1176000,0,Payment from Delta Corp,INR

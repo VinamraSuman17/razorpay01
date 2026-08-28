@@ -51,7 +51,7 @@ Please adjust this transaction credit and issue a revised GST Tax Invoice / Cred
 
 Regards,
 Autonomous Finance Controller Team
-`.strip();
+`.trim();
 
     setDisputeModalData({
       item,

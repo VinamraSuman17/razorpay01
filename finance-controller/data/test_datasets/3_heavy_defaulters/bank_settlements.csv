@@ -1,0 +1,5 @@
+settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,tax_deducted,description,currency
+STL0401,2026-07-10,500000,REF4001,ACC_OMNI,10000,490000,0,Payment from Omni Global,INR
+STL0402,2026-07-14,750000,REF4002,ACC_OMNI,15000,735000,0,Payment from Omni Global,INR
+STL0403,2026-07-15,-120000,REF4003,ACC_OMNI,0,-120000,0,Chargeback Reversal for Omni Global,INR
+STL0404,2026-07-18,300000,MISC9999,ACC_UNKNOWN,6000,294000,0,Orphan Bank Deposit,INR

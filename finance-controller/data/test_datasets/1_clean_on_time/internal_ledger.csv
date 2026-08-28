@@ -1,0 +1,8 @@
+order_id,invoice_date,expected_amount,customer_name,customer_reference,expected_settlement_date,tax_amount,currency,status
+ORD2001,2026-07-01,500000,Acme Corp,REF2001,2026-07-02,90000,INR,settled
+ORD2002,2026-07-02,750000,Acme Corp,REF2002,2026-07-03,135000,INR,settled
+ORD2003,2026-07-04,1000000,Global Tech,REF2003,2026-07-05,180000,INR,settled
+ORD2004,2026-07-05,1200000,Global Tech,REF2004,2026-07-06,216000,INR,settled
+ORD2005,2026-07-07,800000,Nexus Inc,REF2005,2026-07-08,144000,INR,settled
+ORD2006,2026-08-01,600000,Acme Corp,REF2006,2026-08-02,108000,INR,unsettled
+ORD2007,2026-08-03,900000,Global Tech,REF2007,2026-08-04,162000,INR,unsettled

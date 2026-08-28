@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, ShieldAlert, Calendar, CheckCircle2, Sliders, Users, AlertTriangle, ChevronRight, X } from 'lucide-react';
+import { TrendingUp, ShieldAlert, Calendar, CheckCircle2, Sliders, Users, AlertTriangle, ChevronRight, X, Mail, ShieldCheck } from 'lucide-react';
 
 export function CashForecastWidget({ forecast }) {
   const [activeTab, setActiveTab] = useState('overview'); // overview, risk_ranking, buckets, sandbox
@@ -8,6 +8,7 @@ export function CashForecastWidget({ forecast }) {
   const [riskDiscountPercent, setRiskDiscountPercent] = useState(25);
   const [selectedBucketTab, setSelectedBucketTab] = useState('expected');
   const [showMathModal, setShowMathModal] = useState(false);
+  const [dunningModalData, setDunningModalData] = useState(null);
 
   if (!forecast) return null;
 
@@ -18,7 +19,7 @@ export function CashForecastWidget({ forecast }) {
     projected_30d_inflow_inr = 0,
     at_risk_receivables_30d_inr = 0,
     data_derived_weights = {},
-    customer_risk_ranking = [],
+    customer_defaulter_analytics = [],
     order_buckets = {},
     forecast_ranges = {},
     stats = {}
@@ -32,8 +33,6 @@ export function CashForecastWidget({ forecast }) {
     }).format(val || 0);
   };
 
-  // Real-time What-If Sandbox Calculations
-  const simulated7dInflow = Math.max(0, projected_7d_inflow_inr * (1 - payoutDelayDays * 0.05));
   const simulated30dInflow = Math.max(0, projected_30d_inflow_inr * (1 - payoutDelayDays * 0.02));
   const simulatedAtRiskRecovery = at_risk_receivables_30d_inr * (riskDiscountPercent / 100);
   const simulatedConservativeTotal = confirmed_bank_cash_inr + simulated30dInflow * (data_derived_weights.expected_collection_weight || 0.887) + simulatedAtRiskRecovery;
@@ -41,6 +40,41 @@ export function CashForecastWidget({ forecast }) {
   const confirmedOrders = order_buckets.confirmed_cash_orders || [];
   const expectedOrders = order_buckets.expected_inflow_orders || [];
   const atRiskOrders = order_buckets.at_risk_orders || [];
+
+  const handleSendDunningNotice = (customer) => {
+    const draftNotice = `
+TO: accounts-payable@${customer.customer_name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com
+CC: finance-controller@merchant.com
+SUBJECT: URGENT PAYMENT NOTICE: Outstanding Settlement & Delay Warning for ${customer.customer_name}
+
+Dear Finance Team at ${customer.customer_name},
+
+Our autonomous FinOps Monitoring System has flagged an ongoing settlement delay on your account.
+
+ACCOUNT AUDIT SNAPSHOT:
+------------------------------------------------
+• Customer Name: ${customer.customer_name}
+• Average Settlement Delay: +${customer.avg_lag_days} Days Late
+• Recorded Default Violations: ${customer.default_violations_count} Violations
+• Financial Reliability Score: ${customer.reliability_score_percent}% (${customer.reliability_badge})
+• Total Outstanding Value: ${formatINR(customer.total_outstanding_inr)}
+• At-Risk Amount: ${formatINR(customer.at_risk_amount_inr)}
+
+DEFAULT REASON SUMMARY:
+${customer.default_reason_summary}
+
+REQUIRED ACTION:
+Please verify pending invoice settlements and initiate credit transfer to prevent credit limit restriction.
+
+Regards,
+Autonomous Credit & Risk Control Engine
+`.trim();
+
+    setDunningModalData({
+      customer,
+      noticeText: draftNotice
+    });
+  };
 
   return (
     <motion.div
@@ -62,9 +96,12 @@ export function CashForecastWidget({ forecast }) {
               <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-[#2563EB] text-white">
                 Interactive
               </span>
+              <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-400 flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-emerald-700" /> Dual-Engine Math Active
+              </span>
             </div>
             <p className="text-xs text-[#64748B] font-medium">
-              Customer Lag Profiling • Data-Derived Weights ({Math.round((data_derived_weights.expected_collection_weight || 0.887)*100)}%) • 3-Tier Order Buckets
+              Customer Defaulter Intelligence • Data Weights ({Math.round((data_derived_weights.expected_collection_weight || 0.887)*100)}%) • 3-Tier Order Buckets
             </p>
           </div>
         </div>
@@ -85,7 +122,7 @@ export function CashForecastWidget({ forecast }) {
               activeTab === 'risk_ranking' ? 'bg-[#1E3A8A] text-white shadow-[2px_2px_0px_0px_#0F172A]' : 'text-[#475569] hover:text-[#0F172A]'
             }`}
           >
-            <Users className="w-3.5 h-3.5" /> Customer Risk ({customer_risk_ranking.length})
+            <Users className="w-3.5 h-3.5" /> Defaulter Analytics ({customer_defaulter_analytics.length})
           </button>
           <button
             onClick={() => setActiveTab('buckets')}
@@ -186,12 +223,12 @@ export function CashForecastWidget({ forecast }) {
         </motion.div>
       )}
 
-      {/* TAB 2: CUSTOMER RISK RANKING TABLE */}
+      {/* TAB 2: CUSTOMER DEFAULTER ANALYTICS TABLE */}
       {activeTab === 'risk_ranking' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-black uppercase text-[#0F172A]">Customer Settlement Lag & Risk Impact Ranking</h4>
-            <span className="text-[10px] font-mono font-bold text-slate-500">Sorted by Highest Outstanding & At-Risk Impact</span>
+            <h4 className="text-xs font-black uppercase text-[#0F172A]">Customer Settlement Lag & Defaulter Intelligence Ranking</h4>
+            <span className="text-[10px] font-mono font-bold text-slate-500">Sorted by Highest Violations & At-Risk Impact</span>
           </div>
 
           <div className="overflow-x-auto border-2 border-[#0F172A]">
@@ -200,32 +237,49 @@ export function CashForecastWidget({ forecast }) {
                 <tr>
                   <th className="p-3">Customer Name</th>
                   <th className="p-3">Avg Settlement Lag</th>
-                  <th className="p-3">Reliability Rating</th>
-                  <th className="p-3">Total Outstanding</th>
-                  <th className="p-3">At-Risk Amount</th>
+                  <th className="p-3">Defaults Violations</th>
+                  <th className="p-3">Reliability Score</th>
+                  <th className="p-3">Flag Reason & Context</th>
+                  <th className="p-3">Outstanding Risk</th>
+                  <th className="p-3">Defaulter Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y border-[#E2E8F0] font-medium text-[#0F172A]">
-                {customer_risk_ranking.length === 0 ? (
+                {customer_defaulter_analytics.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-4 text-center text-slate-500 italic">No customer risk data available</td>
+                    <td colSpan={7} className="p-4 text-center text-slate-500 italic">No customer defaulter data available</td>
                   </tr>
                 ) : (
-                  customer_risk_ranking.map((c, idx) => (
+                  customer_defaulter_analytics.map((c, idx) => (
                     <tr key={idx} className="hover:bg-slate-50">
                       <td className="p-3 font-bold">{c.customer_name}</td>
-                      <td className="p-3">{c.avg_lag_days} days</td>
+                      <td className="p-3">{c.avg_lag_days} days late</td>
                       <td className="p-3">
-                        <span className={`px-2 py-0.5 text-[10px] font-black uppercase border ${
-                          c.reliability_rating === 'HIGH' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
-                          c.reliability_rating === 'MEDIUM' ? 'bg-amber-100 text-amber-800 border-amber-300' :
-                          'bg-rose-100 text-rose-800 border-rose-300'
-                        }`}>
-                          {c.reliability_rating}
+                        <span className={`px-2 py-0.5 text-[10px] font-black uppercase ${c.default_violations_count > 0 ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'text-slate-600'}`}>
+                          {c.default_violations_count} Defaults
                         </span>
                       </td>
-                      <td className="p-3 font-bold">{formatINR(c.total_outstanding_inr)}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 text-[10px] font-black uppercase border ${
+                          c.reliability_badge === 'REPEAT_DEFAULTER' ? 'bg-rose-100 text-rose-800 border-rose-300 font-extrabold' :
+                          c.reliability_badge === 'HIGH_RELIABILITY' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                          'bg-amber-100 text-amber-800 border-amber-300'
+                        }`}>
+                          {c.reliability_score_percent}% ({c.reliability_badge})
+                        </span>
+                      </td>
+                      <td className="p-3 text-[11px] font-mono text-slate-700 max-w-xs">
+                        {c.default_reason_summary}
+                      </td>
                       <td className="p-3 text-rose-600 font-bold">{formatINR(c.at_risk_amount_inr)}</td>
+                      <td className="p-3">
+                        <button
+                          onClick={() => handleSendDunningNotice(c)}
+                          className="px-2.5 py-1 bg-[#0F172A] text-white text-[10px] font-black uppercase hover:bg-rose-700 transition-all flex items-center gap-1"
+                        >
+                          <Mail className="w-3 h-3" /> Dunning Notice
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -327,7 +381,6 @@ export function CashForecastWidget({ forecast }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Slider 1 */}
             <div className="bg-white p-4 border-2 border-[#CBD5E1]">
               <label className="text-xs font-black uppercase text-[#0F172A] block mb-2">
                 Simulated Gateway Payout Delay: <span className="text-[#2563EB] font-mono">+{payoutDelayDays} Days</span>
@@ -343,7 +396,6 @@ export function CashForecastWidget({ forecast }) {
               <span className="text-[10px] text-slate-500 block mt-1">Simulates settlement lag impact on 7-Day & 30-Day cash inflow timelines.</span>
             </div>
 
-            {/* Slider 2 */}
             <div className="bg-white p-4 border-2 border-[#CBD5E1]">
               <label className="text-xs font-black uppercase text-[#0F172A] block mb-2">
                 At-Risk Recovery Probability: <span className="text-rose-700 font-mono">{riskDiscountPercent}%</span>
@@ -360,7 +412,6 @@ export function CashForecastWidget({ forecast }) {
             </div>
           </div>
 
-          {/* Simulation Results Display */}
           <div className="bg-white p-4 border-2 border-[#0F172A] flex flex-col md:flex-row items-center justify-between gap-4 font-mono">
             <div>
               <span className="text-[10px] font-black uppercase text-slate-500 block">Simulated 30-Day Conservative Cash</span>
@@ -377,6 +428,45 @@ export function CashForecastWidget({ forecast }) {
         </motion.div>
       )}
 
+      {/* 1-CLICK DUNNING NOTICE MODAL */}
+      <AnimatePresence>
+        {dunningModalData && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white border-4 border-[#0F172A] shadow-[8px_8px_0px_0px_#0F172A] max-w-2xl w-full p-6 space-y-4">
+              <div className="flex items-center justify-between border-b-2 border-[#0F172A] pb-3">
+                <div className="flex items-center space-x-2">
+                  <Mail className="w-5 h-5 text-rose-600" />
+                  <h3 className="text-base font-black uppercase text-[#0F172A]">AI Dunning & Payment Schedule Reminder</h3>
+                </div>
+                <button onClick={() => setDunningModalData(null)} className="p-1 hover:bg-slate-200">
+                  <X className="w-5 h-5 text-[#0F172A]" />
+                </button>
+              </div>
+
+              <div className="bg-[#F8FAFC] border-2 border-[#0F172A] p-4 font-mono text-xs text-[#0F172A] whitespace-pre-wrap max-h-[50vh] overflow-y-auto">
+                {dunningModalData.noticeText}
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+                <span className="text-[10px] text-slate-500 font-mono font-bold">Automated FinOps Dunning Notice</span>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(dunningModalData.noticeText);
+                      alert('Dunning Notice copied to clipboard!');
+                    }}
+                    className="px-4 py-2 bg-rose-700 text-white text-xs font-black uppercase hover:bg-rose-800"
+                  >
+                    Copy Notice Text
+                  </button>
+                  <button onClick={() => setDunningModalData(null)} className="px-4 py-2 bg-[#0F172A] text-white text-xs font-black uppercase">Done</button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* MATHEMATICS INSPECTION MODAL */}
       <AnimatePresence>
         {showMathModal && (
@@ -391,10 +481,10 @@ export function CashForecastWidget({ forecast }) {
 
               <div className="space-y-3 text-xs text-slate-700 font-mono">
                 <p><strong>1. Data-Derived Expected Collection Weight:</strong> {data_derived_weights.expected_collection_weight || 0.887} (Calculated from DuckDB ratio of Matched Orders / Total Orders)</p>
-                <p><strong>2. Customer Lag Profiling:</strong> Requires ≥2 historical settlements per customer, else falls back to Global Median (+2.0 days).</p>
+                <p><strong>2. Customer Defaulter Reliability Score:</strong> <code>Score = 100 - (Avg Lag * 4) - (Defaults * 20)</code></p>
                 <p><strong>3. Conservative Range Formula:</strong><br />
                 <code>Conservative = Confirmed Cash + (Healthy Pending × {data_derived_weights.expected_collection_weight || 0.887}) + (At-Risk × 0.25)</code></p>
-                <p><strong>4. Historical MAPE Accuracy:</strong> 3.8% (Empirical accuracy score: 96.2%)</p>
+                <p><strong>4. Dual-Engine Safety Gate:</strong> Deterministic SQL Invariant Check in DuckDB + Gemini LLM double verification.</p>
               </div>
 
               <div className="text-right pt-2 border-t border-slate-200">

@@ -1,0 +1,6 @@
+order_id,invoice_date,expected_amount,customer_name,customer_reference,expected_settlement_date,tax_amount,currency,status
+ORD4001,2026-07-01,500000,Omni Global,REF4001,2026-07-02,90000,INR,settled
+ORD4002,2026-07-05,750000,Omni Global,REF4002,2026-07-06,135000,INR,settled
+ORD4003,2026-07-06,1200000,Omni Global,REF4003,2026-07-07,216000,INR,unsettled
+ORD4004,2026-06-15,1500000,Omni Global,REF4004,2026-06-16,270000,INR,unsettled
+ORD4005,2026-06-20,950000,Vortex Systems,REF4005,2026-06-21,171000,INR,unsettled

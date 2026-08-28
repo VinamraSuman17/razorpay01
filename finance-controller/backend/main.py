@@ -26,6 +26,7 @@ from src.agent.verifier import run_agent_verification, token_usage_tracker
 from src.exceptions.classifier import classify_unmatched_record, ExceptionItem
 from src.evaluation.evaluator import evaluate_reconciliation
 from src.qa.settlement_qa import answer_settlement_question
+from src.audit.logger import init_audit_db
 from src.tax.tax_matcher import run_tax_line_matching
 from src.forecasting.cash_forecaster import calculate_cash_forecast
 
@@ -241,6 +242,18 @@ def run_full_pipeline(
         db_conn.execute("DROP TABLE IF EXISTS internal_ledger")
         db_conn.execute("DROP TABLE IF EXISTS audit_log")
         db_conn.execute("DROP TABLE IF EXISTS exceptions")
+
+        init_audit_db(db_conn)
+        db_conn.execute("""
+            CREATE TABLE IF NOT EXISTS exceptions (
+                record_id VARCHAR,
+                source VARCHAR,
+                category VARCHAR,
+                reason VARCHAR,
+                suggested_action VARCHAR,
+                priority VARCHAR
+            );
+        """)
 
         ingest_bank_settlements(str(bank_csv_path), db_conn)
         ingest_internal_ledger(str(ledger_csv_path), db_conn)
