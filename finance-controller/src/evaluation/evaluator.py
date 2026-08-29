@@ -51,17 +51,23 @@ def evaluate_reconciliation(db_conn: duckdb.DuckDBPyConnection) -> dict:
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
     recall = tp / true_matches_count if true_matches_count > 0 else 0.0
     
-    total_settlements = db_conn.execute("SELECT COUNT(*) FROM bank_settlements").fetchone()[0]
+    has_exc = db_conn.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = 'exceptions'").fetchone()[0]
+    exc_cnt = db_conn.execute("SELECT count(*) FROM exceptions").fetchone()[0] if has_exc > 0 else 0
+
+    raw_bank_cnt = db_conn.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = 'bank_settlements'").fetchone()[0]
+    bank_cnt = db_conn.execute("SELECT COUNT(*) FROM bank_settlements").fetchone()[0] if raw_bank_cnt > 0 else 0
+
+    total_settlements = max(bank_cnt, len(matched_settlements) + exc_cnt)
     match_rate = len(matched_settlements) / total_settlements if total_settlements > 0 else 0.0
     
     return {
         "precision": precision,
         "recall": recall,
         "match_rate": match_rate,
+        "total_settlements": total_settlements,
+        "system_matches_count": len(sys_matches),
         "tp": tp,
         "fp": fp,
         "fn": fn,
-        "total_true_matches": true_matches_count,
-        "total_settlements": total_settlements,
-        "system_matches_count": len(sys_matches)
+        "total_true_matches": true_matches_count
     }

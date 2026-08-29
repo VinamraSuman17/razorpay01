@@ -5,6 +5,7 @@ import { Upload, AlertCircle, CheckCircle2, RefreshCw, Play, Terminal } from 'lu
 export function BatchUploadSection({ onUploadSuccess }) {
   const [bankFile, setBankFile] = useState(null);
   const [ledgerFile, setLedgerFile] = useState(null);
+  const [gatewayFile, setGatewayFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -22,11 +23,14 @@ export function BatchUploadSection({ onUploadSuccess }) {
     setErrorMsg(null);
     setSuccessMsg(null);
     setWarnings([]);
-    setLiveLogs(['[INIT] Uploading dataset files to backend pipeline...']);
+    setLiveLogs(['[INIT] Uploading multi-source dataset files to backend pipeline...']);
 
     const formData = new FormData();
     formData.append('bank_file', bankFile);
     formData.append('ledger_file', ledgerFile);
+    if (gatewayFile) {
+      formData.append('gateway_file', gatewayFile);
+    }
 
     try {
       const res = await fetch('/upload-batch', {
@@ -94,8 +98,8 @@ export function BatchUploadSection({ onUploadSuccess }) {
           <Upload className="w-5 h-5 stroke-[2.5]" />
         </div>
         <div>
-          <h3 className="text-lg font-black uppercase text-[#0F172A]">Supply Custom Dataset Batch</h3>
-          <p className="text-xs font-medium text-slate-600">Upload Bank Settlements and Internal Ledger CSV files to validate and reconcile a new dataset</p>
+          <h3 className="text-lg font-black uppercase text-[#0F172A]">Supply 3-Source Multi-Source Dataset Batch</h3>
+          <p className="text-xs font-medium text-slate-600">Upload Bank Settlements CSV, Internal Ledger CSV, and Razorpay Gateway Payout Report CSV for 3-way triangulation</p>
         </div>
       </div>
 
@@ -120,7 +124,7 @@ export function BatchUploadSection({ onUploadSuccess }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="mb-6 bg-[#050814] text-[#60A5FA] border-2 border-[#2563EB] p-4 shadow-[4px_4px_0px_0px_#0F172A]"
+            className="mb-6 bg-[#0F172A] border-2 border-[#2563EB] p-4 shadow-[4px_4px_0px_0px_#0F172A]"
           >
             <div className="flex items-center justify-between border-b border-[#1E3A8A] pb-2 mb-3">
               <div className="flex items-center space-x-2">
@@ -159,35 +163,53 @@ export function BatchUploadSection({ onUploadSuccess }) {
         </div>
       )}
 
-      <form onSubmit={handleUpload} className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
-        {/* Bank File Input */}
-        <div className="md:col-span-2">
-          <label className="block text-xs font-black uppercase tracking-wider text-[#0F172A] mb-2">
-            Bank Settlements CSV
-          </label>
-          <input
-            type="file"
-            accept=".csv"
-            onChange={(e) => setBankFile(e.target.files[0])}
-            className="w-full text-xs text-[#0F172A] font-bold file:mr-3 file:py-2 file:px-4 file:border-2 file:border-[#1E3A8A] file:text-xs file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[2px_2px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border-2 border-[#1E3A8A] bg-slate-100 p-2 shadow-[2px_2px_0px_0px_#0F172A]"
-          />
-        </div>
+      <form onSubmit={handleUpload} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Bank File Input */}
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-[#0F172A] mb-1.5 flex items-center justify-between">
+              <span>1. Bank Settlements CSV</span>
+              <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 border border-blue-300 font-mono">Source 1</span>
+            </label>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setBankFile(e.target.files[0])}
+              className="w-full text-xs text-[#0F172A] font-bold file:mr-2 file:py-1.5 file:px-3 file:border-2 file:border-[#1E3A8A] file:text-xs file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[1.5px_1.5px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border-2 border-[#1E3A8A] bg-slate-100 p-2 shadow-[2px_2px_0px_0px_#0F172A]"
+            />
+          </div>
 
-        {/* Ledger File Input */}
-        <div className="md:col-span-2">
-          <label className="block text-xs font-black uppercase tracking-wider text-[#0F172A] mb-2">
-            Internal Ledger CSV
-          </label>
-          <input
-            type="file"
-            accept=".csv"
-            onChange={(e) => setLedgerFile(e.target.files[0])}
-            className="w-full text-xs text-[#0F172A] font-bold file:mr-3 file:py-2 file:px-4 file:border-2 file:border-[#1E3A8A] file:text-xs file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[2px_2px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border-2 border-[#1E3A8A] bg-slate-100 p-2 shadow-[2px_2px_0px_0px_#0F172A]"
-          />
+          {/* Ledger File Input */}
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-[#0F172A] mb-1.5 flex items-center justify-between">
+              <span>2. Internal Ledger CSV</span>
+              <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 border border-blue-300 font-mono">Source 2</span>
+            </label>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setLedgerFile(e.target.files[0])}
+              className="w-full text-xs text-[#0F172A] font-bold file:mr-2 file:py-1.5 file:px-3 file:border-2 file:border-[#1E3A8A] file:text-xs file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[1.5px_1.5px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border-2 border-[#1E3A8A] bg-slate-100 p-2 shadow-[2px_2px_0px_0px_#0F172A]"
+            />
+          </div>
+
+          {/* Gateway Payout File Input */}
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-[#0F172A] mb-1.5 flex items-center justify-between">
+              <span>3. Razorpay Gateway Payout CSV</span>
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 border border-emerald-400 font-mono font-bold">Source 3 (Multi)</span>
+            </label>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setGatewayFile(e.target.files[0])}
+              className="w-full text-xs text-[#0F172A] font-bold file:mr-2 file:py-1.5 file:px-3 file:border-2 file:border-[#1E3A8A] file:text-xs file:font-black file:bg-[#0F172A] file:text-[#FAFAFA] file:shadow-[1.5px_1.5px_0px_0px_#0F172A] hover:file:bg-slate-800 cursor-pointer border-2 border-[#1E3A8A] bg-slate-100 p-2 shadow-[2px_2px_0px_0px_#0F172A]"
+            />
+          </div>
         </div>
 
         {/* Primary Action Trigger Button */}
-        <div className="md:col-span-1">
+        <div className="pt-2">
           <button
             type="submit"
             disabled={uploading}
@@ -196,12 +218,12 @@ export function BatchUploadSection({ onUploadSuccess }) {
             {uploading ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                <span>Reconciling...</span>
+                <span>Triangulating 3-Source Reconciliation...</span>
               </>
             ) : (
               <>
                 <Play className="w-4 h-4 fill-current text-white" />
-                <span>Run Batch Reconciliation</span>
+                <span>Run 3-Source Triangulated Reconciliation</span>
               </>
             )}
           </button>

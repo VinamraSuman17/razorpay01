@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 DEPLETED_MODELS: Dict[str, float] = {}
 
 def get_active_models(candidate_models: List[str]) -> List[str]:
-    """Returns models that are not depleted, automatically clearing 60-second RPM cooldowns."""
+    """Returns models that are not depleted, automatically clearing 61s (60s RPM window + 1s buffer) cooldowns."""
     now = time.time()
     active = []
     seen = set()
@@ -26,8 +26,8 @@ def get_active_models(candidate_models: List[str]) -> List[str]:
             continue
         seen.add(m)
         if m in DEPLETED_MODELS:
-            # Clear depletion if 60 seconds have passed (RPM window reset)
-            if now - DEPLETED_MODELS[m] > 60.0:
+            # Check if 61-second RPM reset window + 1s buffer has elapsed
+            if now >= DEPLETED_MODELS[m]:
                 del DEPLETED_MODELS[m]
                 active.append(m)
         else:
@@ -130,24 +130,19 @@ def verify_single_settlement(
         
     candidate_models = [
         "gemini-3.5-flash-lite",
-        "gemini-3.5-flash",
-        "gemini-flash-latest"
+        "gemini-3.1-flash-lite"
     ]
     models = get_active_models(candidate_models)
     
-    # If all models are in 60s rate-limit cooldown, wait for earliest cooldown reset so no record is left unverified
-    if not models and not is_test_mock and DEPLETED_MODELS:
-        now = time.time()
-        earliest_depletion = min(DEPLETED_MODELS.values())
-        elapsed_since_depletion = now - earliest_depletion
-        remaining_cooldown = max(1.0, 60.0 - elapsed_since_depletion + 1.0)
-        
-        logger.warning(f"[LADDER_COOLDOWN_WAIT] All models depleted. Sleeping {remaining_cooldown:.1f}s for RPM window reset...")
-        print(f"[MODEL LADDER] All Gemini models in cooldown. Sleeping {remaining_cooldown:.1f}s for window reset...")
-        time.sleep(remaining_cooldown)
-        
-        DEPLETED_MODELS.clear()
-        models = get_active_models(candidate_models)
+    # If all models are in rate-limit cooldown/depleted, fail fast to rule fallback immediately without sleeping
+    if not models and not is_test_mock:
+        logger.warning("[AI_VERIFIER_BYPASS] All Gemini models depleted/rate-limited. Defaulting to rule engine exception immediately.")
+        return VerificationResult(
+            decision="no_match",
+            confidence=0.0,
+            reasoning="All Gemini models rate-limited/depleted. Defaulting to rule engine exception.",
+            rule_category="UNMATCHED_EXCEPTION"
+        )
 
     if is_test_mock:
         # For custom/mocked clients in tests, use only the first configured model name
@@ -287,42 +282,22 @@ def verify_single_settlement(
                         reasoning=f"Failed to parse LLM response after retry: {str(e)}",
                         rule_category="UNMATCHED_EXCEPTION"
                     )
-                tb = traceback.format_exc()
-                logger.error(
-                    f"LLM API error in verifier for model '{model_name}'. Exception Type: {type(e).__name__}, Message: {str(e)}\nTraceback:\n{tb}"
-                )
                 if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                    DEPLETED_MODELS[model_name] = time.time()
-                    if "PerDay" in str(e) or "limit: 500" in str(e):
-                        logger.warning(f"Daily quota limit hit for model '{model_name}'. Marking model as depleted...")
-                    else:
-                        logger.warning(f"429 Rate limit hit for model '{model_name}'. Switching immediately to next fallback model in ladder (60s cooldown)...")
-                        print(f"429 Rate limit hit for model '{model_name}'. Switching immediately to next fallback model in ladder...")
+                    # 60-second RPM reset window + 1.0 second safety buffer = 61.0s cooldown
+                    DEPLETED_MODELS[model_name] = time.time() + 61.0
+                    log_msg = (
+                        f"[RPM_QUOTA_COOLDOWN] Model '{model_name}' RPM quota exhausted. "
+                        f"Set 61s cooldown (60s RPM reset + 1s buffer). Switching to fallback model..."
+                    )
+                    logger.warning(log_msg)
+                    print(log_msg)
                     skip_model = True
                     break
-                skip_model = True
-                break
-
-    # If rate limited, wait out the 60s window and retry active model so zero records are dropped
-    if not is_test_mock:
-        logger.warning("[RATE_LIMIT_RETRY] Waiting 15s for Gemini API rate-limit window reset...")
-        time.sleep(15.0)
-        DEPLETED_MODELS.clear()
-        models = get_active_models(candidate_models)
-        for model_name in models:
-            try:
-                enforce_proactive_rate_limit(rpm=rpm, is_test_mock=is_test_mock)
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=[user_prompt],
-                    config=config
-                )
-                resp_text = (getattr(response, "text", None) or "").strip()
-                if resp_text:
-                    data = json.loads(resp_text)
-                    return VerificationResult(**data)
-            except Exception as e:
-                logger.warning(f"Final recovery attempt failed for {model_name}: {e}")
+                else:
+                    tb = traceback.format_exc()
+                    logger.error(f"LLM API error in verifier for model '{model_name}': {e}\n{tb}")
+                    skip_model = True
+                    break
 
     return VerificationResult(
         decision="no_match",
@@ -356,6 +331,7 @@ def run_agent_verification(
     auto_thresh = settings.thresholds.auto_match_confidence
     review_thresh = settings.thresholds.needs_review_confidence
     
+    candidate_models = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
     for stl in unmatched_settlements:
         stl_id = stl["settlement_id"]
         if stl_id in consumed_settlements:
@@ -365,6 +341,16 @@ def run_agent_verification(
         if not candidates:
             stats["exceptions"] += 1
             continue
+            
+        active_models = get_active_models(candidate_models)
+        if not active_models:
+            min_reset = min(DEPLETED_MODELS.values())
+            wait_sec = max(1.0, min_reset - time.time() + 1.0)
+            log_msg = f"[RPM_QUOTA_RESET_WAIT] All AI models on 61s cooldown. Waiting {wait_sec:.1f}s for RPM quota window to reset before AI verification..."
+            logger.info(log_msg)
+            print(log_msg)
+            time.sleep(wait_sec)
+            DEPLETED_MODELS.clear()
             
         res = verify_single_settlement(stl, candidates, settings, client=client)
         

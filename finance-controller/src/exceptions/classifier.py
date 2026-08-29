@@ -120,20 +120,47 @@ def classify_unmatched_record(
             stl_date = record.get("date") or "N/A"
             stl_utr = record.get("utr_reference") or "N/A"
             stl_net_inr = net_amt_paise / 100.0
+            bank_fee_paise = record.get("fees_deducted", 0)
+            tds_paise = record.get("tax_deducted", 0)
             
             cand_id = cand_rec.get("order_id") or "N/A"
             exp_amt_paise = cand_rec.get("expected_amount", 0)
             exp_amt_inr = exp_amt_paise / 100.0
-            fee_est_paise = round(exp_amt_paise * 0.0236)
+            fee_est_paise = round(exp_amt_paise * 0.02)
             exp_net_inr = (exp_amt_paise - fee_est_paise) / 100.0
             diff_inr = abs(net_amt_paise - (exp_amt_paise - fee_est_paise)) / 100.0
             
-            reason = (
-                f"Bank settlement {rec_id} on {stl_date} (net ₹{stl_net_inr:.2f}, UTR: '{stl_utr}') "
-                f"reference matches candidate order {cand_id} (expected ₹{exp_amt_inr:.2f}), "
-                f"but amount differs by ₹{diff_inr:.2f} (expected net after 2.36% fee ₹{exp_net_inr:.2f})."
-            )
-            action = f"Review fee agreement or check for unrecorded partial refund/adjustment on order {cand_id}."
+            category = "UNRESOLVED_AMBIGUOUS_DISCREPANCY"
+            priority = "MEDIUM"
+            
+            if bank_fee_paise and bank_fee_paise > fee_est_paise + 500:
+                category = "PLATFORM_FEE_OVERCHARGE"
+                priority = "HIGH"
+                reason = (
+                    f"Platform fee overcharge detected on settlement {rec_id} (Order: {cand_id}). "
+                    f"Deducted fee ₹{bank_fee_paise/100.0:.2f} exceeds 2.0% contract rate ₹{fee_est_paise/100.0:.2f}."
+                )
+                action = f"File fee overcharge dispute with payment gateway to recover ₹{(bank_fee_paise - fee_est_paise)/100.0:.2f}."
+            elif tds_paise and tds_paise > 0:
+                category = "MISSING_TDS_WITHHOLDING"
+                priority = "HIGH"
+                reason = (
+                    f"Sec 194O TDS withholding mismatch on settlement {rec_id} (Order: {cand_id}). "
+                    f"Bank tax withheld ₹{tds_paise/100.0:.2f} vs expected ₹{round(exp_amt_paise * 0.02)/100.0:.2f}."
+                )
+                action = f"Issue revised TDS certificate / tax adjustment note to gateway for order {cand_id}."
+            elif "ORPHAN" in stl_utr or "MISSING" in stl_utr:
+                category = "MISSING_BANK_CREDIT"
+                priority = "HIGH"
+                reason = f"Bank settlement {rec_id} on {stl_date} (₹{stl_net_inr:.2f}) has unmapped UTR reference '{stl_utr}'."
+                action = f"Contact gateway team to map orphan settlement {rec_id} to internal ERP order."
+            else:
+                reason = (
+                    f"Bank settlement {rec_id} on {stl_date} (net ₹{stl_net_inr:.2f}, UTR: '{stl_utr}') "
+                    f"reference matches candidate order {cand_id} (expected ₹{exp_amt_inr:.2f}), "
+                    f"but amount differs by ₹{diff_inr:.2f} (expected net after 2% fee ₹{exp_net_inr:.2f})."
+                )
+                action = f"Review fee agreement or check for unrecorded partial refund/adjustment on order {cand_id}."
         else:
             ord_date = record.get("invoice_date") or "N/A"
             cust_ref = record.get("customer_reference") or "N/A"
@@ -143,6 +170,8 @@ def classify_unmatched_record(
             cand_net_inr = cand_rec.get("net_amount", 0) / 100.0
             diff_inr = abs(record.get("expected_amount", 0) - cand_rec.get("net_amount", 0)) / 100.0
             
+            category = "UNRESOLVED_AMBIGUOUS_DISCREPANCY"
+            priority = "MEDIUM"
             reason = (
                 f"Internal order {rec_id} on {ord_date} (₹{exp_amt_inr:.2f}, Ref: '{cust_ref}') "
                 f"partially matches candidate settlement {cand_id} (net ₹{cand_net_inr:.2f}), "
@@ -153,10 +182,10 @@ def classify_unmatched_record(
         return ExceptionItem(
             record_id=rec_id,
             source=source_type,
-            category="UNRESOLVED_AMBIGUOUS_DISCREPANCY",
+            category=category,
             reason=reason,
             suggested_action=action,
-            priority="MEDIUM",
+            priority=priority,
             is_exception=True
         )
 

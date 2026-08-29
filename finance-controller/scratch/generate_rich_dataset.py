@@ -16,6 +16,7 @@ companies = [
 
 bank_rows = ['settlement_id,date,amount,utr_reference,payer_account,fees_deducted,net_amount,tax_deducted,description,currency']
 ledger_rows = ['order_id,invoice_date,expected_amount,customer_name,customer_reference,expected_settlement_date,tax_amount,currency,status']
+gateway_rows = ['payout_id,payout_date,order_id,utr_reference,gross_amount,gateway_fee,gateway_tax,net_payout,status']
 
 base_date = datetime(2026, 7, 1)
 
@@ -23,6 +24,7 @@ base_date = datetime(2026, 7, 1)
 for i in range(1, 56):
     stl_id = f'STL{i:04d}'
     ord_id = f'ORD{i:04d}'
+    pay_id = f'PAYOUT{i:04d}'
     utr = f'REF{i:04d}'
     
     comp_name, acc, avg_lag, def_cnt = random.choice(companies)
@@ -47,6 +49,7 @@ for i in range(1, 56):
     
     bank_rows.append(f'{stl_id},{d_str},{gross_paise},{utr},{acc},{fee_paise},{net_paise},0,Settlement from {comp_name},{curr}')
     ledger_rows.append(f'{ord_id},{i_str},{gross_paise},{comp_name},{utr},{d_str},{gst_paise},{curr},settled')
+    gateway_rows.append(f'{pay_id},{d_str},{ord_id},{utr},{gross_paise},{fee_paise},{round(fee_paise * 0.18)},{net_paise},SETTLED')
 
 # Add 8 Healthy Pending Orders (for 30-Day Liquidity Forecast)
 for i in range(56, 64):
@@ -86,5 +89,6 @@ out_dir.mkdir(parents=True, exist_ok=True)
 
 (out_dir / "bank_settlements.csv").write_text("\n".join(bank_rows), encoding="utf-8")
 (out_dir / "internal_ledger.csv").write_text("\n".join(ledger_rows), encoding="utf-8")
+(out_dir / "razorpay_gateway_payouts.csv").write_text("\n".join(gateway_rows), encoding="utf-8")
 
-print("SUCCESSFULLY GENERATED 58 BANK SETTLEMENTS AND 68 LEDGER RECORDS IN data/demo_60_records/")
+print("SUCCESSFULLY GENERATED 3-SOURCE MULTI-SOURCE DATASETS (BANK + LEDGER + GATEWAY) IN data/demo_60_records/")

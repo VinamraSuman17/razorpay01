@@ -42,42 +42,59 @@ export default function App() {
         fetch('/summary')
       ]);
 
-      if (matchRes.ok) {
-        const mData = await matchRes.json();
-        setMatches(mData);
-        if (mData.length > 0) {
-          setHasDataset(true);
-          if (mData[0].timestamp) {
-            setLastRunTime(mData[0].timestamp);
+      const mData = matchRes.ok ? await matchRes.json() : [];
+      const eData = excRes.ok ? await excRes.json() : [];
+      const fData = forecastRes.ok ? await forecastRes.json() : null;
+      const tData = taxRes.ok ? await taxRes.json() : null;
+      const sData = summaryRes.ok ? await summaryRes.json() : null;
+
+      setMatches(Array.isArray(mData) ? mData : []);
+      setExceptions(Array.isArray(eData) ? eData : []);
+      if (fData) setForecast(fData);
+      if (tData) setTaxAudit(tData);
+      if (sData) setSummary(sData);
+
+      if (mData && mData.length > 0 && mData[0].timestamp) {
+        setLastRunTime(mData[0].timestamp);
+      }
+
+      // Self-healing retry if summary indicates matches/exceptions exist but array fetch was empty due to write lock
+      if (sData && sData.matched_count > 0 && (!mData || mData.length === 0)) {
+        setTimeout(async () => {
+          try {
+            const retryRes = await fetch('/matches');
+            if (retryRes.ok) {
+              const retryM = await retryRes.json();
+              if (retryM && retryM.length > 0) setMatches(retryM);
+            }
+          } catch (rErr) {
+            console.error('Matches retry failed:', rErr);
           }
-        }
+        }, 500);
       }
 
-      if (excRes.ok) {
-        const eData = await excRes.json();
-        setExceptions(eData);
+      if (sData && sData.exception_count > 0 && (!eData || eData.length === 0)) {
+        setTimeout(async () => {
+          try {
+            const retryExc = await fetch('/exceptions');
+            if (retryExc.ok) {
+              const retryE = await retryExc.json();
+              if (retryE && retryE.length > 0) setExceptions(retryE);
+            }
+          } catch (rErr) {
+            console.error('Exceptions retry failed:', rErr);
+          }
+        }, 500);
       }
 
-      if (forecastRes.ok) {
-        const fData = await forecastRes.json();
-        setForecast(fData);
-      }
-
-      if (taxRes.ok) {
-        const tData = await taxRes.json();
-        setTaxAudit(tData);
-      }
-
-      if (summaryRes.ok) {
-        const sData = await summaryRes.json();
-        setSummary(sData);
-      }
+      const hasData = (mData && mData.length > 0) || (eData && eData.length > 0) || (sData && sData.total_bank_settlements > 0);
+      setHasDataset(Boolean(hasData));
     } catch (err) {
       console.error('Error fetching backend data:', err);
     }
   };
 
-  const handleResetSession = async () => {
+  const handleResetSession = async (showToast = false) => {
     try {
       await fetch('/reset-db', { method: 'POST' });
       setHasDataset(false);
@@ -86,8 +103,10 @@ export default function App() {
       setExceptions([]);
       setForecast(null);
       setTaxAudit(null);
-      setAppToast('✓ Session reset! All previous audit data cleared. Ready for fresh dataset.');
-      setTimeout(() => setAppToast(null), 4000);
+      if (showToast) {
+        setAppToast('✓ Session reset! All previous audit data cleared. Ready for fresh dataset.');
+        setTimeout(() => setAppToast(null), 4000);
+      }
     } catch (e) {
       setHasDataset(false);
       setSummary(null);
@@ -103,13 +122,15 @@ export default function App() {
   const handleUploadSuccess = async (newSummary) => {
     setHasDataset(true);
     setNoDataAlert(null);
-    setSummary(newSummary);
-    await fetchData();
+    if (newSummary) setSummary(newSummary);
+    setTimeout(async () => {
+      await fetchData();
+    }, 400);
   };
 
-  // Initial mount data load
+  // Initial mount data load: Reset session on browser reload (F5) so page starts fresh
   React.useEffect(() => {
-    fetchData();
+    handleResetSession(false);
   }, []);
 
   // Q&A Question Handler
@@ -241,18 +262,21 @@ ${(forecast?.customer_defaulter_analytics || []).map(c => `• ${c.customer_name
             </motion.div>
           )}
 
-          {/* Permanent Trust Strip - Zero Floating Point Risk */}
+          {/* Permanent Trust Strip - Zero Floating Point Risk & Full 5-Stage Enterprise Loop */}
           <div className="mb-4 p-3 bg-[#0F172A] text-white border-2 border-[#1E3A8A] shadow-[4px_4px_0px_0px_#0F172A] flex flex-col md:flex-row items-center justify-between gap-3 text-xs font-mono">
             <div className="flex items-center space-x-2">
-              <span className="text-base">🔒</span>
-              <span className="font-black text-blue-300 uppercase tracking-wide">Zero Floating-Point Risk Shield Active</span>
+              <span className="text-base">🌐</span>
+              <span className="font-black text-emerald-400 uppercase tracking-wide">Full 5-Stage Enterprise Loop Active</span>
+              <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600 px-2 py-0.5 font-bold">
+                1.Ledger ➔ 2.Gateway ➔ 3.Bank ➔ 4.GST Portal ➔ 5.Accounting Books
+              </span>
             </div>
             <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-200">
-              <span className="flex items-center gap-1"><span className="text-emerald-400">✓</span> All calculations in Integer Paise</span>
+              <span className="flex items-center gap-1"><span className="text-emerald-400">✓</span> Integer Paise Math</span>
               <span className="text-slate-500">•</span>
-              <span className="flex items-center gap-1"><span className="text-emerald-400">✓</span> LLM used only for verification (never money math)</span>
+              <span className="flex items-center gap-1"><span className="text-emerald-400">✓</span> LLM Verification Only</span>
               <span className="text-slate-500">•</span>
-              <span className="flex items-center gap-1"><span className="text-emerald-400">✓</span> Auto-settle blocked below 90% confidence</span>
+              <span className="flex items-center gap-1"><span className="text-emerald-400">✓</span> Auto-Settle ≥ 90%</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 bg-emerald-900/90 text-emerald-300 border border-emerald-500 font-bold text-[10px] uppercase">

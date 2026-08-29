@@ -10,6 +10,7 @@ export function ExceptionsTable({ exceptions }) {
   const [selectedOwner, setSelectedOwner] = useState('Rahul (Senior Analyst)');
   const [postSuccessMsg, setPostSuccessMsg] = useState('');
   const [actionNotice, setActionNotice] = useState(null);
+  const [reviewStatus, setReviewStatus] = useState('Open / Pending Action');
 
   const fetchComments = async (recordId) => {
     try {

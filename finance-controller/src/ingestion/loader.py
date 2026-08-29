@@ -157,6 +157,19 @@ def init_db(db_conn: duckdb.DuckDBPyConnection):
             status VARCHAR
         );
     """)
+    db_conn.execute("""
+        CREATE TABLE IF NOT EXISTS gateway_settlements (
+            payout_id VARCHAR PRIMARY KEY,
+            payout_date VARCHAR,
+            order_id VARCHAR,
+            utr_reference VARCHAR,
+            gross_amount BIGINT,
+            gateway_fee BIGINT,
+            gateway_tax BIGINT,
+            net_payout BIGINT,
+            status VARCHAR
+        );
+    """)
 
 def ingest_bank_settlements(csv_path: str | Path, db_conn: duckdb.DuckDBPyConnection) -> Dict[str, int]:
     """
@@ -291,15 +304,48 @@ def ingest_internal_ledger(csv_path: str | Path, db_conn: duckdb.DuckDBPyConnect
                 (order_id, invoice_date, expected_amount, customer_name, customer_reference, expected_settlement_date, tax_amount, currency, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
             """, (
-                record.order_id, record.invoice_date, record.expected_amount, record.customer_name,
-                record.customer_reference, record.expected_settlement_date, record.tax_amount,
+                record.order_id, record.invoice_date, record.expected_amount,
+                record.customer_name, record.customer_reference,
+                record.expected_settlement_date, record.tax_amount,
                 record.currency, record.status
             ))
         db_conn.execute("COMMIT;")
         
     return {
-        "total": total_records,
-        "valid": valid_records,
-        "invalid": invalid_records,
-        "duplicates": duplicate_records
+        "total_records": total_records,
+        "valid_records": valid_records,
+        "invalid_records": invalid_records,
+        "duplicate_records": duplicate_records
     }
+
+def ingest_gateway_settlements(csv_path: str | Path, db_conn: duckdb.DuckDBPyConnection) -> Dict[str, int]:
+    """Ingests, validates, and stores Razorpay Gateway Payout CSV records into DuckDB."""
+    init_db(db_conn)
+    total = 0
+    valid = 0
+    with open(csv_path, mode="r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        db_conn.execute("BEGIN TRANSACTION;")
+        for row in reader:
+            total += 1
+            try:
+                payout_id = str(row.get("payout_id", f"PAYOUT_{total}")).strip()
+                payout_date = parse_date(row.get("payout_date", "2026-07-01"))
+                order_id = str(row.get("order_id", "")).strip()
+                utr = str(row.get("utr_reference", "")).strip()
+                gross = parse_amount_to_paise(row.get("gross_amount", 0))
+                fee = parse_amount_to_paise(row.get("gateway_fee", 0))
+                tax = parse_amount_to_paise(row.get("gateway_tax", 0))
+                net = parse_amount_to_paise(row.get("net_payout", gross - fee))
+                status = str(row.get("status", "SETTLED")).strip()
+                
+                db_conn.execute("""
+                    INSERT OR REPLACE INTO gateway_settlements
+                    (payout_id, payout_date, order_id, utr_reference, gross_amount, gateway_fee, gateway_tax, net_payout, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """, (payout_id, payout_date, order_id, utr, gross, fee, tax, net, status))
+                valid += 1
+            except Exception as e:
+                dq_logger.warning(f"Error ingesting gateway row {total}: {e}")
+        db_conn.execute("COMMIT;")
+    return {"total_records": total, "valid_records": valid}

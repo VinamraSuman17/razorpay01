@@ -322,14 +322,13 @@ def calculate_cash_forecast(db_conn: duckdb.DuckDBPyConnection) -> Dict[str, Any
                     })
                 else:
                     healthy_pending_orders_count += 1
-                    if days_diff <= 30:
-                        expected_orders_list.append({
-                            "id": ord_id,
-                            "customer_name": cust_name,
-                            "amount_inr": round(exp_amt_inr, 2),
-                            "due_date": str(adjusted_settle_dt),
-                            "bucket": "7D" if days_diff <= 7 else ("14D" if days_diff <= 14 else "30D")
-                        })
+                    expected_orders_list.append({
+                        "id": ord_id,
+                        "customer_name": cust_name,
+                        "amount_inr": round(exp_amt_inr, 2),
+                        "due_date": str(adjusted_settle_dt),
+                        "bucket": "7D" if days_diff <= 7 else ("14D" if days_diff <= 14 else "30D")
+                    })
                     if days_diff <= 7:
                         next_7d_healthy += exp_amt_inr
                     if days_diff <= 14:

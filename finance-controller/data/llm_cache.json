@@ -229,5 +229,19 @@
     "confidence": 0.95,
     "reasoning": "The settlement amount of 60,000,000 paise is exactly 50% of the expected amount of 120,000,000 paise for ORD3052. The settlement description explicitly states 'PARTIAL/Installment 1 of REF3052', which matches the customer reference REF3052 and customer name Omni Global. After accounting for a 2% fee deduction (1,200,000 paise), the net amount of 58,800,000 paise matches the settlement net amount exactly.",
     "rule_category": "PARTIAL_PAYMENT"
+  },
+  "1cedefca02a6cdc26230e91c8fb96e3900f4111391a4bf197c6284735269702e": {
+    "decision": "no_match",
+    "matched_order_id": null,
+    "confidence": 0.0,
+    "reasoning": "The settlement represents a chargeback reversal of -150,000 paise for Omni Global on 2026-07-25. All shortlisted candidates are standard orders for Acme Corp with expected amounts exceeding 51,300,000 paise and invoice dates on 2026-07-26. There is no matching candidate in terms of amount, customer name, or reference.",
+    "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "6e15d3798bd762539908717970bc691b55d2fe7123abe2f7dadc16601d8d82df": {
+    "decision": "match",
+    "matched_order_id": "ORD0053",
+    "confidence": 0.95,
+    "reasoning": "The settlement amount (75,000,000) matches the expected amount of ORD0053 exactly. After accounting for a 2% fee deduction (1,500,000), the net amount (73,500,000) matches the settlement net amount perfectly. The reference 'REF0055_ORPHAN' is a clear variation of the order's 'REF0055_MISSING', and the payer account 'ACC_APEX' aligns with 'Apex Logistics'.",
+    "rule_category": "FEE_DEDUCTION"
   }
 }

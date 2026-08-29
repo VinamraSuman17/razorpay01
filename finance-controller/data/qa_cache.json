@@ -118,5 +118,25 @@
     },
     "data_found": true,
     "row_count": 1
+  },
+  "tell me aboout stl0090 what category it is from and how can we improve it": {
+    "answer": "Settlement **STL0090** (date: **2026-07-25**, UTR: `REF0090`) belongs to the exception category **`CHARGEBACK_REVERSAL`**. \n\nIt involves a negative bank settlement amount of **-\u20b91,500.00** (gross and net amount of -\u20b91,500.00 with \u20b90.00 fees deducted) under description *\"Chargeback Reversal for Omni Global\"*, referencing UTR `REF0090`. Because it is an unresolved exception, it currently has no matching audit log or internal ledger order associated with it in the retrieved data.\n\n**How to improve and resolve it:**\nTo resolve this exception, you should follow the suggested action: **Debit the merchant ledger account or file a chargeback dispute with the acquirer bank for UTR `REF0090`**.",
+    "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
+    "extracted_entity": {
+      "filter_type": "settlement_id",
+      "value": "STL0090"
+    },
+    "data_found": true,
+    "row_count": 1
+  },
+  "what is the total matched amount?": {
+    "answer": "Based on the reconciliation data provided, there are 56 reconciled matches out of a total of 60 bank settlements and 63 internal orders (achieving a match rate of 93.33%). However, the exact total monetary amount for these matched records is not available in the current context.",
+    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
+    "extracted_entity": {
+      "filter_type": "general_query",
+      "value": "total matched amount"
+    },
+    "data_found": true,
+    "row_count": 1
   }
 }
