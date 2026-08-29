@@ -6,6 +6,7 @@ import { LinearGradient } from '@visx/gradient';
 export function TaxAuditWidget({ taxAudit }) {
   const [showLedgerModal, setShowLedgerModal] = useState(false);
   const [disputeModalData, setDisputeModalData] = useState(null);
+  const [copyToast, setCopyToast] = useState(null);
 
   if (!taxAudit) return null;
 
@@ -370,19 +371,30 @@ Autonomous Finance Controller Team
                 {disputeModalData.emailText}
               </div>
 
+              {copyToast && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-2.5 bg-emerald-100 border-2 border-emerald-500 text-emerald-950 font-mono font-bold text-xs shadow-[2px_2px_0px_0px_#0F172A] flex justify-between items-center"
+                >
+                  <span>{copyToast}</span>
+                  <button onClick={() => setCopyToast(null)} className="font-black text-sm px-1 cursor-pointer">✕</button>
+                </motion.div>
+              )}
+
               <div className="flex items-center justify-between pt-2 border-t border-slate-200">
                 <span className="text-[10px] text-slate-500 font-mono font-bold">Ready to send to Gateway Acquirer Team</span>
                 <div className="flex space-x-2">
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(disputeModalData.emailText);
-                      alert('Dispute Email Draft copied to clipboard!');
+                      setCopyToast('✓ Dispute Email Draft copied to clipboard!');
                     }}
-                    className="px-4 py-2 bg-[#0D9488] text-white text-xs font-black uppercase hover:bg-[#09756C]"
+                    className="px-4 py-2 bg-[#0D9488] text-white text-xs font-black uppercase hover:bg-[#09756C] cursor-pointer border border-[#0F172A]"
                   >
                     Copy Email Text
                   </button>
-                  <button onClick={() => setDisputeModalData(null)} className="px-4 py-2 bg-[#0F172A] text-white text-xs font-black uppercase">Done</button>
+                  <button onClick={() => setDisputeModalData(null)} className="px-4 py-2 bg-[#0F172A] text-white text-xs font-black uppercase cursor-pointer">Done</button>
                 </div>
               </div>
             </div>

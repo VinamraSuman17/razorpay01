@@ -15,6 +15,7 @@ export function CashForecastWidget({ forecast }) {
   const [dunningModalData, setDunningModalData] = useState(null);
   const [frozenCustomers, setFrozenCustomers] = useState({});
   const [frozenModalData, setFrozenModalData] = useState(null);
+  const [toastNotice, setToastNotice] = useState(null);
 
   if (!forecast) return null;
 
@@ -520,7 +521,10 @@ Autonomous Credit & Risk Control Engine
                 {selectedBucketTab === 'at_risk' && (
                   atRiskOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="p-4 text-center text-slate-500 italic">No at-risk receivables in current dataset</td>
+                      <td colSpan={4} className="p-6 text-center text-slate-600 font-bold font-mono bg-slate-50">
+                        🛡️ No At-Risk receivables in current dataset <br />
+                        <span className="text-[11px] font-normal text-slate-500">(All pending orders are within healthy collection window)</span>
+                      </td>
                     </tr>
                   ) : (
                     atRiskOrders.map((o, idx) => (
@@ -616,19 +620,39 @@ Autonomous Credit & Risk Control Engine
                 {dunningModalData.noticeText}
               </div>
 
+              {toastNotice && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 bg-emerald-100 border-2 border-emerald-500 text-emerald-950 font-mono font-bold text-xs shadow-[2px_2px_0px_0px_#0F172A] flex justify-between items-center"
+                >
+                  <span>{toastNotice}</span>
+                  <button onClick={() => setToastNotice(null)} className="font-black text-sm px-1 cursor-pointer">✕</button>
+                </motion.div>
+              )}
+
               <div className="flex items-center justify-between pt-2 border-t border-slate-200">
                 <span className="text-[10px] text-slate-500 font-mono font-bold">Automated FinOps Dunning Notice</span>
                 <div className="flex space-x-2">
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(dunningModalData.noticeText);
-                      alert('Dunning Notice copied to clipboard!');
+                      setToastNotice(`✓ Dunning Notice queued successfully for ${dunningModalData.customer.customer_name}! Accounts team notified.`);
+                      setTimeout(() => setDunningModalData(null), 1800);
                     }}
-                    className="px-4 py-2 bg-rose-700 text-white text-xs font-black uppercase hover:bg-rose-800"
+                    className="px-4 py-2 bg-[#1D4ED8] text-white text-xs font-black uppercase hover:bg-[#2563EB] border-2 border-[#0F172A] shadow-[2px_2px_0px_0px_#0F172A] cursor-pointer"
                   >
-                    Copy Notice Text
+                    Send Dunning Notice to {dunningModalData.customer.customer_name} 🚀
                   </button>
-                  <button onClick={() => setDunningModalData(null)} className="px-4 py-2 bg-[#0F172A] text-white text-xs font-black uppercase">Done</button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(dunningModalData.noticeText);
+                      setToastNotice('✓ Dunning Notice copied to clipboard!');
+                    }}
+                    className="px-3 py-2 bg-slate-700 text-white text-xs font-black uppercase hover:bg-slate-800 border-2 border-[#0F172A] cursor-pointer"
+                  >
+                    Copy Text
+                  </button>
+                  <button onClick={() => setDunningModalData(null)} className="px-3 py-2 bg-[#0F172A] text-white text-xs font-black uppercase cursor-pointer">Done</button>
                 </div>
               </div>
             </div>

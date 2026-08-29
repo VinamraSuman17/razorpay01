@@ -98,12 +98,30 @@ def calculate_customer_defaulter_analytics(db_conn: duckdb.DuckDBPyConnection) -
             c_entry["total_orders"] += 1
             c_entry["total_outstanding_paise"] += (exp_paise or 0)
 
-            is_risk = ord_id in at_risk_ids
+            is_overdue = False
+            lag_days = 0.0
+            if raw_date:
+                try:
+                    if isinstance(raw_date, str):
+                        dt_val = datetime.strptime(raw_date[:10], "%Y-%m-%d").date()
+                    elif isinstance(raw_date, datetime):
+                        dt_val = raw_date.date()
+                    else:
+                        dt_val = None
+                    if dt_val and dt_val < today:
+                        is_overdue = True
+                        lag_days = max(1.0, float((today - dt_val).days))
+                        c_entry["lags"].append(lag_days)
+                except Exception:
+                    pass
+
+            is_risk = (ord_id in at_risk_ids) or is_overdue
             if is_risk:
                 c_entry["default_violations"] += 1
                 c_entry["at_risk_paise"] += (exp_paise or 0)
-                c_entry["default_reasons"].append(f"Order {ord_id} flagged for discrepancy/overdue")
-    except Exception:
+                reason = f"Order {ord_id} overdue by {int(lag_days)} days" if is_overdue else f"Order {ord_id} flagged in discrepancy queue"
+                c_entry["default_reasons"].append(reason)
+    except Exception as e:
         pass
 
     # 3. Finalize Scores and Lag Profiling
@@ -275,6 +293,7 @@ def calculate_cash_forecast(db_conn: duckdb.DuckDBPyConnection) -> Dict[str, Any
                     
                 cust_lag = customer_lags.get(cust_name, 2.0)
                 
+                is_overdue = False
                 base_dt = today + timedelta(days=7)
                 if raw_date:
                     try:
@@ -282,24 +301,25 @@ def calculate_cash_forecast(db_conn: duckdb.DuckDBPyConnection) -> Dict[str, Any
                             base_dt = datetime.strptime(raw_date[:10], "%Y-%m-%d").date()
                         elif isinstance(raw_date, datetime):
                             base_dt = raw_date.date()
+                        if base_dt < today:
+                            is_overdue = True
                     except Exception:
                         pass
                         
                 adjusted_settle_dt = base_dt + timedelta(days=round(cust_lag))
                 days_diff = (adjusted_settle_dt - today).days
                 
-                is_risk = ord_id in at_risk_ids
+                is_risk = (ord_id in at_risk_ids) or is_overdue
                 if is_risk:
                     at_risk_pending_orders_count += 1
-                    if days_diff <= 30:
-                        next_30d_at_risk += exp_amt_inr
-                        at_risk_orders_list.append({
-                            "id": ord_id,
-                            "customer_name": cust_name,
-                            "amount_inr": round(exp_amt_inr, 2),
-                            "due_date": str(adjusted_settle_dt),
-                            "risk_reason": "Exception Flagged / Overdue Order"
-                        })
+                    next_30d_at_risk += exp_amt_inr
+                    at_risk_orders_list.append({
+                        "id": ord_id,
+                        "customer_name": cust_name,
+                        "amount_inr": round(exp_amt_inr, 2),
+                        "due_date": str(adjusted_settle_dt),
+                        "risk_reason": "Overdue Payment Violation" if is_overdue else "Exception Flagged"
+                    })
                 else:
                     healthy_pending_orders_count += 1
                     if days_diff <= 30:

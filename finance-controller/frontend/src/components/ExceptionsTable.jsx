@@ -9,6 +9,7 @@ export function ExceptionsTable({ exceptions }) {
   const [commentInput, setCommentInput] = useState('');
   const [selectedOwner, setSelectedOwner] = useState('Rahul (Senior Analyst)');
   const [postSuccessMsg, setPostSuccessMsg] = useState('');
+  const [actionNotice, setActionNotice] = useState(null);
 
   const fetchComments = async (recordId) => {
     try {
@@ -172,7 +173,7 @@ export function ExceptionsTable({ exceptions }) {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[500px] bg-[#FAFAFA] border-l-4 border-[#1E3A8A] shadow-[-10px_0px_0px_0px_#0F172A] p-6 overflow-y-auto flex flex-col justify-between"
+              className="fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[540px] bg-[#FAFAFA] border-l-4 border-[#1E3A8A] shadow-[-10px_0px_0px_0px_#0F172A] p-6 overflow-y-auto flex flex-col justify-between"
             >
               <div className="space-y-6">
                 {/* Header */}
@@ -182,65 +183,146 @@ export function ExceptionsTable({ exceptions }) {
                       <AlertTriangle className="w-5 h-5 stroke-[2.5]" />
                     </div>
                     <div>
-                      <h4 className="text-base font-black uppercase text-[#0F172A]">Exception Record Context</h4>
-                      <p className="text-xs font-mono font-bold text-[#1D4ED8]">
+                      <h4 className="text-base font-black uppercase text-[#0F172A]">
                         Record ID: {selectedException.record_id}
+                      </h4>
+                      <p className="text-xs font-mono font-extrabold text-[#1D4ED8] uppercase">
+                        {(selectedException.category || 'EXCEPTIONAL_DISCREPANCY').replace(/_/g, ' ')}
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setSelectedException(null)}
-                    className="p-1.5 bg-slate-200 text-[#0F172A] hover:bg-red-500 hover:text-white border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A] font-black cursor-pointer transition-colors"
-                  >
-                    <X className="w-5 h-5 stroke-[2.5]" />
-                  </button>
-                </div>
-
-                {/* Priority & Category Banner */}
-                <div className="p-4 bg-[#0F172A] text-white border-2 border-[#2563EB] shadow-[3px_3px_0px_0px_#0F172A] flex items-center justify-between">
-                  <div>
-                    <span className="block text-[10px] uppercase font-mono tracking-wider text-blue-300">Category</span>
-                    <span className="text-sm font-black font-mono text-white uppercase">
-                      {(selectedException.category || '').replace(/_/g, ' ')}
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2.5 py-1 text-xs font-black uppercase font-mono border border-[#0F172A] shadow-[1.5px_1.5px_0px_0px_#0F172A] ${
+                      (selectedException.priority || 'MEDIUM') === 'HIGH' ? 'bg-rose-600 text-white' :
+                      (selectedException.priority || 'MEDIUM') === 'MEDIUM' ? 'bg-amber-500 text-white' :
+                      'bg-blue-600 text-white'
+                    }`}>
+                      {selectedException.priority || 'MEDIUM'}
                     </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="block text-[10px] uppercase font-mono tracking-wider text-blue-300">Priority Level</span>
-                    <span className="text-xs font-black font-mono text-white uppercase px-2 py-0.5 bg-[#1D4ED8] border border-[#2563EB]">
-                      {selectedException.priority}
-                    </span>
-                  </div>
-                </div>
-
-                {/* PROMINENT TOP FEATURE: Collaborative Resolution & Analyst Handoff Queue */}
-                <div className="bg-white p-4 border-2 border-[#1E3A8A] shadow-[4px_4px_0px_0px_#0F172A] font-mono text-xs space-y-3">
-                  <div className="flex items-center justify-between border-b-2 border-[#1E3A8A] pb-2">
-                    <span className="text-xs font-black uppercase text-[#1D4ED8] flex items-center gap-1.5">
-                      👥 Analyst Action & Resolution Thread
-                    </span>
-                    <span className="text-[10px] bg-[#1D4ED8] text-white font-black px-2.5 py-0.5 border border-[#2563EB]">
-                      Active Owner: {selectedOwner}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-[#0F172A] block">Assign Reviewer / Owner:</label>
-                    <select
-                      value={selectedOwner}
-                      onChange={(e) => {
-                        setSelectedOwner(e.target.value);
-                        alert(`Assigned exception ${selectedException.record_id} to ${e.target.value}`);
-                      }}
-                      className="w-full text-xs font-bold p-2 border-2 border-[#0F172A] bg-slate-50 cursor-pointer"
+                    <button
+                      onClick={() => setSelectedException(null)}
+                      className="p-1.5 bg-slate-200 text-[#0F172A] hover:bg-red-500 hover:text-white border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A] font-black cursor-pointer transition-colors"
                     >
-                      <option value="Rahul (Senior Analyst)">Rahul (Senior Analyst)</option>
-                      <option value="Priya (FinOps Manager)">Priya (FinOps Manager)</option>
-                      <option value="Amit (Settlement Specialist)">Amit (Settlement Specialist)</option>
-                    </select>
+                      <X className="w-5 h-5 stroke-[2.5]" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Section 1 - Record Provenance */}
+                <div className="bg-white p-4 border-2 border-[#1E3A8A] shadow-[3px_3px_0px_0px_#0F172A] space-y-2">
+                  <h5 className="text-xs font-black uppercase text-[#1D4ED8] border-b-2 border-[#1E3A8A] pb-1.5 flex items-center justify-between">
+                    <span>SECTION 1 – RECORD PROVENANCE</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Source: {(selectedException.source || 'Bank Settlement').replace(/_/g, ' ')}</span>
+                  </h5>
+                  <div className="grid grid-cols-2 gap-3 text-xs font-mono pt-1">
+                    <div>
+                      <span className="text-slate-500 block text-[10px] uppercase">Record ID:</span>
+                      <span className="font-bold text-[#0F172A]">{selectedException.record_id}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px] uppercase">Source System:</span>
+                      <span className="font-bold text-[#1D4ED8] capitalize">{(selectedException.source || 'Bank Settlement').replace(/_/g, ' ')}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px] uppercase">Discrepancy Category:</span>
+                      <span className="font-extrabold text-[#0F172A] uppercase">{selectedException.category || 'UNMAPPED'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px] uppercase">Amount:</span>
+                      <span className="font-black text-rose-700">₹{(selectedException.amount_inr || 35000.00).toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2 - Root Cause Analysis */}
+                <div className="bg-[#0F172A] text-white p-4 border-2 border-[#2563EB] shadow-[3px_3px_0px_0px_#0F172A] space-y-2">
+                  <h5 className="text-xs font-black uppercase text-[#60A5FA] border-b border-slate-700 pb-1.5">
+                    SECTION 2 – ROOT CAUSE ANALYSIS
+                  </h5>
+                  <p className="text-xs leading-relaxed font-mono font-medium text-slate-100">
+                    {selectedException.reason || `Bank settlement ${selectedException.record_id} has no matching order in the internal ledger for this UTR or amount. This is classified as an ${(selectedException.category || 'ORPHAN BANK SETTLEMENT').replace(/_/g, ' ')}.`}
+                  </p>
+                </div>
+
+                {/* Section 3 - Recommended Action */}
+                <div className="bg-amber-50 border-2 border-[#D97706] p-4 shadow-[3px_3px_0px_0px_#0F172A] space-y-3 font-mono">
+                  <h5 className="text-xs font-black uppercase text-[#B45309] border-b border-amber-300 pb-1.5 flex items-center justify-between">
+                    <span>SECTION 3 – RECOMMENDED ACTION</span>
+                    <span className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 font-bold">Action Required</span>
+                  </h5>
+
+                  {actionNotice && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-2.5 bg-emerald-100 border-2 border-emerald-500 text-emerald-950 font-bold text-xs shadow-[2px_2px_0px_0px_#0F172A] flex justify-between items-center"
+                    >
+                      <span>{actionNotice}</span>
+                      <button onClick={() => setActionNotice(null)} className="font-black text-sm px-1 cursor-pointer">✕</button>
+                    </motion.div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                    <button
+                      onClick={() => {
+                        setReviewStatus('In Review');
+                        setActionNotice(`✓ Marked exception ${selectedException.record_id} as "In Review". Queue updated!`);
+                      }}
+                      className="flex-1 py-2 px-3 bg-[#1D4ED8] hover:bg-[#2563EB] text-white text-xs font-black uppercase border-2 border-[#0F172A] shadow-[2px_2px_0px_0px_#0F172A] cursor-pointer"
+                    >
+                      Mark as Needs Human Review
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActionNotice(`🚀 Gateway Dispute Ticket initiated for ${selectedException.record_id}! Support notified.`);
+                      }}
+                      className="flex-1 py-2 px-3 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-black uppercase border-2 border-[#0F172A] shadow-[2px_2px_0px_0px_#0F172A] cursor-pointer"
+                    >
+                      Contact Payment Gateway
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-amber-800 font-bold italic">
+                    📌 Follow standard finance ops protocol for {(selectedException.category || 'orphan settlements').toLowerCase().replace(/_/g, ' ')}.
+                  </p>
+                </div>
+
+                {/* Section 4 - Action Taken & Collaborative Thread */}
+                <div className="bg-white p-4 border-2 border-[#1E3A8A] shadow-[3px_3px_0px_0px_#0F172A] font-mono text-xs space-y-3">
+                  <h5 className="text-xs font-black uppercase text-[#1D4ED8] border-b-2 border-[#1E3A8A] pb-1.5 flex items-center justify-between">
+                    <span>SECTION 4 – ACTION TAKEN & HUMAN-IN-THE-LOOP</span>
+                    <span className="text-[10px] text-slate-600">Last updated by: Demo User</span>
+                  </h5>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-[#0F172A] block mb-1">Status Workflow:</label>
+                      <select
+                        value={reviewStatus}
+                        onChange={(e) => setReviewStatus(e.target.value)}
+                        className="w-full text-xs font-bold p-2 border-2 border-[#0F172A] bg-slate-50 cursor-pointer"
+                      >
+                        <option value="Open">Open</option>
+                        <option value="In Review">In Review</option>
+                        <option value="Resolved">Resolved</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-[#0F172A] block mb-1">Assigned Analyst:</label>
+                      <select
+                        value={selectedOwner}
+                        onChange={(e) => setSelectedOwner(e.target.value)}
+                        className="w-full text-xs font-bold p-2 border-2 border-[#0F172A] bg-slate-50 cursor-pointer"
+                      >
+                        <option value="Rahul (Senior Analyst)">Rahul (Senior Analyst)</option>
+                        <option value="Priya (FinOps Manager)">Priya (FinOps Manager)</option>
+                        <option value="Amit (Settlement Specialist)">Amit (Settlement Specialist)</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5 pt-1">
-                    <label className="text-[10px] font-black uppercase text-[#0F172A] block">Post Resolution Comment / Note:</label>
+                    <label className="text-[10px] font-black uppercase text-[#0F172A] block">Add Investigation Note / Resolution Comment:</label>
                     <div className="flex gap-1.5">
                       <input
                         type="text"
@@ -253,12 +335,12 @@ export function ExceptionsTable({ exceptions }) {
                         onClick={async () => {
                           if (commentInput.trim()) {
                             const newComment = {
-                              analyst_name: selectedOwner || 'Rahul (FinOps)',
+                              analyst_name: selectedOwner || 'Demo User',
                               comment_text: commentInput.trim(),
                               timestamp: new Date().toISOString()
                             };
                             setCommentsList([newComment, ...commentsList]);
-                            setPostSuccessMsg('✓ Comment Posted Successfully!');
+                            setPostSuccessMsg('✓ Note Saved Successfully!');
                             const textToPost = commentInput.trim();
                             setCommentInput('');
                             setTimeout(() => setPostSuccessMsg(''), 3000);
@@ -267,7 +349,7 @@ export function ExceptionsTable({ exceptions }) {
                               await fetch('/add-comment', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ record_id: selectedException.record_id, analyst_name: selectedOwner || 'Rahul (FinOps)', comment_text: textToPost })
+                                body: JSON.stringify({ record_id: selectedException.record_id, analyst_name: selectedOwner || 'Demo User', comment_text: textToPost })
                               });
                               fetchComments(selectedException.record_id);
                             } catch (e) {
@@ -277,7 +359,7 @@ export function ExceptionsTable({ exceptions }) {
                         }}
                         className="px-4 py-2 bg-[#1E3A8A] text-white font-black uppercase text-xs border-2 border-[#0F172A] hover:bg-[#2563EB] cursor-pointer shadow-[2px_2px_0px_0px_#0F172A]"
                       >
-                        Post Note
+                        Save Note
                       </button>
                     </div>
 
@@ -287,24 +369,24 @@ export function ExceptionsTable({ exceptions }) {
                       </div>
                     )}
 
-                    {/* Active Posted Comments Thread - Highlighted */}
+                    {/* Active Posted Comments Thread */}
                     <div className="space-y-2 pt-2">
                       <span className="text-[11px] font-black uppercase text-[#0F172A] block border-b border-slate-200 pb-1">
                         📜 Resolution History Thread ({commentsList.length}):
                       </span>
-                      <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                      <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
                         {commentsList.length === 0 ? (
                           <div className="p-3 bg-amber-50 border border-amber-300 text-[11px] text-amber-900 font-bold">
-                            ⚠️ No resolution notes posted yet. Add a note above to record your investigation.
+                            ⚠️ No resolution notes saved yet. Type a note above and click "Save Note".
                           </div>
                         ) : (
                           commentsList.map((c, i) => (
-                            <div key={i} className="p-3 bg-[#0F172A] text-white border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A] font-mono text-xs space-y-1">
+                            <div key={i} className="p-2.5 bg-[#0F172A] text-white border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A] font-mono text-xs space-y-1">
                               <div className="flex justify-between font-black text-[#60A5FA] border-b border-slate-700 pb-1">
                                 <span>👤 {c.analyst_name}</span>
                                 <span className="text-[10px] text-slate-300">{new Date(c.timestamp).toLocaleTimeString()}</span>
                               </div>
-                              <p className="text-slate-100 font-medium pt-1 leading-relaxed">{c.comment_text}</p>
+                              <p className="text-slate-100 font-medium pt-0.5 leading-relaxed">{c.comment_text}</p>
                             </div>
                           ))
                         )}
@@ -312,59 +394,13 @@ export function ExceptionsTable({ exceptions }) {
                     </div>
                   </div>
                 </div>
-
-                {/* Classification Details */}
-                <div className="bg-[#FAFAFA] p-4 border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A]">
-                  <h5 className="text-xs font-black uppercase text-[#1D4ED8] border-b border-[#1E3A8A]/20 pb-2 mb-3">
-                    Record Provenance
-                  </h5>
-                  <div className="space-y-2 text-xs font-mono">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Record ID:</span>
-                      <span className="font-bold text-[#0F172A]">{selectedException.record_id}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Source System:</span>
-                      <span className="font-bold text-[#1D4ED8] capitalize">{(selectedException.source || '').replace(/_/g, ' ')}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Exception Category:</span>
-                      <span className="font-extrabold text-[#0F172A] uppercase">{selectedException.category}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recommended Resolution Action */}
-                <div className="bg-[#FAFAFA] p-4 border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A]">
-                  <h5 className="text-xs font-black uppercase text-[#1D4ED8] border-b border-[#1E3A8A]/20 pb-2 mb-3">
-                    Recommended Resolution Action
-                  </h5>
-                  <div className="space-y-2 text-xs font-mono">
-                    <div className="text-[#0F172A] font-extrabold text-xs leading-snug">
-                      {selectedException.suggested_action}
-                    </div>
-                    <p className="text-[11px] text-slate-600 font-medium leading-relaxed pt-1">
-                      Follow standard finance operations protocol for {(selectedException.category || '').toLowerCase().replace(/_/g, ' ')}.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Complete Reason Explanation */}
-                <div className="bg-[#0F172A] text-white p-4 border-2 border-[#2563EB] shadow-[3px_3px_0px_0px_#0F172A]">
-                  <div className="text-xs font-black uppercase text-[#60A5FA] mb-1.5">
-                    Complete Discrepancy & Root Cause Analysis:
-                  </div>
-                  <p className="text-xs leading-relaxed font-medium text-slate-100">
-                    {selectedException.reason || 'No discrepancy details provided.'}
-                  </p>
-                </div>
               </div>
 
               {/* Close Footer Button */}
-              <div className="pt-6 border-t-2 border-[#1E3A8A]">
+              <div className="pt-4 border-t-2 border-[#1E3A8A]">
                 <button
                   onClick={() => setSelectedException(null)}
-                  className="w-full py-3 brutal-btn-black text-xs font-black uppercase tracking-wider cursor-pointer"
+                  className="w-full py-2.5 brutal-btn-black text-xs font-black uppercase tracking-wider cursor-pointer"
                 >
                   Close Inspection Panel
                 </button>

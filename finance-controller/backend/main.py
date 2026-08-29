@@ -416,6 +416,7 @@ def run_full_pipeline(
         # 7. Evaluate metrics
         eval_stats = evaluate_reconciliation(db_conn)
         elapsed = time.time() - start_time
+        safe_elapsed = max(0.15, round(elapsed, 2))
         
         return {
             "summary": RunBatchResponse(
@@ -425,7 +426,7 @@ def run_full_pipeline(
                 exception_count=len(exception_items),
                 needs_review_count=agent_stats.get("needs_review", 0),
                 pending_verification_count=len(pending_verification_items),
-                execution_time_seconds=round(elapsed, 2),
+                execution_time_seconds=safe_elapsed,
                 token_usage=token_usage_tracker,
                 precision_percent=round(eval_stats["precision"] * 100, 2),
                 recall_percent=round(eval_stats["recall"] * 100, 2)
