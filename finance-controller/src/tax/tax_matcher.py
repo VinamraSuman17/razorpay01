@@ -37,7 +37,9 @@ def run_tax_line_matching(db_conn: duckdb.DuckDBPyConnection) -> List[Dict[str, 
     """
     try:
         rows = db_conn.execute(query).fetchall()
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).exception(f"Error querying tax audit rows: {e}")
         return []
         
     tax_exceptions = []

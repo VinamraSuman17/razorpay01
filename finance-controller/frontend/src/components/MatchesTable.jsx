@@ -69,6 +69,7 @@ export function MatchesTable({ matches }) {
                 <th className="py-3.5 px-6">Settlement ID</th>
                 <th className="py-3.5 px-6">Matched Order ID</th>
                 <th className="py-3.5 px-6">Rule Applied</th>
+                <th className="py-3.5 px-4">SLA Status</th>
                 <th className="py-3.5 px-6">Confidence</th>
                 <th className="py-3.5 px-6">Timestamp</th>
                 <th className="py-3.5 px-4 text-center">Inspect</th>
@@ -77,7 +78,7 @@ export function MatchesTable({ matches }) {
             <tbody className="divide-y-2 divide-[#1E3A8A]/10 text-[#0F172A]">
               {filteredMatches.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center font-bold text-slate-500">
+                  <td colSpan={7} className="py-8 text-center font-bold text-slate-500">
                     No matched records found. Click "Run Batch Reconciliation" to process dataset.
                   </td>
                 </tr>
@@ -86,6 +87,7 @@ export function MatchesTable({ matches }) {
                   const stlId = m?.settlement_id || `stl_${idx}`;
                   const isSelected = selectedMatch?.settlement_id === m?.settlement_id;
                   const confPercent = ((m?.confidence ?? 1.0) * 100).toFixed(0);
+                  const slaColor = m?.sla_color || 'GREEN';
 
                   return (
                     <tr
@@ -108,6 +110,15 @@ export function MatchesTable({ matches }) {
                       <td className="py-3.5 px-6 font-mono">
                         <span className="px-2.5 py-1 text-[11px] font-black uppercase bg-blue-100 text-[#1D4ED8] border border-[#2563EB] shadow-[1.5px_1.5px_0px_0px_#0F172A]">
                           {m?.rule_applied || 'UNKNOWN'}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono">
+                        <span className={`px-2 py-0.5 text-[10px] font-black uppercase border ${
+                          slaColor === 'GREEN' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                          slaColor === 'AMBER' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                          'bg-rose-100 text-rose-800 border-rose-300'
+                        }`}>
+                          {m?.sla_status || 'MEETS_SLA'}
                         </span>
                       </td>
                       <td className="py-3.5 px-6 font-mono tabular-nums">
@@ -256,6 +267,42 @@ export function MatchesTable({ matches }) {
                       <span>Math Precision:</span>
                       <span className="font-bold text-emerald-800">100.0% Exact Unit Compliance</span>
                     </div>
+                  </div>
+                </div>
+
+                {/* Human-in-the-Loop Analyst Feedback Controls */}
+                <div className="p-4 bg-slate-100 border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A] font-mono text-xs space-y-2">
+                  <span className="text-[10px] font-black uppercase text-[#0F172A] block border-b border-slate-300 pb-1">
+                    🤖 Human-in-the-Loop Feedback: Was this Match Reasoning Correct?
+                  </span>
+                  <div className="flex items-center space-x-2 pt-1">
+                    <button
+                      onClick={async () => {
+                        await fetch('/submit-feedback', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ settlement_id: selectedMatch.settlement_id, order_id: selectedMatch.order_id, feedback: 'APPROVE' })
+                        });
+                        alert(`Feedback Logged: 👍 Match Reasoning Approved for ${selectedMatch.settlement_id}`);
+                      }}
+                      className="flex-1 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-black uppercase text-[11px] border border-[#0F172A] flex items-center justify-center gap-1 shadow-[1.5px_1.5px_0px_0px_#0F172A]"
+                    >
+                      <span>👍 Approve Match Rationale</span>
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        await fetch('/submit-feedback', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ settlement_id: selectedMatch.settlement_id, order_id: selectedMatch.order_id, feedback: 'REJECT' })
+                        });
+                        alert(`Feedback Logged: 👎 Match Rationale Flagged for Escalation (${selectedMatch.settlement_id})`);
+                      }}
+                      className="flex-1 py-1.5 bg-rose-700 hover:bg-rose-800 text-white font-black uppercase text-[11px] border border-[#0F172A] flex items-center justify-center gap-1 shadow-[1.5px_1.5px_0px_0px_#0F172A]"
+                    >
+                      <span>👎 Reject / Escalate Match</span>
+                    </button>
                   </div>
                 </div>
 

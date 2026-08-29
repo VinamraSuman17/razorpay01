@@ -21,19 +21,25 @@ dq_logger.addHandler(dq_handler)
 def parse_amount_to_paise(val: Any) -> int:
     if val is None or str(val).strip() == "":
         raise ValueError("Amount cannot be null or empty")
-    if isinstance(val, (int, float)):
-        return round(val * 100)
-    
-    # Strip currency indicators
-    s = str(val).strip().replace("Rs.", "").replace("Rs", "").replace("₹", "").replace("INR", "")
-    # Remove commas
-    s = s.replace(",", "")
+        
+    # If already an integer paise representation (e.g. 18500000)
+    if isinstance(val, int):
+        return val
+        
+    s = str(val).strip().replace("Rs.", "").replace("Rs", "").replace("₹", "").replace("INR", "").replace(",", "")
     if not s:
         raise ValueError("Amount cannot be null or empty")
     
     try:
-        f = float(s)
-        return round(f * 100)
+        if "." in s:
+            f = float(s)
+            return round(f * 100)
+        else:
+            i = int(s)
+            # If input is a large integer like 18500000, it is already stored in paise
+            if i > 100000 or i < -100000:
+                return i
+            return i * 100
     except ValueError:
         raise ValueError(f"Invalid amount format: {val}")
 
@@ -63,6 +69,7 @@ class BankSettlementRecord(BaseModel):
     utr_reference: Optional[str] = None
     payer_account: str
     fees_deducted: int  # stored in paise
+    tax_deducted: Optional[int] = 0  # stored in paise
     net_amount: int  # stored in paise
     description: str
     currency: str
@@ -75,6 +82,13 @@ class BankSettlementRecord(BaseModel):
     @field_validator("amount", "fees_deducted", "net_amount", mode="before")
     @classmethod
     def validate_amount(cls, v):
+        return parse_amount_to_paise(v)
+
+    @field_validator("tax_deducted", mode="before")
+    @classmethod
+    def validate_tax(cls, v):
+        if v is None or str(v).strip() == "":
+            return 0
         return parse_amount_to_paise(v)
 
     @field_validator("utr_reference", mode="before")
@@ -124,6 +138,7 @@ def init_db(db_conn: duckdb.DuckDBPyConnection):
             utr_reference VARCHAR,
             payer_account VARCHAR,
             fees_deducted BIGINT,
+            tax_deducted BIGINT DEFAULT 0,
             net_amount BIGINT,
             description VARCHAR,
             currency VARCHAR
@@ -200,12 +215,12 @@ def ingest_bank_settlements(csv_path: str | Path, db_conn: duckdb.DuckDBPyConnec
         for record in valid_rows_to_insert:
             db_conn.execute("""
                 INSERT OR REPLACE INTO bank_settlements 
-                (settlement_id, date, amount, utr_reference, payer_account, fees_deducted, net_amount, description, currency)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                (settlement_id, date, amount, utr_reference, payer_account, fees_deducted, tax_deducted, net_amount, description, currency)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """, (
                 record.settlement_id, record.date, record.amount, record.utr_reference,
-                record.payer_account, record.fees_deducted, record.net_amount,
-                record.description, record.currency
+                record.payer_account, record.fees_deducted, getattr(record, 'tax_deducted', 0) or 0,
+                record.net_amount, record.description, record.currency
             ))
         db_conn.execute("COMMIT;")
         

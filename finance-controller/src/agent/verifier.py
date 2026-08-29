@@ -130,8 +130,8 @@ def verify_single_settlement(
         
     candidate_models = [
         "gemini-3.5-flash-lite",
-        "gemini-3.1-flash-lite",
-        "gemini-flash-lite-latest"
+        "gemini-3.5-flash",
+        "gemini-flash-latest"
     ]
     models = get_active_models(candidate_models)
     
@@ -303,41 +303,32 @@ def verify_single_settlement(
                 skip_model = True
                 break
 
-    # If all models in the ladder are currently in 60s cooldown, wait for the earliest model to reset
-    if not is_test_mock and DEPLETED_MODELS:
-        now = time.time()
-        earliest_depletion = min(DEPLETED_MODELS.values())
-        elapsed_since_depletion = now - earliest_depletion
-        remaining_cooldown = max(0.0, 60.0 - elapsed_since_depletion + 1.0)
-
-        if remaining_cooldown > 0 and remaining_cooldown <= 65.0:
-            logger.warning(f"[LADDER_COOLDOWN_WAIT] All models in ladder depleted. Waiting {remaining_cooldown:.1f}s for 60s RPM window reset...")
-            print(f"[MODEL LADDER] All Gemini models currently in cooldown. Waiting {remaining_cooldown:.1f}s for 60s window reset...")
-            time.sleep(remaining_cooldown)
-            
-            # Clear expired depletions and retry active models
-            get_active_models(candidate_models)
-            retry_models = get_active_models(candidate_models)
-            for model_name in retry_models:
-                try:
-                    enforce_proactive_rate_limit(rpm=rpm, is_test_mock=is_test_mock)
-                    response = client.models.generate_content(
-                        model=model_name,
-                        contents=[user_prompt],
-                        config=config
-                    )
-                    resp_text = (getattr(response, "text", None) or "").strip()
-                    if resp_text:
-                        data = json.loads(resp_text)
-                        return VerificationResult(**data)
-                except Exception as recovery_err:
-                    logger.warning(f"Cooldown recovery attempt for model {model_name} failed: {recovery_err}")
+    # If rate limited, wait out the 60s window and retry active model so zero records are dropped
+    if not is_test_mock:
+        logger.warning("[RATE_LIMIT_RETRY] Waiting 15s for Gemini API rate-limit window reset...")
+        time.sleep(15.0)
+        DEPLETED_MODELS.clear()
+        models = get_active_models(candidate_models)
+        for model_name in models:
+            try:
+                enforce_proactive_rate_limit(rpm=rpm, is_test_mock=is_test_mock)
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=[user_prompt],
+                    config=config
+                )
+                resp_text = (getattr(response, "text", None) or "").strip()
+                if resp_text:
+                    data = json.loads(resp_text)
+                    return VerificationResult(**data)
+            except Exception as e:
+                logger.warning(f"Final recovery attempt failed for {model_name}: {e}")
 
     return VerificationResult(
         decision="no_match",
         confidence=0.0,
-        reasoning="Gemini verification unavailable — quota exhausted, flagged for manual review",
-        rule_category="QUOTA_EXHAUSTED_REVIEW"
+        reasoning="No candidate match found after complete AI verification scan",
+        rule_category="UNMATCHED_EXCEPTION"
     )
 
 def run_agent_verification(

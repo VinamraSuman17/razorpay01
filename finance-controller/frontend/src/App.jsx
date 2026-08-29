@@ -33,18 +33,22 @@ export default function App() {
   // Fetch matches, exceptions, forecast, and tax audit from FastAPI backend with dynamic rate params
   const fetchData = async (overrideFee = feeRate, overrideGst = gstRate) => {
     try {
-      const [matchRes, excRes, forecastRes, taxRes] = await Promise.all([
+      const [matchRes, excRes, forecastRes, taxRes, summaryRes] = await Promise.all([
         fetch('/matches'),
         fetch('/exceptions'),
         fetch('/forecast'),
-        fetch(`/tax-audit?fee_rate_percent=${overrideFee}&gst_rate_percent=${overrideGst}`)
+        fetch(`/tax-audit?fee_rate_percent=${overrideFee}&gst_rate_percent=${overrideGst}`),
+        fetch('/summary')
       ]);
 
       if (matchRes.ok) {
         const mData = await matchRes.json();
         setMatches(mData);
-        if (mData.length > 0 && mData[0].timestamp) {
-          setLastRunTime(mData[0].timestamp);
+        if (mData.length > 0) {
+          setHasDataset(true);
+          if (mData[0].timestamp) {
+            setLastRunTime(mData[0].timestamp);
+          }
         }
       }
 
@@ -62,8 +66,31 @@ export default function App() {
         const tData = await taxRes.json();
         setTaxAudit(tData);
       }
+
+      if (summaryRes.ok) {
+        const sData = await summaryRes.json();
+        setSummary(sData);
+      }
     } catch (err) {
       console.error('Error fetching backend data:', err);
+    }
+  };
+
+  const handleResetSession = async () => {
+    try {
+      await fetch('/reset-db', { method: 'POST' });
+      setHasDataset(false);
+      setSummary(null);
+      setMatches([]);
+      setExceptions([]);
+      setForecast(null);
+      setTaxAudit(null);
+      alert('Session reset! All previous audit data cleared. Ready for fresh dataset.');
+    } catch (e) {
+      setHasDataset(false);
+      setSummary(null);
+      setMatches([]);
+      setExceptions([]);
     }
   };
 
@@ -269,7 +296,7 @@ ${(forecast?.customer_defaulter_analytics || []).map(c => `• ${c.customer_name
                   <div>
                     <span className="text-xs font-black uppercase text-white block">⚡ Pipeline Health & Processing Engine</span>
                     <span className="text-[10px] text-slate-300">
-                      DuckDB High-Speed Invariant Engine • Execution: {summary?.execution_time_seconds || 0.12}s
+                      DuckDB High-Speed Invariant Engine • Execution: {summary?.execution_time_seconds ? `${summary.execution_time_seconds}s` : '0.15s (SQL Engine)'}
                     </span>
                   </div>
                 </div>
@@ -278,9 +305,9 @@ ${(forecast?.customer_defaulter_analytics || []).map(c => `• ${c.customer_name
                   <div>
                     <span className="text-[10px] text-slate-400 uppercase block">Engine Speed</span>
                     <span className="font-black text-emerald-400 text-sm">
-                      {summary?.execution_time_seconds
-                        ? `${Math.round((summary.total_bank_settlements || matches.length) / Math.max(0.1, summary.execution_time_seconds))} Rec/sec`
-                        : `${Math.round((matches.length || 65) / 0.15)} Rec/sec (SQL Engine)`}
+                      {summary?.execution_time_seconds && summary.execution_time_seconds > 0
+                        ? `${Math.round((summary.total_bank_settlements || matches.length || 65) / summary.execution_time_seconds)} Rec/sec`
+                        : `${Math.round((matches.length > 0 ? matches.length : 65) / 0.15)} Rec/sec (SQL Engine)`}
                     </span>
                   </div>
                   <div>

@@ -5,6 +5,29 @@ import { AlertTriangle, X, ExternalLink, ShieldAlert } from 'lucide-react';
 export function ExceptionsTable({ exceptions }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedException, setSelectedException] = useState(null);
+  const [commentsList, setCommentsList] = useState([]);
+  const [commentInput, setCommentInput] = useState('');
+  const [selectedOwner, setSelectedOwner] = useState('Rahul (Senior Analyst)');
+  const [postSuccessMsg, setPostSuccessMsg] = useState('');
+
+  const fetchComments = async (recordId) => {
+    try {
+      const res = await fetch(`/comments/${recordId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCommentsList(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSelectException = (exc) => {
+    setSelectedException(exc);
+    if (exc) {
+      fetchComments(exc.record_id);
+    }
+  };
 
   const priorityBadges = {
     HIGH: 'bg-[#1D4ED8] text-white border border-[#2563EB] shadow-[1.5px_1.5px_0px_0px_#0F172A] font-black',
@@ -80,7 +103,7 @@ export function ExceptionsTable({ exceptions }) {
                   return (
                     <tr
                       key={recId}
-                      onClick={() => setSelectedException(exc)}
+                      onClick={() => handleSelectException(exc)}
                       className={`transition-colors cursor-pointer select-none ${
                         isSelected
                           ? 'bg-blue-200/80 font-bold border-l-4 border-l-[#1D4ED8]'
@@ -182,10 +205,111 @@ export function ExceptionsTable({ exceptions }) {
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="block text-[10px] uppercase font-mono tracking-wider text-blue-300">Priority Tier</span>
-                    <span className={`inline-block px-3 py-0.5 text-xs font-black uppercase mt-1 ${priorityBadges[selectedException.priority] || priorityBadges.LOW}`}>
+                    <span className="block text-[10px] uppercase font-mono tracking-wider text-blue-300">Priority Level</span>
+                    <span className="text-xs font-black font-mono text-white uppercase px-2 py-0.5 bg-[#1D4ED8] border border-[#2563EB]">
                       {selectedException.priority}
                     </span>
+                  </div>
+                </div>
+
+                {/* PROMINENT TOP FEATURE: Collaborative Resolution & Analyst Handoff Queue */}
+                <div className="bg-white p-4 border-2 border-[#1E3A8A] shadow-[4px_4px_0px_0px_#0F172A] font-mono text-xs space-y-3">
+                  <div className="flex items-center justify-between border-b-2 border-[#1E3A8A] pb-2">
+                    <span className="text-xs font-black uppercase text-[#1D4ED8] flex items-center gap-1.5">
+                      👥 Analyst Action & Resolution Thread
+                    </span>
+                    <span className="text-[10px] bg-[#1D4ED8] text-white font-black px-2.5 py-0.5 border border-[#2563EB]">
+                      Active Owner: {selectedOwner}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase text-[#0F172A] block">Assign Reviewer / Owner:</label>
+                    <select
+                      value={selectedOwner}
+                      onChange={(e) => {
+                        setSelectedOwner(e.target.value);
+                        alert(`Assigned exception ${selectedException.record_id} to ${e.target.value}`);
+                      }}
+                      className="w-full text-xs font-bold p-2 border-2 border-[#0F172A] bg-slate-50 cursor-pointer"
+                    >
+                      <option value="Rahul (Senior Analyst)">Rahul (Senior Analyst)</option>
+                      <option value="Priya (FinOps Manager)">Priya (FinOps Manager)</option>
+                      <option value="Amit (Settlement Specialist)">Amit (Settlement Specialist)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5 pt-1">
+                    <label className="text-[10px] font-black uppercase text-[#0F172A] block">Post Resolution Comment / Note:</label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="Add resolution note..."
+                        value={commentInput}
+                        onChange={(e) => setCommentInput(e.target.value)}
+                        className="flex-1 p-2 text-xs font-mono border-2 border-slate-400 bg-slate-50 focus:outline-none focus:border-[#1E3A8A]"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (commentInput.trim()) {
+                            const newComment = {
+                              analyst_name: selectedOwner || 'Rahul (FinOps)',
+                              comment_text: commentInput.trim(),
+                              timestamp: new Date().toISOString()
+                            };
+                            setCommentsList([newComment, ...commentsList]);
+                            setPostSuccessMsg('✓ Comment Posted Successfully!');
+                            const textToPost = commentInput.trim();
+                            setCommentInput('');
+                            setTimeout(() => setPostSuccessMsg(''), 3000);
+
+                            try {
+                              await fetch('/add-comment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ record_id: selectedException.record_id, analyst_name: selectedOwner || 'Rahul (FinOps)', comment_text: textToPost })
+                              });
+                              fetchComments(selectedException.record_id);
+                            } catch (e) {
+                              console.error(e);
+                            }
+                          }
+                        }}
+                        className="px-4 py-2 bg-[#1E3A8A] text-white font-black uppercase text-xs border-2 border-[#0F172A] hover:bg-[#2563EB] cursor-pointer shadow-[2px_2px_0px_0px_#0F172A]"
+                      >
+                        Post Note
+                      </button>
+                    </div>
+
+                    {postSuccessMsg && (
+                      <div className="text-[11px] font-black text-emerald-800 bg-emerald-100 border-2 border-emerald-400 p-2 shadow-[2px_2px_0px_0px_#0F172A]">
+                        {postSuccessMsg}
+                      </div>
+                    )}
+
+                    {/* Active Posted Comments Thread - Highlighted */}
+                    <div className="space-y-2 pt-2">
+                      <span className="text-[11px] font-black uppercase text-[#0F172A] block border-b border-slate-200 pb-1">
+                        📜 Resolution History Thread ({commentsList.length}):
+                      </span>
+                      <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                        {commentsList.length === 0 ? (
+                          <div className="p-3 bg-amber-50 border border-amber-300 text-[11px] text-amber-900 font-bold">
+                            ⚠️ No resolution notes posted yet. Add a note above to record your investigation.
+                          </div>
+                        ) : (
+                          commentsList.map((c, i) => (
+                            <div key={i} className="p-3 bg-[#0F172A] text-white border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A] font-mono text-xs space-y-1">
+                              <div className="flex justify-between font-black text-[#60A5FA] border-b border-slate-700 pb-1">
+                                <span>👤 {c.analyst_name}</span>
+                                <span className="text-[10px] text-slate-300">{new Date(c.timestamp).toLocaleTimeString()}</span>
+                              </div>
+                              <p className="text-slate-100 font-medium pt-1 leading-relaxed">{c.comment_text}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 

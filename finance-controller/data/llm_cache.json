@@ -194,5 +194,40 @@
     "confidence": 1.0,
     "reasoning": "The settlement is a chargeback/reversal debit for 'Everest Textiles' with a UTR 'CHG3054'. None of the shortlisted candidates match the payer name ('Everest Textiles'), the reference ('CHG3054'), or the amount. The amounts in the candidates are significantly different from the settlement amount, and there is no logical connection between the chargeback and the provided settled orders.",
     "rule_category": "UNMATCHED_EXCEPTION"
+  },
+  "c5a5dd356bec0913baf1080dca98aa14ca3fef0223a922fb01575ecbfc11e67b": {
+    "decision": "match",
+    "matched_order_id": "ORD3048",
+    "confidence": 0.95,
+    "reasoning": "The settlement amount of 60,000,000 paise is exactly 50% of the expected amount of 120,000,000 paise for ORD3048. The settlement description explicitly states 'PARTIAL/Installment 1 of REF3048', and the customer reference ('REF3048') and payer name ('Pioneer Auto') match perfectly.",
+    "rule_category": "PARTIAL_PAYMENT"
+  },
+  "9ce786790c54dcf6e9c70399f265e4ec57c5c1048a7d93bad365981c6381af71": {
+    "decision": "match",
+    "matched_order_id": "ORD3049",
+    "confidence": 0.95,
+    "reasoning": "The settlement represents a partial payment (Installment 1) of 60,000,000 paise, which is exactly half of the expected amount of 120,000,000 paise for ORD3049. The customer name 'Raga Exports' and reference 'REF3049' match perfectly, and the settlement description explicitly confirms it is a partial installment.",
+    "rule_category": "PARTIAL_PAYMENT"
+  },
+  "c95ea85e8afcbeec72f7b3cfea3bba1fdbe0327e4bc5b2fd02ab824239505f57": {
+    "decision": "match",
+    "matched_order_id": "ORD3051",
+    "confidence": 0.95,
+    "reasoning": "The settlement is a partial payment representing exactly 50% of the expected amount of ORD3051 (60,000,000 paise of 120,000,000 paise). The customer name 'Delta Systems' and reference 'REF3051' match perfectly. Furthermore, the settlement description explicitly states 'PARTIAL/Installment 1 of REF3051', confirming this is the first installment of the order.",
+    "rule_category": "PARTIAL_PAYMENT"
+  },
+  "08829d5a71935c02e4f572e551930f1dfd522a148f60e3d9125e9e74e2844c11": {
+    "decision": "match",
+    "matched_order_id": "ORD3050",
+    "confidence": 0.95,
+    "reasoning": "The settlement amount of 60,000,000 paise represents a 50% partial payment of the expected 120,000,000 paise for ORD3050, which is explicitly confirmed by the description 'PARTIAL/Installment 1 of REF3050'. The customer name 'Global Tech' and reference 'REF3050' match perfectly. After accounting for a 2% fee deduction of 1,200,000 paise, the net amount of 58,800,000 paise matches the settlement net amount exactly.",
+    "rule_category": "PARTIAL_PAYMENT"
+  },
+  "1b97108024f107d31f07033f46a7407358e0b33f3135f0b33bde07d272c9e356": {
+    "decision": "match",
+    "matched_order_id": "ORD3052",
+    "confidence": 0.95,
+    "reasoning": "The settlement amount of 60,000,000 paise is exactly 50% of the expected amount of 120,000,000 paise for ORD3052. The settlement description explicitly states 'PARTIAL/Installment 1 of REF3052', which matches the customer reference REF3052 and customer name Omni Global. After accounting for a 2% fee deduction (1,200,000 paise), the net amount of 58,800,000 paise matches the settlement net amount exactly.",
+    "rule_category": "PARTIAL_PAYMENT"
   }
 }

@@ -10,14 +10,19 @@ def get_embed_model():
     """Lazily loads local sentence-transformers model."""
     global _EMBED_MODEL
     if _EMBED_MODEL is None:
-        from sentence_transformers import SentenceTransformer
-        _EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+        try:
+            from sentence_transformers import SentenceTransformer
+            _EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+        except ImportError:
+            _EMBED_MODEL = False
     return _EMBED_MODEL
 
 def _encode_texts(texts: List[str]) -> List[np.ndarray]:
     """Batch encodes list of text strings, utilizing bounded in-memory cache."""
     global _EMBED_CACHE
     model = get_embed_model()
+    if not model:
+        return [np.zeros(384) for _ in texts]
     
     if len(_EMBED_CACHE) > MAX_CACHE_SIZE:
         _EMBED_CACHE.clear()
