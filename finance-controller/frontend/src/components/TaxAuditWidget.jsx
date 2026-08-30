@@ -185,6 +185,17 @@ Autonomous Finance Controller Team
           </div>
         </div>
 
+        {/* Mathematical Proof Formula Banner */}
+        <div className="bg-slate-950 p-3 border border-teal-800 text-[11px] font-mono leading-relaxed space-y-1">
+          <div className="flex justify-between items-center text-[#2DD4BF] font-black uppercase text-[10px]">
+            <span>🧮 STATUTORY CALCULATION INVARIANT (INTEGER PAISE ARITHMETIC)</span>
+            <span className="text-emerald-400">0.00% Rounding Variance</span>
+          </div>
+          <p className="text-slate-200">
+            <span className="text-teal-300 font-bold">Net Bank Credit</span> = Gross Invoice Amount - (Gross Invoice × 2.0% MDR Fee) - (Fee × 18.0% GST) - (Gross Invoice × 2.0% Sec 194O TDS)
+          </p>
+        </div>
+
         {/* Full Visx Visual Tax Compliance Chart Card */}
         <div className="bg-slate-900 p-4 border border-slate-700 font-mono space-y-2">
           <div className="flex justify-between items-center text-xs font-black text-[#2DD4BF]">

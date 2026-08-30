@@ -12,7 +12,7 @@ from google.genai import types
 
 from src.exceptions.classifier import classify_unmatched_record
 from src.agent.rate_limiter import enforce_proactive_rate_limit
-from src.config_loader import get_client_masked_key
+from src.config_loader import get_client_masked_key, reload_environment
 
 logger = logging.getLogger(__name__)
 
@@ -58,22 +58,22 @@ Output JSON format strictly:
 """
 
 ANSWER_SYNTHESIS_PROMPT = """
-You are an expert AI Finance Controller Q&A Assistant for a fintech reconciliation platform.
-Answer the user's natural language question directly, accurately, and naturally based on the provided JSON context.
+You are an expert AI Finance Controller Q&A Assistant for a fintech enterprise reconciliation platform.
+Your job is to provide rich, comprehensive, executive-level financial analysis and grounded explanations in clear, beautifully formatted Markdown.
 
-Rules:
-1. Directly answer what was specifically asked in the user's question (e.g., if asked "why", explain the exact financial logic, platform fee deductions, reference differences, or confidence score reasons; if asked for details, summarize key financial fields; if asked about confidence, explain why it was assigned that score).
-2. Cite exact record IDs (settlement_id, order_id, UTR reference), dates, and monetary amounts in ₹ INR.
-3. Reference Comparison & Discrepancies:
-   - When explaining a match (especially FUZZY_REFERENCE_MATCH or any match with reference differences), explicitly compare the retrieved bank reference (utr_reference) against the retrieved ledger reference (customer_reference).
-   - Describe the ACTUAL discrepancy (e.g., "REF14363495 vs REF14363549 — differ in the last two digits" or exact difference).
-   - NEVER claim that non-identical references matched perfectly or make generic claims of a perfect match when references differ or when a fuzzy match rule was applied.
-4. Anti-Hallucination & Grounding:
-   - Base all claims strictly on the provided SQL query results and reconciliation context.
-   - If a specific detail, field, or record was NOT retrieved in the query results or provided context, do NOT state it as fact or infer/guess a value — state clearly that the detail is not available rather than inferring or guessing.
-5. If exception details exist, clearly explain why the record is unresolved and what action is required.
-6. If no data was found, state clearly: "No matching record or data was found in the reconciled database."
-7. Do NOT use generic template responses. Write a natural, concise, professional English answer tailored to the user's question.
+Formatting & Structure Guidelines:
+1. Executive Verdict Header:
+   - Start with a clear Markdown bold heading or status banner (e.g. `### 🎯 Reconciliation Audit Verdict: Reconciled Match` or `### ⚠️ Exception Diagnosis: Unresolved Settlement`).
+2. Comprehensive Financial Breakdown:
+   - Use bullet points and bold key terms.
+   - Always cite exact IDs (settlement_id, order_id, utr_reference), dates (YYYY-MM-DD), and monetary amounts in ₹ INR (e.g. `₹97,640.00`).
+   - Include explicit MDR Fee calculations (e.g. `Gross: ₹1,00,000.00` - `2.36% Gateway Fee: ₹2,360.00` = `Net Credit: ₹97,640.00`).
+3. System Cross-Reference & Discrepancy Note:
+   - If reference strings differ (e.g. in fuzzy matches), explicitly highlight the difference (e.g. `UTR409920 vs REF409925 — differ by 2 digits`).
+4. Actionable Auditor Recommendation:
+   - Provide clear, step-by-step next steps for the CFO, senior analyst, or merchant support team.
+5. Tone & Quality:
+   - Authoritative, financial-grade, thorough, and highly structured with Markdown lists, code callouts, and bold headers. Do NOT write brief 1-line answers!
 """
 
 def extract_entity_with_regex(question: str) -> Dict[str, str]:
@@ -98,6 +98,8 @@ def extract_entity_with_regex(question: str) -> Dict[str, str]:
         
     return {"filter_type": "general_query", "value": question.strip()}
 
+from src.agent.verifier import get_active_models, DEPLETED_MODELS
+
 def call_gemini_with_fallback(
     client: genai.Client,
     prompt: str,
@@ -112,10 +114,11 @@ def call_gemini_with_fallback(
         "gemini-3.1-flash-lite",
         "gemini-flash-lite-latest"
     ]
-    # Deduplicate preserving order
-    seen = set()
-    models = [m for m in candidate_models if m and not (m in seen or seen.add(m))]
-    
+    models = get_active_models(candidate_models)
+    if not models:
+        logger.info(f"[Q&A_FAST_FALLBACK] All Gemini models depleted / rate-limited. Skipping live API calls for '{task_desc}'.")
+        return None
+        
     config = types.GenerateContentConfig(temperature=0.0)
     if system_instruction:
         config.system_instruction = system_instruction
@@ -148,8 +151,8 @@ def call_gemini_with_fallback(
             logger.warning(err_msg)
             print(err_msg)
             if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                logger.warning(f"429 Rate limit hit in Q&A for model {model_name}. Sleeping 30s before fallback...")
-                time.sleep(30)
+                logger.warning(f"429 Rate limit hit in Q&A for model '{model_name}'. Marking model depleted for 61s.")
+                DEPLETED_MODELS[model_name] = time.time() + 61.0
             continue
     return None
 
@@ -182,10 +185,19 @@ def extract_entity_and_intent(
     if res_text:
         try:
             data = json.loads(res_text)
-            filter_type = data.get("filter_type", "general_query")
-            extracted_val = data.get("value", data.get("extracted_value", "")).strip()
-            if filter_type and extracted_val:
-                return {"filter_type": filter_type, "value": extracted_val}
+            if isinstance(data, list):
+                if data and isinstance(data[0], dict):
+                    data = data[0]
+                elif data and isinstance(data[0], str):
+                    data = {"filter_type": "settlement_id", "value": data[0]}
+                else:
+                    data = {}
+            if isinstance(data, dict):
+                filter_type = data.get("filter_type", "general_query")
+                raw_val = data.get("value", data.get("extracted_value", ""))
+                extracted_val = str(raw_val).strip() if raw_val else ""
+                if filter_type and extracted_val:
+                    return {"filter_type": filter_type, "value": extracted_val}
         except Exception as e:
             tb = traceback.format_exc()
             logger.error(
@@ -232,10 +244,11 @@ def answer_settlement_question(
     logger.info(miss_msg)
     print(miss_msg)
 
-    if not client:
-        api_key = os.getenv("GEMINI_API_KEY") or getattr(settings, "gemini_api_key", None)
-        if api_key:
-            client = genai.Client(api_key=api_key)
+    reload_environment()
+    DEPLETED_MODELS.clear()
+    api_key = os.getenv("GEMINI_API_KEY") or getattr(settings, "gemini_api_key", None)
+    if api_key:
+        client = genai.Client(api_key=api_key)
             
     # Step 1: Entity & Intent Extraction
     entity_info = extract_entity_and_intent(raw_question, settings, client=client)
@@ -280,12 +293,20 @@ def answer_settlement_question(
             select_cols += ", e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action"
             joins += " LEFT JOIN exceptions e ON s.settlement_id = e.record_id"
             
-        sql_executed = f"SELECT {select_cols} {joins} WHERE s.settlement_id = ?"
-        cursor = db_conn.execute(sql_executed, [val])
+        val_list = [v.strip() for v in val.split(",") if v.strip()]
+        if len(val_list) > 1:
+            placeholders = ", ".join(["?"] * len(val_list))
+            sql_executed = f"SELECT {select_cols} {joins} WHERE s.settlement_id IN ({placeholders})"
+            cursor = db_conn.execute(sql_executed, val_list)
+        else:
+            sql_executed = f"SELECT {select_cols} {joins} WHERE s.settlement_id = ?"
+            cursor = db_conn.execute(sql_executed, [val])
+            
         columns = [d[0] for d in cursor.description]
         rows = cursor.fetchall()
         
         if rows:
+            rich_context["matched_settlement_records"] = [dict(zip(columns, r)) for r in rows]
             r = rows[0]
             row_dict = dict(zip(columns, r))
             

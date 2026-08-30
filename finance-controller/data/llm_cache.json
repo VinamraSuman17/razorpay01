@@ -243,5 +243,110 @@
     "confidence": 0.95,
     "reasoning": "The settlement amount (75,000,000) matches the expected amount of ORD0053 exactly. After accounting for a 2% fee deduction (1,500,000), the net amount (73,500,000) matches the settlement net amount perfectly. The reference 'REF0055_ORPHAN' is a clear variation of the order's 'REF0055_MISSING', and the payer account 'ACC_APEX' aligns with 'Apex Logistics'.",
     "rule_category": "FEE_DEDUCTION"
+  },
+  "dfce08ad593c6b6fcddb5bef431bc6fadbb28813d57b4f5abcfbc104fecc72c0": {
+    "decision": "match",
+    "matched_order_id": "ORD4007",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 3,050,000 matches the expected amount of ORD4007 exactly. Furthermore, applying a 2% fee deduction to the expected amount results in 2,989,000, which matches the net_amount of the settlement perfectly. The customer name 'Omni Global' matches, and the settlement date is within the expected range.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "2a65ae5a1cb1e519e53abefbadcf4f73416db0051a053ee3ff4736eb726b7ba8": {
+    "decision": "match",
+    "matched_order_id": "ORD4008",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 3,200,000 INR matches the expected amount of ORD4008 exactly. After applying a 2% fee deduction to the expected amount, the result is 3,136,000 INR, which matches the net_amount of the settlement perfectly. The customer name 'Meridian Steel' matches, and the settlement date is within the expected range.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "4b175531fb7c178a98b5249e2f730957b19e885241b8db6506216c610bc33c2c": {
+    "decision": "match",
+    "matched_order_id": "ORD4009",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 3,350,000 matches the expected amount of ORD4009 exactly. The customer name 'Everest Textiles' is identical, and the settlement date 2026-08-12 aligns perfectly with the expected settlement date for this order.",
+    "rule_category": "EXACT"
+  },
+  "f325d24a3f997c7a4bdd2a7ef83567820c88ef8af7e1dd3fff5a658ef38fadf2": {
+    "decision": "match",
+    "matched_order_id": "ORD4010",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 3,500,000 matches the expected amount of ORD4010 exactly. The net amount of 3,430,000 is consistent with a 2% fee deduction from the gross amount (3,500,000 - 2% = 3,430,000). The settlement date (2026-08-13) aligns perfectly with the expected settlement date of ORD4010, and the customer name 'Acme Corp' matches.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "ee9199744c77ccb253d0cfc55a580fd2d0081e2a55aaf7293cce8c62d8a53d61": {
+    "decision": "match",
+    "matched_order_id": "ORD4011",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 3,650,000 matches the expected amount of ORD4011 exactly. After applying a 2% fee deduction to the expected amount (3,650,000 * 0.02 = 73,000), the resulting net amount is 3,577,000, which matches the settlement's net_amount exactly. The customer name 'Vortex Dynamics' matches, and the settlement date is within the expected range.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "b07cceaae12fad26d6412ced3004d0d41b8efa200d43deb0039a87aa7f18de87": {
+    "decision": "match",
+    "matched_order_id": "ORD4014",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount (4,100,000) matches the expected amount of ORD4014 exactly. The net amount (4,018,000) is consistent with a 2% fee deduction from the gross amount. The payer name 'Global Tech' matches, and the settlement date aligns with the expected settlement date of the order.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "84acca6fb9a67622574088b83e8a58c73ceea06bdc5ef1df2b692dbb3616724d": {
+    "decision": "match",
+    "matched_order_id": "ORD4015",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount (4,250,000) matches the expected amount of ORD4015 exactly. The net amount (4,165,000) after a 2% fee deduction matches the settlement's net amount exactly. The payer name 'Delta Systems' matches, and the settlement date (2026-08-18) aligns with the expected settlement date of the order.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "4f8371b0968828fb24e437d6f4e490ea2a3466464c6b5cd507108311526d483b": {
+    "decision": "match",
+    "matched_order_id": "ORD4019",
+    "confidence": 0.98,
+    "reasoning": "The settlement amount (4,850,000) matches the expected amount of ORD4019 exactly. The net amount (4,753,000) is consistent with a 2% fee deduction from the gross amount. The settlement date (2026-08-22) aligns perfectly with the expected settlement date for ORD4019, and the payer name 'Acme Corp' matches the customer name on the order.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "4f1f42e16c54da98ac375b48dd6427d51cccc3f10ecb500eff90d62b4b2035df": {
+    "decision": "match",
+    "matched_order_id": "ORD4021",
+    "confidence": 0.98,
+    "reasoning": "The settlement amount of 5,150,000 matches the expected amount of ORD4021 exactly. After applying a 2% fee deduction to the expected amount (5,150,000 * 0.02 = 103,000), the resulting net amount is 5,047,000, which matches the settlement's net_amount exactly. The customer name 'Pioneer Auto' matches, and the settlement date is within the expected range.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "c2e7e88c3b9e5a555ef2ff3ef3e12a29c2dc27c55705bdf20d4230695b12b25b": {
+    "decision": "match",
+    "matched_order_id": "ORD4023",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount (5,450,000) matches the expected amount of ORD4023 exactly. The net amount after the 2% fee deduction (109,000) is 5,341,000, which matches the settlement's net amount perfectly. The customer name 'Global Tech' matches, and the settlement date (2026-08-26) aligns with the expected settlement date of the order.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "cd502b17d7bfdfc6979d465be2104f85b789ec6b2681883ac9d21ec5a36ea83b": {
+    "decision": "match",
+    "matched_order_id": "ORD4024",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount (5,600,000) matches the expected amount of ORD4024 exactly. The net amount after a 2% fee deduction (112,000) is 5,488,000, which matches the settlement's net_amount perfectly. The customer name 'Delta Systems' matches, and the settlement date is within the expected timeframe.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "5157a46b8168554edb0bc4ac6599cdd4916381a91cb075876a157ab413043ab2": {
+    "decision": "match",
+    "matched_order_id": "ORD4025",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount (5,750,000) matches the expected amount of ORD4025 exactly. The net amount after the 115,000 fee deduction (5,635,000) is consistent with the settlement. The customer name 'Omni Global' matches, and the settlement date (2026-08-03) aligns perfectly with the expected settlement date of the order.",
+    "rule_category": "EXACT"
+  },
+  "2002a68cdbcdf8a31a5e50fd751a0479150cefd043c02c5c7333f702c095b1d7": {
+    "decision": "match",
+    "matched_order_id": "ORD4033",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 10,100,000 paise matches the expected amount of ORD4033 exactly. After applying the 2.36% fee deduction to the expected amount, the resulting net amount (9,861,640 paise) matches the settlement's net_amount perfectly. The customer name 'Delta Systems' matches, and the settlement date is within the allowed tolerance.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "dc3fb60022652ec1b788059daba5cb097021405b166e7b8283bd31756e31a5ca": {
+    "decision": "match",
+    "matched_order_id": "ORD4037",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 10,900,000 matches the expected amount of ORD4037 exactly. The net amount after the reported fee deduction (2.36%) matches the settlement net amount of 10,642,760. The settlement date and customer name also align perfectly with the order details.",
+    "rule_category": "FEE_DEDUCTION"
+  },
+  "106a765c129dbccf363a4aaacc294aedd80769a3bf00b23bc7904f6fa313e1be": {
+    "decision": "match",
+    "matched_order_id": "ORD4022",
+    "confidence": 1.0,
+    "reasoning": "The settlement amount of 5,300,000 matches the expected amount of ORD4022 exactly. After applying a 2% fee deduction (106,000), the net amount of 5,194,000 matches the settlement net amount perfectly. The customer name 'Raga Exports' matches, and the settlement date is within the expected timeframe.",
+    "rule_category": "FEE_DEDUCTION"
   }
 }

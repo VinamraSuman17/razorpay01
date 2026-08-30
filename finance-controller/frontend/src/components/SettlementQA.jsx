@@ -115,12 +115,23 @@ export function SettlementQA({ onAskQuestion, onAsk }) {
                 {msg.role === 'user' ? (
                   <p>{msg.content}</p>
                 ) : (
-                  <div className="prose prose-xs max-w-none text-[#0F172A]">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <div className="space-y-2 text-[#0F172A]">
+                    <div className="flex items-center justify-between border-b-2 border-[#1E3A8A] pb-1.5 mb-2">
+                      <span className="text-[11px] font-black uppercase text-[#1D4ED8] flex items-center gap-1.5 font-mono">
+                        <Sparkles className="w-3.5 h-3.5 text-[#1D4ED8]" />
+                        <span>Gemini 3.5 Flash-Lite AI Response</span>
+                      </span>
+                      <span className="text-[9px] bg-emerald-100 text-emerald-900 border border-emerald-400 font-mono font-bold px-1.5 py-0.5">
+                        Grounded AI Synthesized
+                      </span>
+                    </div>
+                    <div className="prose prose-slate prose-xs max-w-none font-sans font-medium text-xs leading-relaxed space-y-2">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
                     {msg.sqlQuery && (
                       <details className="mt-3 text-[11px] bg-[#0F172A] text-[#FAFAFA] p-3 border-2 border-[#1E3A8A] font-mono shadow-[2px_2px_0px_0px_#0F172A]">
                         <summary className="cursor-pointer text-blue-300 font-black uppercase mb-1">Generated SQL Query</summary>
-                        <code>{msg.sqlQuery}</code>
+                        <code className="text-emerald-400 font-bold block pt-1 whitespace-pre-wrap">{msg.sqlQuery}</code>
                       </details>
                     )}
                   </div>

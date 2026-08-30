@@ -1,140 +1,30 @@
 {
-  "how many settlements are still open": {
-    "answer": "Based on the reconciled database, there is currently **1** open settlement.",
-    "sql_query": "SELECT count(*) AS count FROM bank_settlements WHERE net_amount < 0 OR description ILIKE ?",
+  "compare settlement stl4020 and stl4022": {
+    "answer": "Here is the comparison between settlements **STL4020** and **STL4022**:\n\n### **Settlement STL4020**\n- **Date:** 2026-08-23\n- **Gross Amount:** \u20b950,000.00 (5,000,000 paise)\n- **Net Amount:** \u20b949,000.00\n- **Fees Deducted:** \u20b9100,000.00 *(Note: recorded as 10,000,000 paise)*\n- **UTR Reference:** `UTR409920`\n- **Payer Account:** Vortex Dynamics\n- **Description:** HDFC Bank Payout PAY4020 UTR:UTR409920\n- **Status / Exception:** Unresolved exception (`ORPHAN_BANK_SETTLEMENT`). It has no matching candidate in the internal ledger for reference `UTR409920` or amount \u20b949,000.00. \n- **Suggested Action:** Contact the payment gateway team to verify if the order entry for UTR `UTR409920` was omitted from the internal ledger.\n\n### **Settlement STL4022**\n- **Date:** 2026-08-25\n- **Gross Amount:** \u20b953,000.00 (5,300,000 paise)\n- **Net Amount:** \u20b951,940.00\n- **Fees Deducted:** \u20b91,060.00 (106,000 paise)\n- **UTR Reference:** `UTR409922`\n- **Payer Account:** Raga Exports\n- **Description:** HDFC Bank Payout PAY4022 UTR:UTR409922\n- **Status / Exception:** No audit log, matching record, or exception details were retrieved for STL4022 beyond its initial bank settlement data.",
+    "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id IN (?, ?)",
     "extracted_entity": {
-      "filter_type": "category_count",
-      "value": "open settlements"
+      "filter_type": "settlement_id",
+      "value": "STL4020, STL4022"
     },
     "data_found": true,
-    "row_count": 1
+    "row_count": 2
   },
-  "tell more about stl0005": {
-    "answer": "Settlement ID **STL0005** (dated **2026-07-21**) was successfully matched to internal order **ORD0005** with a confidence score of **100%** (1.0) using the **EXACT_REFERENCE_MATCH** rule on 2026-08-26. \n\nHere are the key details of the transaction:\n* **Financial Breakdown:** The bank settlement amount is **\u20b918,47,823.00** (`net_amount_inr` and `gross_amount_inr`), with **\u20b90.00** in platform fees deducted. The expected amount in the ledger for order `ORD0005` is also **\u20b918,47,823.00**. Note that while the gross amounts match perfectly, there is a net versus expected variance note indicating a difference of **\u20b943,608.62**.\n* **References:** The bank UTR reference (`utr_reference`) is **`REF87207439`** and the ledger customer reference (`customer_reference`) is **`REF87207439`**. They match perfectly with no discrepancies.\n* **Payer & Customer:** Payer account **Chakrabarti-Puri** corresponds to customer **Chakrabarti-Puri**, and the ledger status is marked as **settled**.",
+  "why was stl4005 matched?": {
+    "answer": "### \u26a0\ufe0f Exception Diagnosis: Orphan Bank Settlement / Unmatched Record\n\n---\n\n### \ud83d\udccb Comprehensive Financial Breakdown\n\nAn analysis of the reconciliation audit logs indicates that **Settlement ID `STL4005` was NOT matched** to any internal ledger entry or order. Instead, it is currently flagged as an unresolved exception in the reconciliation pipeline.\n\n* **Settlement ID:** `STL4005`\n* **Settlement Date:** `2026-08-08`\n* **UTR Reference:** `UTR409905`\n* **Payer Account / Merchant:** `Global Tech`\n* **Description:** `HDFC Bank Payout PAY4005 UTR:UTR409905`\n* **Currency:** `INR`\n\n#### **Financial & Fee Computation Review:**\n* **Gross Settlement Amount:** `\u20b927,500.00` *(27,500,00 paise)*\n* **Gateway Fees Deducted:** `\u20b955,000.00` *(Note: The raw fee field reflects an anomalous data entry or scale mismatch in the source feed, showing 5,500,000 paise against a gross amount of 2,750,000 paise. This requires immediate fee-structure auditing).*\n* **Net Credited Amount:** `\u20b926,950.00` *(Reflecting ledger net settlement)*\n\n---\n\n### \ud83d\udd0d System Cross-Reference & Discrepancy Note\n\n* **Ledger Status:** `NULL` (No corresponding record exists in `internal_ledger`).\n* **Audit Rule Applied:** `NULL` (No automated matching rule successfully executed).\n* **Confidence Score:** `NULL` (Zero algorithmic confidence due to complete absence of a counterpart ledger entry).\n* **Exception Category:** `ORPHAN_BANK_SETTLEMENT` (Priority: **MEDIUM**).\n* **Discrepancy Details:** Bank settlement `STL4005` received on `2026-08-08` for net `\u20b926,950.00` with UTR `UTR409905` has **no matching candidate** in the internal ledger for either the reference string `UTR409905` or the net settlement amount. Furthermore, the fee structure logged (`\u20b955,000.00` fee on a `\u20b927,500.00` gross transaction) indicates a potential data ingestion or currency-subunit conversion error.\n\n---\n\n### \ud83d\udee0\ufe0f Actionable Auditor Recommendations\n\n1. **Verify Internal Ledger Ingestion:**\n   * Coordinate with the engineering/payment gateway operations team to check if the order entry corresponding to payout reference `PAY4005` / UTR `UTR409905` was omitted, dropped, or delayed during the ETL ingestion window on `2026-08-08`.\n2. **Audit Fee Calculation Anomaly:**\n   * Escalate the fee discrepancy to the finance controller. The recorded fee of `\u20b955,000.00` exceeds the gross settlement amount of `\u20b927,500.00`, pointing to a potential sign/multiplier error in the gateway settlement file parser.\n3. **Manual Ledger Reconciliation:**\n   * If `Global Tech` confirms a successful transaction matching `PAY4005`, create a manual journal entry or adjust the internal ledger to clear the `ORPHAN_BANK_SETTLEMENT` exception state.",
     "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
     "extracted_entity": {
       "filter_type": "settlement_id",
-      "value": "STL0005"
+      "value": "STL4005"
     },
     "data_found": true,
     "row_count": 1
   },
-  "which ones need someone to look at them today": {
-    "answer": "Based on the current reconciliation batch summary, there are 0 unresolved exceptions requiring manual review today. Out of 14 total bank settlements and 11 internal orders, 8 matches have been successfully reconciled (giving a match rate of 57.14%), leaving no active exceptions in the system.",
-    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
-    "extracted_entity": {
-      "filter_type": "general_query",
-      "value": "which ones need someone to look at them today"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "is anything urgent right now": {
-    "answer": "Based on the current reconciliation batch summary, there are no urgent issues or unresolved exceptions requiring immediate attention. \n\nHere is the current status:\n- **Total Bank Settlements:** 14\n- **Total Internal Orders:** 11\n- **Reconciled Matches:** 8\n- **Unresolved Exceptions:** 0\n- **Match Rate:** 57.14%\n\nSince there are 0 active exceptions, everything is currently balanced without any urgent discrepancies to resolve.",
-    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
-    "extracted_entity": {
-      "filter_type": "general_query",
-      "value": "is anything urgent right now"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "give me a quick summary of today's reconciliation run": {
-    "answer": "Here is a quick summary of today's reconciliation run:\n\n- **Total Bank Settlements:** 14\n- **Total Internal Orders:** 11\n- **Reconciled Matches:** 8\n- **Unresolved Exceptions:** 0\n- **Match Rate:** 57.14%",
-    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
-    "extracted_entity": {
-      "filter_type": "general_query",
-      "value": "today's reconciliation run"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "did everything go smoothly or were there problems": {
-    "answer": "Based on the batch reconciliation summary, not everything went smoothly; the overall match rate is relatively low at 57.14%. \n\nHere is the breakdown of the batch:\n- **Total Bank Settlements:** 14\n- **Total Internal Orders:** 11\n- **Reconciled Matches:** 8\n- **Unresolved Exceptions:** 0 (though no active exceptions are currently flagged, the lower match rate indicates unmatched records or discrepancies between the total bank settlements and internal orders).",
-    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
-    "extracted_entity": {
-      "filter_type": "general_query",
-      "value": "did everything go smoothly or were there problems"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "what's the biggest issue in this batch": {
-    "answer": "Based on the batch reconciliation summary, the biggest issue in this batch is the low match rate of **57.14%**. Out of 14 total bank settlements and 11 internal orders, only 8 matches have been successfully reconciled, leaving several records unmatched.",
-    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
-    "extracted_entity": {
-      "filter_type": "general_query",
-      "value": "biggest issue in this batch"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "how much money is tied up in unresolved settlements": {
-    "answer": "Based on the current reconciliation batch summary, there are no unresolved exceptions (`unresolved_exceptions_count` is 0), meaning there is currently \u20b90 tied up in unresolved settlements. Out of 14 total bank settlements and 11 internal orders, 8 matches have been successfully reconciled, with no active exceptions pending.",
-    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
-    "extracted_entity": {
-      "filter_type": "general_query",
-      "value": "how much money is tied up in unresolved settlements"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "what advicdeyou give me for this data, what are the things to take care in the future": {
-    "answer": "Based on the current reconciliation batch summary (which shows a 76.0% match rate with 19 matched records and 4 unresolved exceptions), here is my advice and the key areas to monitor and take care of in the future:\n\n### 1. Address Current High-Priority Exceptions Immediately\n* **Chargeback Reversal (`STL0017`):** A negative settlement of **-\u20b9120,000,000.00** occurred on 2026-07-17 under UTR `'REF1006'`. *Action:* Debit the merchant ledger account or file a chargeback dispute with the acquirer bank immediately.\n* **Duplicate Settlement (`STL0018`):** Settlement `STL0018` for **\u20b9250,000,000.00** (UTR `'REF1002'`, dated 2026-07-18) is a duplicate entry for an already reconciled transaction. *Action:* Flag this entry as a duplicate and reverse the credit in the bank reconciliation journal.\n* **Orphan Bank Settlement (`STL0019`):** Settlement `STL0019` for **\u20b9340,000,000.00** (UTR `'MISC8888'`, \"Unknown Payer\") on 2026-07-19 has no matching internal ledger entry. *Action:* Coordinate with the payment gateway team to verify if the corresponding order entry was omitted.\n* **Ambiguous Discrepancy (`STL0020`):** Settlement `STL0020` for **\u20b9270,000,000.00** on 2026-07-20 references order `ORD1099`, but the amount differs by **\u20b91,693,800,000.00** against the expected net amount (after a 2.36% fee on the expected **\u20b9450,000,000.00**). *Action:* Review the fee agreement or investigate unrecorded partial refunds or adjustments.\n\n---\n\n### 2. Best Practices & Things to Take Care of in the Future\n\n* **Strengthen Data Entry & Ingestion Validation:**\n  * Implement stricter pre-ingestion checks on internal ledger order creations to prevent missing entries (which lead to orphan settlements like `STL0019`).\n  * Enforce uniqueness constraints on UTR references at the ingestion layer to automatically flag and block duplicate bank files (preventing duplicates like `STL0018`).\n* **Automate Chargeback & Reversal Tracking:**\n  * Set up automated tagging for negative bank settlements so that chargebacks and reversals (such as `STL0017`) instantly trigger merchant debit workflows rather than waiting for manual exception review.\n* **Enhance Fee & Net Amount Tolerance Rules:**\n  * Configure automated alerts for fee percentage deviations (similar to the discrepancy seen in `STL0020` with `ORD1099`) to ensure gateway fee deductions match contract terms in real-time, catching partial refunds or unexpected deductions early.\n* **Improve Match Rate Thresholds:**\n  * Aim to increase your match rate well above the current 76.0% by establishing standard naming and reference formats across payment gateways and internal order management systems to minimize fuzzy or broken reference matches.",
-    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
-    "extracted_entity": {
-      "filter_type": "general_query",
-      "value": "what advicdeyou give me for this data, what are the things to take care in the future"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "show me total bank settlements count": {
-    "answer": "The total count of bank settlements is 5.",
-    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
-    "extracted_entity": {
-      "filter_type": "general_query",
-      "value": "total bank settlements count"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "tell me more about the stl0016 why it is gicving that exception and how do we settle it for the future give me steps to be followed": {
-    "answer": "Settlement **STL0016** (dated **2026-07-05** for **\u20b969,44,664.00**, UTR: `REF85468020`) is currently raising a **DUPLICATE_SETTLEMENT** exception because it represents a duplicate credit entry in the bank statement for a UTR reference (`REF85468020`) that has already been reconciled against an existing order.\n\n### Why this exception occurred:\n- **Duplicate Credit:** The bank description explicitly notes `\"Settlement for REF85468020 (duplicate credit)\"`. \n- **System Guardrails:** The reconciliation platform flagged this as a duplicate because `REF85468020` was previously processed, preventing double-counting or inflating ledger balances.\n\n---\n\n### Steps to be followed to settle this now and for the future:\n\n#### 1. Immediate Resolution (How to settle STL0016):\n- **Flag as Duplicate:** Mark settlement record `STL0016` as a duplicate entry within the reconciliation system.\n- **Reverse the Credit:** Post a reversal entry in the bank reconciliation journal to offset the duplicate credit of **\u20b969,44,664.00**.\n- **Close Exception:** Resolve the exception category `DUPLICATE_SETTLEMENT` once the journal adjustment is verified and balanced.\n\n#### 2. Preventive Steps for the Future:\n- **Bank Feed Validation:** Set up automated pre-ingestion checks to scan incoming bank feeds for duplicate UTR references (`REF85468020`) before they hit the reconciliation engine.\n- **Partner/Gateway Alerts:** Flag recurring duplicate payout issues with the banking partner (Butala, Kunda and Magar) to prevent duplicate settlement files from being generated at the source.\n- **Automated Rule Enhancement:** Configure ingestion rules to automatically tag entries containing duplicate keywords in the description (such as `\"duplicate credit\"`) into a review queue before automated matching rules are triggered.",
+  "tell me all about stl4052": {
+    "answer": "### \u26a0\ufe0f Exception Diagnosis: Unresolved Settlement (Orphan Bank Deposit)\n\nAs the AI Finance Controller for our fintech reconciliation platform, I have completed a deep-dive audit and system cross-reference for settlement identifier **`STL4052`**. Below is the executive-level financial analysis, discrepancy breakdown, and recommended remediation steps.\n\n---\n\n### \ud83d\udcca Comprehensive Financial Breakdown\n\n* **Settlement Identifier:** `STL4052`\n* **Settlement Date:** `2026-08-20`\n* **UTR Reference:** `UTR999952`\n* **Payer Account:** `Unknown Merchant Account`\n* **Transaction Description:** `Unmapped Direct Deposit`\n* **Currency:** `INR`\n* **Ledger Match Status:** `UNMAPPED / ORPHAN` (`order_id: null`, confidence: `0%`)\n\n#### \ud83d\udcb0 Explicit MDR Fee & Amount Calculation:\n* **Gross Settlement Amount:** `\u20b975,000.00` *(75,00,000 paise)*\n* **Gateway Fees Deducted (MDR):** `\u20b91,500.00` *(1,50,000 paise \u2014 representing a 2.00% processing fee tier)*\n* **Net Credit Deposited:** `\u20b973,500.00` *(73,50,000 paise)*\n\n```\nGross Bank Inflow : \u20b975,000.00\n(-) Gateway Fee   : \u20b91,500.00\n---------------------------------\n(=) Net Credit    : \u20b973,500.00\n```\n\n---\n\n### \ud83d\udd0d System Cross-Reference & Discrepancy Note\n\n* **Internal Ledger Status:** No matching ledger entry, invoice, or expected order record exists for settlement `STL4052`. \n* **Reference & Amount Exhaustive Search:** Automated lookup routines scanned for matching customer references against UTR string **`UTR999952`** and net amount **`\u20b973,500.00`**, yielding **zero candidates**.\n* **Exception Category:** `ORPHAN_BANK_SETTLEMENT`\n* **Core Discrepancy:** Funds have physically landed in our bank account via direct deposit under description `\"Unmapped Direct Deposit\"`, but the transaction lacks a corresponding internal ledger booking or order entry to attribute the revenue.\n\n---\n\n### \ud83d\udee0\ufe0f Actionable Auditor Recommendations\n\nTo resolve this discrepancy, protect financial reporting accuracy, and clear the exception log, the following sequential actions are recommended for the Finance Operations and Merchant Support teams:\n\n1. **Verify Gateway & Settlement Files:**\n   * Contact the payment gateway / acquiring partner account manager to trace UTR **`UTR999952`**. \n   * Request the primary merchant metadata, terminal ID, and checkout session payload linked to the gross payout of `\u20b975,000.00` processed on `2026-08-20`.\n\n2. **Audit Internal Order Logs:**\n   * Run a comprehensive database query across our order management system (OMS) and internal ledger for timestamp ranges surrounding `2026-08-20` to check if order creation failed asynchronously (e.g., webhook failure, dropped database packet during checkout).\n\n3. **Manual Journal Entry / Contra-Account Posting:**\n   * If the transaction represents a valid merchant sale where the order entry was omitted, create a retrospective manual journal entry in the internal ledger mapped to UTR `UTR999952`, debiting the clearing account for **`\u20b973,500.00`** (Net) and **`\u20b91,500.00`** (MDR Fee Expense) against a total credit of **`\u20b975,000.00`**.\n\n4. **Exception Resolution Sign-Off:**\n   * Once mapped and verified by senior financial analysts, update the exception status in the reconciliation engine from `ORPHAN_BANK_SETTLEMENT` to `RECONCILED_MANUAL` referencing the newly created adjustment ticket ID.",
     "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
     "extracted_entity": {
       "filter_type": "settlement_id",
-      "value": "STL0016"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "why was settlement stl0020 matched with order ord0020, and what was the platform fee deduction?": {
-    "answer": "Settlement `STL0020` was matched with order `ORD0020` under the **FEE_DEDUCTED_MATCH** rule with a 100% confidence score because the bank UTR reference (`REF0020`) and the ledger customer reference (`REF0020`) match perfectly, and the gross settlement amount of \u20b913,870,000,000.00 aligns exactly with the expected ledger amount. \n\nRegarding the platform fee deduction, a total fee of **\u20b9277,400,000.00** was deducted (approximately 2.36%), resulting in a net settlement amount of \u20b913,592,600,000.00 on 2026-08-01.",
-    "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
-    "extracted_entity": {
-      "filter_type": "settlement_id",
-      "value": "STL0020"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "tell me aboout stl0090 what category it is from and how can we improve it": {
-    "answer": "Settlement **STL0090** (date: **2026-07-25**, UTR: `REF0090`) belongs to the exception category **`CHARGEBACK_REVERSAL`**. \n\nIt involves a negative bank settlement amount of **-\u20b91,500.00** (gross and net amount of -\u20b91,500.00 with \u20b90.00 fees deducted) under description *\"Chargeback Reversal for Omni Global\"*, referencing UTR `REF0090`. Because it is an unresolved exception, it currently has no matching audit log or internal ledger order associated with it in the retrieved data.\n\n**How to improve and resolve it:**\nTo resolve this exception, you should follow the suggested action: **Debit the merchant ledger account or file a chargeback dispute with the acquirer bank for UTR `REF0090`**.",
-    "sql_query": "SELECT s.settlement_id, s.date, s.amount, s.net_amount, s.fees_deducted, s.utr_reference, s.payer_account, s.description, s.currency, a.order_id, a.rule_applied, a.confidence, a.timestamp, l.expected_amount, l.customer_reference, l.invoice_date, l.expected_settlement_date, l.customer_name, l.currency AS ledger_currency, l.status AS ledger_status, e.category AS exception_category, e.reason AS exception_reason, e.suggested_action AS exception_suggested_action FROM bank_settlements s LEFT JOIN audit_log a ON s.settlement_id = a.settlement_id LEFT JOIN internal_ledger l ON a.order_id = l.order_id LEFT JOIN exceptions e ON s.settlement_id = e.record_id WHERE s.settlement_id = ?",
-    "extracted_entity": {
-      "filter_type": "settlement_id",
-      "value": "STL0090"
-    },
-    "data_found": true,
-    "row_count": 1
-  },
-  "what is the total matched amount?": {
-    "answer": "Based on the reconciliation data provided, there are 56 reconciled matches out of a total of 60 bank settlements and 63 internal orders (achieving a match rate of 93.33%). However, the exact total monetary amount for these matched records is not available in the current context.",
-    "sql_query": "SELECT COUNT(*) FROM bank_settlements",
-    "extracted_entity": {
-      "filter_type": "general_query",
-      "value": "total matched amount"
+      "value": "STL4052"
     },
     "data_found": true,
     "row_count": 1

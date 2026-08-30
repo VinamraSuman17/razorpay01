@@ -6,6 +6,7 @@ export function BatchUploadSection({ onUploadSuccess }) {
   const [bankFile, setBankFile] = useState(null);
   const [ledgerFile, setLedgerFile] = useState(null);
   const [gatewayFile, setGatewayFile] = useState(null);
+  const [gtFile, setGtFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -30,6 +31,9 @@ export function BatchUploadSection({ onUploadSuccess }) {
     formData.append('ledger_file', ledgerFile);
     if (gatewayFile) {
       formData.append('gateway_file', gatewayFile);
+    }
+    if (gtFile) {
+      formData.append('gt_file', gtFile);
     }
 
     try {
@@ -164,46 +168,60 @@ export function BatchUploadSection({ onUploadSuccess }) {
       )}
 
       <form onSubmit={handleUpload} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Bank File Input */}
-          <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-[#0F172A] mb-1.5 flex items-center justify-between">
-              <span>1. Bank Settlements CSV</span>
-              <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 border border-blue-300 font-mono">Source 1</span>
-            </label>
+          <div className="flex flex-col justify-between border-2 border-[#1E3A8A] bg-slate-50 p-3 shadow-[2px_2px_0px_0px_#0F172A]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#0F172A] truncate">1. Bank Settlements</span>
+              <span className="text-[9px] bg-blue-100 text-blue-900 px-1.5 py-0.5 border border-blue-400 font-mono font-bold shrink-0">Source 1</span>
+            </div>
             <input
               type="file"
               accept=".csv"
               onChange={(e) => setBankFile(e.target.files[0])}
-              className="w-full text-xs text-[#0F172A] font-bold file:mr-2 file:py-1.5 file:px-3 file:border-2 file:border-[#1E3A8A] file:text-xs file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[1.5px_1.5px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border-2 border-[#1E3A8A] bg-slate-100 p-2 shadow-[2px_2px_0px_0px_#0F172A]"
+              className="w-full text-[11px] text-[#0F172A] font-bold file:mr-2 file:py-1 file:px-2 file:border-2 file:border-[#1E3A8A] file:text-[10px] file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[1px_1px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border border-[#1E3A8A] bg-white p-1"
             />
           </div>
 
           {/* Ledger File Input */}
-          <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-[#0F172A] mb-1.5 flex items-center justify-between">
-              <span>2. Internal Ledger CSV</span>
-              <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 border border-blue-300 font-mono">Source 2</span>
-            </label>
+          <div className="flex flex-col justify-between border-2 border-[#1E3A8A] bg-slate-50 p-3 shadow-[2px_2px_0px_0px_#0F172A]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#0F172A] truncate">2. ERP Ledger CSV</span>
+              <span className="text-[9px] bg-blue-100 text-blue-900 px-1.5 py-0.5 border border-blue-400 font-mono font-bold shrink-0">Source 2</span>
+            </div>
             <input
               type="file"
               accept=".csv"
               onChange={(e) => setLedgerFile(e.target.files[0])}
-              className="w-full text-xs text-[#0F172A] font-bold file:mr-2 file:py-1.5 file:px-3 file:border-2 file:border-[#1E3A8A] file:text-xs file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[1.5px_1.5px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border-2 border-[#1E3A8A] bg-slate-100 p-2 shadow-[2px_2px_0px_0px_#0F172A]"
+              className="w-full text-[11px] text-[#0F172A] font-bold file:mr-2 file:py-1 file:px-2 file:border-2 file:border-[#1E3A8A] file:text-[10px] file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[1px_1px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border border-[#1E3A8A] bg-white p-1"
             />
           </div>
 
           {/* Gateway Payout File Input */}
-          <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-[#0F172A] mb-1.5 flex items-center justify-between">
-              <span>3. Razorpay Gateway Payout CSV</span>
-              <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 border border-emerald-400 font-mono font-bold">Source 3 (Multi)</span>
-            </label>
+          <div className="flex flex-col justify-between border-2 border-[#1E3A8A] bg-slate-50 p-3 shadow-[2px_2px_0px_0px_#0F172A]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#0F172A] truncate">3. Gateway Payouts</span>
+              <span className="text-[9px] bg-emerald-100 text-emerald-900 px-1.5 py-0.5 border border-emerald-400 font-mono font-bold shrink-0">3-Way</span>
+            </div>
             <input
               type="file"
               accept=".csv"
               onChange={(e) => setGatewayFile(e.target.files[0])}
-              className="w-full text-xs text-[#0F172A] font-bold file:mr-2 file:py-1.5 file:px-3 file:border-2 file:border-[#1E3A8A] file:text-xs file:font-black file:bg-[#0F172A] file:text-[#FAFAFA] file:shadow-[1.5px_1.5px_0px_0px_#0F172A] hover:file:bg-slate-800 cursor-pointer border-2 border-[#1E3A8A] bg-slate-100 p-2 shadow-[2px_2px_0px_0px_#0F172A]"
+              className="w-full text-[11px] text-[#0F172A] font-bold file:mr-2 file:py-1 file:px-2 file:border-2 file:border-[#1E3A8A] file:text-[10px] file:font-black file:bg-[#0F172A] file:text-[#FAFAFA] file:shadow-[1px_1px_0px_0px_#0F172A] hover:file:bg-slate-800 cursor-pointer border border-[#1E3A8A] bg-white p-1"
+            />
+          </div>
+
+          {/* Ground Truth File Input (Optional) */}
+          <div className="flex flex-col justify-between border-2 border-[#1E3A8A] bg-amber-50/60 p-3 shadow-[2px_2px_0px_0px_#0F172A]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#0F172A] truncate">4. Ground Truth</span>
+              <span className="text-[9px] bg-amber-200 text-amber-950 px-1.5 py-0.5 border border-amber-500 font-mono font-bold shrink-0">Benchmark (Opt)</span>
+            </div>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setGtFile(e.target.files[0])}
+              className="w-full text-[11px] text-[#0F172A] font-bold file:mr-2 file:py-1 file:px-2 file:border-2 file:border-[#1E3A8A] file:text-[10px] file:font-black file:bg-amber-800 file:text-white file:shadow-[1px_1px_0px_0px_#0F172A] hover:file:bg-amber-900 cursor-pointer border border-[#1E3A8A] bg-white p-1"
             />
           </div>
         </div>

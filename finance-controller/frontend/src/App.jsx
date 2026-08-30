@@ -10,6 +10,9 @@ import { SettlementQA } from './components/SettlementQA';
 import { BatchUploadSection } from './components/BatchUploadSection';
 import { CashForecastWidget } from './components/CashForecastWidget';
 import { TaxAuditWidget } from './components/TaxAuditWidget';
+import { AccuracyBenchmarkCard } from './components/AccuracyBenchmarkCard';
+import { ThroughputMetricsCard } from './components/ThroughputMetricsCard';
+import { CfoExecutiveSummaryCard } from './components/CfoExecutiveSummaryCard';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { RulesConfigModal } from './components/RulesConfigModal';
 import { Settings } from 'lucide-react';
@@ -426,6 +429,15 @@ ${(forecast?.customer_defaulter_analytics || []).map(c => `• ${c.customer_name
                   index={3}
                 />
               </div>
+
+              {/* Executive CFO Summary Card */}
+              <CfoExecutiveSummaryCard summary={summary} taxAudit={taxAudit} />
+
+              {/* Ground Truth Accuracy vs Match Rate Benchmark Card */}
+              <AccuracyBenchmarkCard />
+
+              {/* Engine Speed & Latency Diagnostics Card */}
+              <ThroughputMetricsCard />
 
               {/* Forward Cash Forecaster Widget */}
               <CashForecastWidget forecast={forecast} />

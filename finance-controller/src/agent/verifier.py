@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import time
 import logging
@@ -128,26 +129,58 @@ def verify_single_settlement(
             )
         client = genai.Client(api_key=api_key)
         
+    # 0. Deterministic Fast-Path Pre-Check
+    stl_id = (settlement.get("settlement_id") or "").strip().upper()
+    stl_utr = (settlement.get("utr_reference") or settlement.get("utr") or "").strip().upper()
+    stl_desc = (settlement.get("description") or "").strip().upper()
+    stl_gross = settlement.get("amount", 0)
+    stl_net = settlement.get("net_amount", stl_gross)
+    tol_paise = getattr(settings.reconciliation, "amount_tolerance_paise", 500) if settings else 500
+
+    stl_nums = re.findall(r"\d+", stl_id) + re.findall(r"\d+", stl_utr)
+
+    for cand in candidates:
+        cand_order_id = (cand.get("order_id") or "").strip().upper()
+        cand_ref = (cand.get("customer_reference") or "").strip().upper()
+        cand_exp = cand.get("expected_amount", 0)
+        cand_fee = round(cand_exp * 0.0236)
+        cand_net = cand_exp - cand_fee
+        cand_nums = re.findall(r"\d+", cand_order_id) + re.findall(r"\d+", cand_ref)
+
+        ref_match = (
+            (stl_utr and cand_order_id and stl_utr == cand_order_id) or
+            (stl_utr and cand_ref and stl_utr == cand_ref) or
+            (cand_order_id and cand_order_id in stl_desc) or
+            (cand_ref and cand_ref in stl_desc) or
+            bool(set(stl_nums) & set(cand_nums) - {"0", "00"})
+        )
+        amt_match = (
+            abs(stl_gross - cand_exp) <= tol_paise or
+            abs(stl_net - cand_net) <= tol_paise or
+            abs(stl_gross - cand_net) <= tol_paise
+        )
+
+        if ref_match and amt_match:
+            return VerificationResult(
+                decision="match",
+                matched_order_id=cand.get("order_id"),
+                confidence=0.98,
+                reasoning=f"Deterministic Candidate Match: Order '{cand_order_id}' matched with MDR fee-adjusted amount (Gross: {stl_gross}, Net: {stl_net})",
+                rule_category="DETERMINISTIC_FEES_MATCH"
+            )
+
     candidate_models = [
         "gemini-3.5-flash-lite",
         "gemini-3.1-flash-lite"
     ]
     models = get_active_models(candidate_models)
     
-    # If all models are in rate-limit cooldown/depleted, fail fast to rule fallback immediately without sleeping
-    if not models and not is_test_mock:
-        logger.warning("[AI_VERIFIER_BYPASS] All Gemini models depleted/rate-limited. Defaulting to rule engine exception immediately.")
-        return VerificationResult(
-            decision="no_match",
-            confidence=0.0,
-            reasoning="All Gemini models rate-limited/depleted. Defaulting to rule engine exception.",
-            rule_category="UNMATCHED_EXCEPTION"
-        )
-
     if is_test_mock:
-        # For custom/mocked clients in tests, use only the first configured model name
         models = [candidate_models[0]]
-    
+    elif not models:
+        # If all models depleted, retry with primary candidate model
+        models = [candidate_models[0]]
+
     system_prompt = load_system_prompt()
     
     # Prompt construction
@@ -343,14 +376,6 @@ def run_agent_verification(
             continue
             
         active_models = get_active_models(candidate_models)
-        if not active_models:
-            min_reset = min(DEPLETED_MODELS.values())
-            wait_sec = max(1.0, min_reset - time.time() + 1.0)
-            log_msg = f"[RPM_QUOTA_RESET_WAIT] All AI models on 61s cooldown. Waiting {wait_sec:.1f}s for RPM quota window to reset before AI verification..."
-            logger.info(log_msg)
-            print(log_msg)
-            time.sleep(wait_sec)
-            DEPLETED_MODELS.clear()
             
         res = verify_single_settlement(stl, candidates, settings, client=client)
         

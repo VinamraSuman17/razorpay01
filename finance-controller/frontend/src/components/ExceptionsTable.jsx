@@ -37,6 +37,53 @@ export function ExceptionsTable({ exceptions }) {
     LOW: 'bg-slate-200 text-[#0F172A] border border-[#1E3A8A] shadow-[1.5px_1.5px_0px_0px_#0F172A] font-bold'
   };
 
+  const getCategoryDeepBreakdown = (cat) => {
+    const category = (cat || '').toUpperCase();
+    if (category.includes('ORPHAN_BANK') || category.includes('ORPHAN')) {
+      return {
+        title: '🏦 Orphan Bank Settlement Audit',
+        step1: 'Bank Statement Import: Unmatched Credit Entry Detected',
+        step2: 'ERP Ledger Search: Zero Matching Order ID / UTR In Inward Register',
+        step3: 'Financial Impact: Unclaimed Cash Asset sitting in Bank clearing account.',
+        recommendation: 'Contact Payment Gateway or Customer Support with Bank UTR reference to map missing order.'
+      };
+    }
+    if (category.includes('FEE_OVERCHARGE') || category.includes('OVERCHARGE')) {
+      return {
+        title: '⚠️ Platform Fee Overcharge Detected',
+        step1: 'Contract Rate Check: Agreed MDR Fee 2.0% + GST 18%',
+        step2: 'Actual Deduction Check: Gateway deducted higher platform fee rate',
+        step3: 'Financial Impact: Revenue Leakage / Excess Bank Debit',
+        recommendation: 'Click "Contact Payment Gateway" below to automatically generate & dispatch fee dispute notice.'
+      };
+    }
+    if (category.includes('TIMING_LAG')) {
+      return {
+        title: '⏱️ Settlement Timing Lag Discrepancy',
+        step1: 'Invoice Creation Date vs Bank Credit Date Comparison',
+        step2: 'Settlement Window Audit: Exceeds standard T+3 banking clearing cutoff',
+        step3: 'Financial Impact: Working Capital Liquidity Delay',
+        recommendation: 'Check public holiday clearing schedule or query gateway payout dispatch status.'
+      };
+    }
+    if (category.includes('GST') || category.includes('TAX')) {
+      return {
+        title: '📑 GST / Statutory Tax Invoice Mismatch',
+        step1: 'Calculated GST Invoice Rate (18.0% on MDR Fee)',
+        step2: 'Gateway GST Invoice Line Item Mismatch Detected',
+        step3: 'Financial Impact: Potential Input Tax Credit (ITC) Loss under GSTR-2B',
+        recommendation: 'File GST Tax Credit adjustment request on Gateway Merchant Portal.'
+      };
+    }
+    return {
+      title: '🚨 Operational Financial Exception',
+      step1: 'Reconciliation Rule Engine Pass: Discrepancy Flagged',
+      step2: 'Multi-Signal Mismatch (Amount Variance / String Similarity <50%)',
+      step3: 'Financial Impact: Unreconciled Balance Requiring Analyst Intervention',
+      recommendation: 'Review source documents and record notes below.'
+    };
+  };
+
   const filteredExceptions = (exceptions || []).filter(exc =>
     (exc?.record_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (exc?.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -235,14 +282,52 @@ export function ExceptionsTable({ exceptions }) {
                   </div>
                 </div>
 
-                {/* Section 2 - Root Cause Analysis */}
-                <div className="bg-[#0F172A] text-white p-4 border-2 border-[#2563EB] shadow-[3px_3px_0px_0px_#0F172A] space-y-2">
-                  <h5 className="text-xs font-black uppercase text-[#60A5FA] border-b border-slate-700 pb-1.5">
-                    SECTION 2 – ROOT CAUSE ANALYSIS
-                  </h5>
-                  <p className="text-xs leading-relaxed font-mono font-medium text-slate-100">
-                    {selectedException.reason || `Bank settlement ${selectedException.record_id} has no matching order in the internal ledger for this UTR or amount. This is classified as an ${(selectedException.category || 'ORPHAN BANK SETTLEMENT').replace(/_/g, ' ')}.`}
-                  </p>
+                {/* Section 2 - Root Cause Analysis & Deep Audit Flow */}
+                {/* Section 2 - Gemini 3.5 AI Root Cause Analysis & Diagnostics */}
+                <div className="bg-[#0F172A] text-white p-4 border-2 border-[#2563EB] shadow-[4px_4px_0px_0px_#0F172A] space-y-3 font-mono">
+                  <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+                    <h5 className="text-xs font-black uppercase text-[#60A5FA] flex items-center gap-1.5">
+                      <span>🤖 Gemini 3.5 Flash-Lite AI Root-Cause Diagnosis</span>
+                    </h5>
+                    <span className="text-[10px] bg-rose-950 text-rose-300 border border-rose-700 px-2 py-0.5 font-bold uppercase">
+                      ⚠️ Discrepancy Flagged
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-900/90 border border-slate-700 space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-blue-300 block">
+                      🤖 Gemini AI Financial Explanation & Audit Note:
+                    </span>
+                    <p className="text-xs text-slate-100 font-sans font-medium leading-relaxed">
+                      {selectedException.reason || `Bank settlement ${selectedException.record_id} has no matching order in internal ledger. Classified as ${(selectedException.category || 'ORPHAN BANK SETTLEMENT').replace(/_/g, ' ')}.`}
+                    </p>
+                  </div>
+
+                  {/* Step-by-Step Diagnostic Breakdown */}
+                  {(() => {
+                    const detail = getCategoryDeepBreakdown(selectedException.category);
+                    return (
+                      <div className="p-3 bg-slate-900 border border-slate-700 space-y-2 text-[11px] font-mono">
+                        <span className="text-amber-400 font-black block border-b border-slate-800 pb-1">
+                          {detail.title}
+                        </span>
+                        <div className="space-y-1 text-slate-300">
+                          <div className="flex gap-2">
+                            <span className="text-blue-400 font-bold">1. Diagnosis:</span>
+                            <span>{detail.step1}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <span className="text-blue-400 font-bold">2. Audit Finding:</span>
+                            <span>{detail.step2}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <span className="text-rose-400 font-bold">3. Financial Risk:</span>
+                            <span>{detail.step3}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Section 3 - Recommended Action */}
