@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, X, ExternalLink, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, X, ExternalLink, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
 export function ExceptionsTable({ exceptions }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -10,7 +10,13 @@ export function ExceptionsTable({ exceptions }) {
   const [selectedOwner, setSelectedOwner] = useState('Rahul (Senior Analyst)');
   const [postSuccessMsg, setPostSuccessMsg] = useState('');
   const [actionNotice, setActionNotice] = useState(null);
-  const [reviewStatus, setReviewStatus] = useState('Open / Pending Action');
+  const [recordStatuses, setRecordStatuses] = useState({});
+  const [showResolved, setShowResolved] = useState(false);
+
+  const getRecordStatus = (recId) => recordStatuses[recId] || 'Open';
+  const setRecordStatus = (recId, status) => {
+    setRecordStatuses(prev => ({ ...prev, [recId]: status }));
+  };
 
   const fetchComments = async (recordId) => {
     try {
@@ -84,12 +90,18 @@ export function ExceptionsTable({ exceptions }) {
     };
   };
 
-  const filteredExceptions = (exceptions || []).filter(exc =>
-    (exc?.record_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (exc?.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (exc?.reason || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (exc?.suggested_action || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredExceptions = (exceptions || []).filter(exc => {
+    const recId = exc?.record_id || '';
+    const status = getRecordStatus(recId);
+    if (!showResolved && status === 'Resolved') return false;
+
+    return (
+      (exc?.record_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (exc?.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (exc?.reason || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (exc?.suggested_action || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   return (
     <>
@@ -105,7 +117,7 @@ export function ExceptionsTable({ exceptions }) {
             <h3 className="text-lg font-black uppercase text-[#0F172A] flex items-center gap-2">
               Operational Exceptions Queue
               <span className="text-xs font-mono font-bold px-2 py-0.5 bg-blue-100 text-[#1D4ED8] border border-[#2563EB]">
-                {filteredExceptions.length} active exceptions
+                {filteredExceptions.length} {showResolved ? 'records' : 'active exceptions'}
               </span>
             </h3>
             <p className="text-xs font-medium text-slate-600 mt-1">
@@ -113,13 +125,24 @@ export function ExceptionsTable({ exceptions }) {
             </p>
           </div>
 
-          <input
-            type="text"
-            placeholder="Filter Record ID, Category, or Reason..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-3.5 py-2 text-xs font-mono font-bold text-[#0F172A] border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A] focus:outline-none focus:bg-blue-50 w-full sm:w-80 placeholder:text-slate-400"
-          />
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <button
+              onClick={() => setShowResolved(!showResolved)}
+              className={`px-3 py-2 text-xs font-mono font-bold uppercase border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A] cursor-pointer transition-colors ${
+                showResolved ? 'bg-emerald-700 text-white' : 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+              }`}
+            >
+              {showResolved ? '✓ Showing All (Inc. Resolved)' : 'Show Resolved'}
+            </button>
+
+            <input
+              type="text"
+              placeholder="Filter Record ID, Category, or Reason..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-3.5 py-2 text-xs font-mono font-bold text-[#0F172A] border-2 border-[#1E3A8A] shadow-[2px_2px_0px_0px_#0F172A] focus:outline-none focus:bg-blue-50 w-full sm:w-64 placeholder:text-slate-400"
+            />
+          </div>
         </div>
 
         <div className="overflow-x-auto max-h-[440px]">
@@ -127,6 +150,7 @@ export function ExceptionsTable({ exceptions }) {
             <thead className="bg-[#0F172A] text-[#FAFAFA] border-b-2 border-[#1E3A8A] sticky top-0 uppercase tracking-wider font-black text-xs z-10">
               <tr>
                 <th className="py-3.5 px-6">Record ID</th>
+                <th className="py-3.5 px-6">Status / Review Flag</th>
                 <th className="py-3.5 px-6">Source</th>
                 <th className="py-3.5 px-6">Priority</th>
                 <th className="py-3.5 px-6">Category</th>
@@ -138,7 +162,7 @@ export function ExceptionsTable({ exceptions }) {
             <tbody className="divide-y-2 divide-[#1E3A8A]/10 text-[#0F172A]">
               {filteredExceptions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center font-bold text-slate-500">
+                  <td colSpan={8} className="py-8 text-center font-bold text-slate-500">
                     No operational exceptions matching filter criteria.
                   </td>
                 </tr>
@@ -148,13 +172,20 @@ export function ExceptionsTable({ exceptions }) {
                   const isSelected = selectedException?.record_id === exc?.record_id;
                   const reasonText = exc?.reason || 'No discrepancy details provided.';
                   const priority = exc?.priority || 'LOW';
+                  const currentStatus = getRecordStatus(recId);
+                  const isInReview = currentStatus === 'In Review';
+                  const isResolved = currentStatus === 'Resolved';
 
                   return (
                     <tr
                       key={recId}
                       onClick={() => handleSelectException(exc)}
                       className={`transition-colors cursor-pointer select-none ${
-                        isSelected
+                        isInReview
+                          ? 'bg-amber-100/90 font-bold border-l-4 border-l-amber-600 hover:bg-amber-200/80'
+                          : isResolved
+                          ? 'bg-emerald-50 font-bold border-l-4 border-l-emerald-600 hover:bg-emerald-100/80'
+                          : isSelected
                           ? 'bg-blue-200/80 font-bold border-l-4 border-l-[#1D4ED8]'
                           : idx % 2 === 1
                           ? 'bg-slate-100/70 hover:bg-blue-50'
@@ -163,6 +194,21 @@ export function ExceptionsTable({ exceptions }) {
                     >
                       <td className="py-3.5 px-6 font-mono tabular-nums font-black text-[#0F172A]">
                         {exc?.record_id || '—'}
+                      </td>
+                      <td className="py-3.5 px-6 font-mono">
+                        {isInReview ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-black uppercase bg-amber-400 text-amber-950 border border-amber-600 shadow-[1.5px_1.5px_0px_0px_#0F172A] animate-pulse">
+                            🔍 NEEDS HUMAN REVIEW
+                          </span>
+                        ) : isResolved ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-black uppercase bg-emerald-600 text-white border border-emerald-800 shadow-[1.5px_1.5px_0px_0px_#0F172A]">
+                            ✓ RESOLVED
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase bg-slate-200 text-slate-700 border border-slate-400">
+                            ⏳ OPEN PENDING
+                          </span>
+                        )}
                       </td>
                       <td className="py-3.5 px-6 font-mono tabular-nums capitalize text-slate-600 font-bold">
                         {(exc?.source || '').replace(/_/g, ' ') || '—'}
@@ -348,23 +394,37 @@ export function ExceptionsTable({ exceptions }) {
                     </motion.div>
                   )}
 
-                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <div className="flex flex-col gap-2 pt-1">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => {
+                          setRecordStatus(selectedException.record_id, 'In Review');
+                          setActionNotice(`✓ Marked exception ${selectedException.record_id} as "In Review". Flag added to table!`);
+                        }}
+                        className="flex-1 py-2 px-3 bg-[#1D4ED8] hover:bg-[#2563EB] text-white text-xs font-black uppercase border-2 border-[#0F172A] shadow-[2px_2px_0px_0px_#0F172A] cursor-pointer"
+                      >
+                        Mark as Needs Human Review
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActionNotice(`🚀 Gateway Dispute Ticket initiated for ${selectedException.record_id}! Support notified.`);
+                        }}
+                        className="flex-1 py-2 px-3 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-black uppercase border-2 border-[#0F172A] shadow-[2px_2px_0px_0px_#0F172A] cursor-pointer"
+                      >
+                        Contact Payment Gateway
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => {
-                        setReviewStatus('In Review');
-                        setActionNotice(`✓ Marked exception ${selectedException.record_id} as "In Review". Queue updated!`);
+                        setRecordStatus(selectedException.record_id, 'Resolved');
+                        setActionNotice(`✓ Exception ${selectedException.record_id} marked as RESOLVED and cleared from active queue!`);
+                        setTimeout(() => setSelectedException(null), 1200);
                       }}
-                      className="flex-1 py-2 px-3 bg-[#1D4ED8] hover:bg-[#2563EB] text-white text-xs font-black uppercase border-2 border-[#0F172A] shadow-[2px_2px_0px_0px_#0F172A] cursor-pointer"
+                      className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase border-2 border-[#0F172A] shadow-[2px_2px_0px_0px_#0F172A] cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                      Mark as Needs Human Review
-                    </button>
-                    <button
-                      onClick={() => {
-                        setActionNotice(`🚀 Gateway Dispute Ticket initiated for ${selectedException.record_id}! Support notified.`);
-                      }}
-                      className="flex-1 py-2 px-3 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-black uppercase border-2 border-[#0F172A] shadow-[2px_2px_0px_0px_#0F172A] cursor-pointer"
-                    >
-                      Contact Payment Gateway
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Mark as Resolved & Clear from Queue</span>
                     </button>
                   </div>
                   <p className="text-[10px] text-amber-800 font-bold italic">
@@ -383,8 +443,8 @@ export function ExceptionsTable({ exceptions }) {
                     <div>
                       <label className="text-[10px] font-black uppercase text-[#0F172A] block mb-1">Status Workflow:</label>
                       <select
-                        value={reviewStatus}
-                        onChange={(e) => setReviewStatus(e.target.value)}
+                        value={getRecordStatus(selectedException.record_id)}
+                        onChange={(e) => setRecordStatus(selectedException.record_id, e.target.value)}
                         className="w-full text-xs font-bold p-2 border-2 border-[#0F172A] bg-slate-50 cursor-pointer"
                       >
                         <option value="Open">Open</option>

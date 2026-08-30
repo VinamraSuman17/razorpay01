@@ -2,6 +2,7 @@ import os
 import re
 import json
 import time
+import difflib
 import logging
 import traceback
 from pathlib import Path
@@ -127,7 +128,10 @@ def verify_single_settlement(
                 reasoning="GEMINI_API_KEY missing",
                 rule_category="API_KEY_MISSING"
             )
-        client = genai.Client(api_key=api_key)
+        client = genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(timeout=20000)
+        )
         
     # 0. Deterministic Fast-Path Pre-Check
     stl_id = (settlement.get("settlement_id") or "").strip().upper()
@@ -178,8 +182,40 @@ def verify_single_settlement(
     if is_test_mock:
         models = [candidate_models[0]]
     elif not models:
-        # If all models depleted, retry with primary candidate model
-        models = [candidate_models[0]]
+        # Fast-Fail Mode with Deterministic Local Scorer:
+        # Calculate local reference string similarity ratio + amount match confidence in 0s!
+        best_cand = None
+        best_score = 0.0
+        for cand in candidates:
+            cand_order_id = (cand.get("order_id") or "").strip().upper()
+            cand_ref = (cand.get("customer_reference") or "").strip().upper()
+            
+            sim_utr = difflib.SequenceMatcher(None, stl_utr, cand_ref).ratio() if stl_utr and cand_ref else 0.0
+            sim_desc = difflib.SequenceMatcher(None, stl_desc, cand_ref).ratio() if stl_desc and cand_ref else 0.0
+            sim_id = difflib.SequenceMatcher(None, stl_id, cand_order_id).ratio() if stl_id and cand_order_id else 0.0
+            
+            score = max(sim_utr, sim_desc, sim_id)
+            if score > best_score:
+                best_score = score
+                best_cand = cand
+                
+        if best_cand and best_score >= 0.50:
+            assigned_conf = round(min(0.85, max(0.60, best_score)), 2)
+            logger.info(f"[LOCAL_FUZZY_SCORER] Match found for {stl_id} -> {best_cand.get('order_id')} (Conf: {assigned_conf})")
+            return VerificationResult(
+                decision="match",
+                matched_order_id=best_cand.get("order_id"),
+                confidence=assigned_conf,
+                reasoning=f"Deterministic Local Scorer: Settlement {stl_id} matched Order {best_cand.get('order_id')} with {int(best_score*100)}% reference string similarity. (Evaluated locally via Python engine during LLM rate-limit cooldown).",
+                rule_category="LOCAL_FUZZY_SCORE_MATCH"
+            )
+        else:
+            return VerificationResult(
+                decision="no_match",
+                confidence=0.35,
+                reasoning=f"Low reference similarity ({int(best_score*100)}%). Routed to Exception Queue during LLM rate-limit cooldown.",
+                rule_category="QUOTA_EXHAUSTED_REVIEW"
+            )
 
     system_prompt = load_system_prompt()
     
@@ -374,8 +410,6 @@ def run_agent_verification(
         if not candidates:
             stats["exceptions"] += 1
             continue
-            
-        active_models = get_active_models(candidate_models)
             
         res = verify_single_settlement(stl, candidates, settings, client=client)
         

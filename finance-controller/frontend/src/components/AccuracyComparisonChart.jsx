@@ -30,7 +30,7 @@ function AccuracyComparisonChartInner({ width, height, summary }) {
     showTooltip,
   } = useTooltip();
 
-  const matchRate = summary?.match_rate_percent || 97.9;
+  const matchRate = summary?.match_rate_percent || 0.0;
   const baselineRate = 62.1;
   const delta = (matchRate - baselineRate).toFixed(1);
 

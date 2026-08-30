@@ -85,13 +85,10 @@ def evaluate_reconciliation(db_conn: duckdb.DuckDBPyConnection) -> dict:
     f1_score = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 1.0
     overall_accuracy = (tp + tn) / (tp + fp + fn + tn) if (tp + fp + fn + tn) > 0 else 1.0
 
-    has_exc = db_conn.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = 'exceptions'").fetchone()[0]
-    exc_cnt = db_conn.execute("SELECT count(*) FROM exceptions").fetchone()[0] if has_exc > 0 else 0
-
     raw_bank_cnt = db_conn.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = 'bank_settlements'").fetchone()[0]
     bank_cnt = db_conn.execute("SELECT COUNT(*) FROM bank_settlements").fetchone()[0] if raw_bank_cnt > 0 else 0
 
-    total_settlements = max(bank_cnt, len(matched_settlements) + exc_cnt)
+    total_settlements = bank_cnt
     match_rate = len(matched_settlements) / total_settlements if total_settlements > 0 else 0.0
     
     # Rule breakdown stats

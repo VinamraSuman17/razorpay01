@@ -77,17 +77,25 @@ def run_partial_matching(
         expected_amt = ledger_entry[2]
         total_bank_net = sum(s[2] for s in stl_list)
         
-        # Calculate expected net after 2.36% platform fee if applicable
-        fee_est = round(expected_amt * 0.0236)
-        expected_fee_net = expected_amt - fee_est
+        # Calculate expected net after 2% MDR + 18% GST (2.36%) platform fee
+        mdr_fee_paise = round(expected_amt * 0.02)
+        gst_fee_paise = round(mdr_fee_paise * 0.18)
+        expected_fee_net = expected_amt - mdr_fee_paise - gst_fee_paise
+        
+        strict_tol_paise = min(tol_paise, 500)
         
         # Check if total bank net matches expected amount or fee-adjusted expected amount
-        if abs(total_bank_net - expected_amt) <= tol_paise or abs(total_bank_net - expected_fee_net) <= tol_paise:
+        if abs(total_bank_net - expected_amt) <= strict_tol_paise or abs(total_bank_net - expected_fee_net) <= strict_tol_paise:
             # Full match for partial bank settlements to this single order
             for stl in stl_list:
                 stl_id = stl[0]
                 consumed_settlements.add(stl_id)
-                log_match(db_conn, stl_id, order_id, "PARTIAL_SETTLEMENT_MATCH", confidence=1.0)
+                log_match(
+                    db_conn, stl_id, order_id, 
+                    "PARTIAL_SETTLEMENT_MATCH", 
+                    confidence=1.0,
+                    reason=f"Partial Payment Group Verified: Reference '{ref}' matched Order {order_id} (Total Bank Net ₹{total_bank_net/100:.2f} vs Expected Net ₹{expected_fee_net/100:.2f})"
+                )
                 match_count += 1
             consumed_orders.add(order_id)
         elif total_bank_net > 0 and (expected_fee_net - total_bank_net) < expected_fee_net:

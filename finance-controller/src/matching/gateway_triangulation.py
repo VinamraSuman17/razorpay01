@@ -47,21 +47,41 @@ def run_gateway_triangulation_matching(
         return 0
 
     match_count = 0
-    tol_paise = settings.reconciliation.amount_tolerance_paise
+    strict_tol_paise = min(settings.reconciliation.amount_tolerance_paise, 500)
 
     for b_id, l_id, utr, p_id, bank_net, gateway_net, ledger_exp in rows:
         if b_id in consumed_settlements or l_id in consumed_orders:
             continue
         
-        diff = abs((bank_net or 0) - (gateway_net or 0))
-        if diff <= tol_paise or bank_net == gateway_net or abs((bank_net or 0) - (ledger_exp or 0)) <= tol_paise:
+        b_net_paise = bank_net or 0
+        g_net_paise = gateway_net or 0
+        l_exp_paise = ledger_exp or 0
+        
+        mdr_fee_paise = round(l_exp_paise * 0.02)
+        gst_fee_paise = round(mdr_fee_paise * 0.18)
+        exp_net_paise_gst = l_exp_paise - mdr_fee_paise - gst_fee_paise
+        exp_net_paise_nogst = l_exp_paise - mdr_fee_paise
+        
+        diff_gateway = abs(b_net_paise - g_net_paise)
+        diff_ledger_net_gst = abs(b_net_paise - exp_net_paise_gst)
+        diff_ledger_net_nogst = abs(b_net_paise - exp_net_paise_nogst)
+        diff_ledger_gross = abs(b_net_paise - l_exp_paise)
+        
+        passes_3way = (
+            diff_gateway <= strict_tol_paise or 
+            diff_ledger_net_gst <= strict_tol_paise or 
+            diff_ledger_net_nogst <= strict_tol_paise or 
+            diff_ledger_gross <= strict_tol_paise
+        )
+        
+        if passes_3way:
             consumed_settlements.add(b_id)
             consumed_orders.add(l_id)
             log_match(
                 db_conn, b_id, l_id, 
                 "GATEWAY_3WAY_TRIANGULATION_MATCH", 
                 confidence=1.0, 
-                reason=f"3-Way Triangulation Verified: Bank Settlement {b_id} <--> Gateway Payout {p_id} <--> ERP Order {l_id}"
+                reason=f"3-Way Triangulation Verified: Bank Settlement {b_id} (Net ₹{b_net_paise/100:.2f}) <--> Gateway Payout {p_id} <--> ERP Order {l_id} (Gross ₹{l_exp_paise/100:.2f}, MDR 2% ₹{mdr_fee_paise/100:.2f})"
             )
             match_count += 1
 

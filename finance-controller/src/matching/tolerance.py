@@ -78,23 +78,40 @@ def run_tolerance_matching(db_conn: duckdb.DuckDBPyConnection, consumed_settleme
                 b_fees = stl[4]
                 l_expected = entry[2]
                 
-                # Rule 1: Net Amount = Expected Amount - Fee (either formula 2.36% or explicit bank fees_deducted)
-                expected_fee = round(l_expected * 0.0236)
-                expected_net = l_expected - expected_fee
+                # Rule 1: Integer Paise 2% MDR Fee + 18% GST (2.36% Total) Deduction Formula:
+                # Expected Net = Gross - round(Gross * 0.02) - round(Gross * 0.02 * 0.18)
+                mdr_fee_paise = round(l_expected * 0.02)
+                gst_fee_paise = round(mdr_fee_paise * 0.18)
+                total_deduction_paise = mdr_fee_paise + gst_fee_paise
+                expected_net_paise = l_expected - total_deduction_paise
                 
-                passes_fee = (b_net == expected_net) or (b_fees > 0 and b_net == l_expected - b_fees)
-                passes_rounding = abs(b_net - l_expected) <= amount_tol_paise
+                strict_tol_paise = min(amount_tol_paise, 500)
                 
-                if passes_fee:
+                fee_diff_paise = abs(b_net - expected_net_paise)
+                passes_fee_formula = fee_diff_paise <= strict_tol_paise
+                passes_explicit_bank_fee = (b_fees > 0 and abs(b_net - (l_expected - b_fees)) <= strict_tol_paise)
+                passes_rounding = abs(b_net - l_expected) <= strict_tol_paise
+                
+                if passes_fee_formula or passes_explicit_bank_fee:
                     consumed_settlements.add(stl_id)
                     consumed_orders.add(order_id)
-                    log_match(db_conn, stl_id, order_id, "FEE_DEDUCTED_MATCH", confidence=1.0)
+                    log_match(
+                        db_conn, stl_id, order_id, 
+                        "FEE_DEDUCTED_MATCH", 
+                        confidence=1.0,
+                        reason=f"Fee Deduction Verified: Gross ₹{l_expected/100:.2f} - MDR Fee 2% ₹{mdr_fee_paise/100:.2f} - GST 18% ₹{gst_fee_paise/100:.2f} = Expected Net ₹{expected_net_paise/100:.2f} (Bank Net ₹{b_net/100:.2f}, Variance {fee_diff_paise} paise)"
+                    )
                     match_count += 1
                     break
                 elif passes_rounding:
                     consumed_settlements.add(stl_id)
                     consumed_orders.add(order_id)
-                    log_match(db_conn, stl_id, order_id, "ROUNDING_TOLERANCE_MATCH", confidence=1.0)
+                    log_match(
+                        db_conn, stl_id, order_id, 
+                        "ROUNDING_TOLERANCE_MATCH", 
+                        confidence=1.0,
+                        reason=f"Rounding Tolerance Verified: Bank Net ₹{b_net/100:.2f} matched Ledger Expected ₹{l_expected/100:.2f} within {abs(b_net - l_expected)} paise."
+                    )
                     match_count += 1
                     break
                     

@@ -54,15 +54,23 @@ def run_split_matching(
             unconsumed_cust_orders = [o for o in orders_for_cust if o[0] not in consumed_orders]
             if len(unconsumed_cust_orders) >= 2:
                 total_expected = sum(o[2] for o in unconsumed_cust_orders)
-                fee_est = round(total_expected * 0.0236)
-                total_expected_net = total_expected - fee_est
+                mdr_fee_paise = round(total_expected * 0.02)
+                gst_fee_paise = round(mdr_fee_paise * 0.18)
+                total_expected_net = total_expected - mdr_fee_paise - gst_fee_paise
                 
-                if abs(net_amt - total_expected) <= tol_paise or abs(net_amt - total_expected_net) <= tol_paise:
+                strict_tol_paise = min(tol_paise, 500)
+                
+                if abs(net_amt - total_expected) <= strict_tol_paise or abs(net_amt - total_expected_net) <= strict_tol_paise:
                     consumed_settlements.add(stl_id)
                     for o in unconsumed_cust_orders:
                         order_id = o[0]
                         consumed_orders.add(order_id)
-                        log_match(db_conn, stl_id, order_id, "SPLIT_COMBINED_SETTLEMENT_MATCH", confidence=1.0)
+                        log_match(
+                            db_conn, stl_id, order_id, 
+                            "SPLIT_COMBINED_SETTLEMENT_MATCH", 
+                            confidence=1.0,
+                            reason=f"Split Batch Settlement Verified: Settlement {stl_id} (Net ₹{net_amt/100:.2f}) matched batch orders for Payer '{payer}' (Total Gross ₹{total_expected/100:.2f}, Expected Net ₹{total_expected_net/100:.2f})"
+                        )
                         match_count += 1
                         
     return match_count

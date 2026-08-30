@@ -2,40 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Target, CheckCircle2, AlertTriangle, Scale, ShieldCheck, Activity } from 'lucide-react';
 
-export function AccuracyBenchmarkCard() {
+export function AccuracyBenchmarkCard({ summary }) {
   const [data, setData] = useState({
-    ground_truth_available: true,
-    precision_percent: 98.2,
-    recall_percent: 96.5,
-    f1_score_percent: 97.34,
-    overall_accuracy_percent: 97.8,
-    match_rate_percent: 93.33,
+    ground_truth_available: false,
+    precision_percent: 100.0,
+    recall_percent: 100.0,
+    f1_score_percent: 100.0,
+    overall_accuracy_percent: 100.0,
+    match_rate_percent: 0.0,
     confusion_matrix: {
-      true_positives: 56,
-      false_positives: 1,
-      false_negatives: 2,
-      true_negatives: 4,
-      total_ground_truth: 58
+      true_positives: 0,
+      false_positives: 0,
+      false_negatives: 0,
+      true_negatives: 0,
+      total_ground_truth: 0
     },
-    total_settlements: 60,
-    system_matches_count: 57,
-    rule_breakdown: {
-      "GATEWAY_3WAY_TRIANGULATION_MATCH": 35,
-      "EXACT_REFERENCE_MATCH": 15,
-      "FEE_DEDUCTED_MATCH": 4,
-      "ROUNDING_TOLERANCE_MATCH": 2,
-      "LLM_AGENT_VERIFIED_MATCH": 1
-    }
+    total_settlements: 0,
+    system_matches_count: 0,
+    rule_breakdown: {}
   });
 
-  useEffect(() => {
+  const fetchBenchmark = () => {
     fetch('/evaluation-benchmark')
       .then(res => res.ok ? res.json() : null)
       .then(json => {
         if (json) setData(json);
       })
       .catch(e => console.error(e));
-  }, []);
+  };
+
+  useEffect(() => {
+    fetchBenchmark();
+  }, [summary?.total_bank_settlements, summary?.matched_count]);
 
   const cm = data.confusion_matrix || {};
 
@@ -142,25 +140,25 @@ export function AccuracyBenchmarkCard() {
           <div className="grid grid-cols-2 gap-2 text-center text-xs">
             <div className="p-3 bg-emerald-50 border-2 border-emerald-400 text-emerald-950 space-y-1">
               <span className="text-[10px] font-bold uppercase text-emerald-800 block">True Positives (TP)</span>
-              <span className="text-xl font-black text-emerald-900 block">{cm.true_positives || 56}</span>
+              <span className="text-xl font-black text-emerald-900 block">{cm.true_positives ?? 0}</span>
               <span className="text-[10px] font-bold block text-emerald-700">Correctly Matched</span>
             </div>
 
             <div className="p-3 bg-rose-50 border-2 border-rose-400 text-rose-950 space-y-1">
               <span className="text-[10px] font-bold uppercase text-rose-800 block">False Positives (FP)</span>
-              <span className="text-xl font-black text-rose-900 block">{cm.false_positives || 1}</span>
+              <span className="text-xl font-black text-rose-900 block">{cm.false_positives ?? 0}</span>
               <span className="text-[10px] font-bold block text-rose-700">Incorrect Mismatch</span>
             </div>
 
             <div className="p-3 bg-amber-50 border-2 border-amber-400 text-amber-950 space-y-1">
               <span className="text-[10px] font-bold uppercase text-amber-800 block">False Negatives (FN)</span>
-              <span className="text-xl font-black text-amber-900 block">{cm.false_negatives || 2}</span>
+              <span className="text-xl font-black text-amber-900 block">{cm.false_negatives ?? 0}</span>
               <span className="text-[10px] font-bold block text-amber-700">Missed Valid Matches</span>
             </div>
 
             <div className="p-3 bg-blue-50 border-2 border-blue-400 text-blue-950 space-y-1">
               <span className="text-[10px] font-bold uppercase text-blue-800 block">True Negatives (TN)</span>
-              <span className="text-xl font-black text-blue-900 block">{cm.true_negatives || 4}</span>
+              <span className="text-xl font-black text-blue-900 block">{cm.true_negatives ?? 0}</span>
               <span className="text-[10px] font-bold block text-blue-700">Correct Exceptions</span>
             </div>
           </div>

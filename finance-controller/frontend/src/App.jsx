@@ -434,10 +434,10 @@ ${(forecast?.customer_defaulter_analytics || []).map(c => `• ${c.customer_name
               <CfoExecutiveSummaryCard summary={summary} taxAudit={taxAudit} />
 
               {/* Ground Truth Accuracy vs Match Rate Benchmark Card */}
-              <AccuracyBenchmarkCard />
+              <AccuracyBenchmarkCard summary={summary} />
 
               {/* Engine Speed & Latency Diagnostics Card */}
-              <ThroughputMetricsCard />
+              <ThroughputMetricsCard summary={summary} />
 
               {/* Forward Cash Forecaster Widget */}
               <CashForecastWidget forecast={forecast} />

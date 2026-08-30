@@ -74,22 +74,26 @@ def run_exact_matching(db_conn: duckdb.DuckDBPyConnection, consumed_settlements:
                 if days_diff > date_tol_days:
                     continue
                     
-                # Check amount tolerance (integer paise check against net_amount)
+                # Check amount tolerance (integer paise check against net_amount or gross invoice)
                 b_net = stl[2]
                 l_amt = entry[2]
                 
                 abs_diff = abs(b_net - l_amt)
                 
-                # Check absolute tolerance
-                passes_abs = abs_diff <= amount_tol_paise
-                # Check percentage tolerance
-                passes_pct = (abs_diff * 100) <= (l_amt * amount_tol_pct)
+                # Strict absolute tolerance check in integer paise (<= 500 paise / ₹5.00)
+                strict_tol_paise = min(amount_tol_paise, 500)
+                passes_abs = abs_diff <= strict_tol_paise
                 
-                if passes_abs or passes_pct:
+                if passes_abs:
                     # Match found!
                     consumed_settlements.add(stl_id)
                     consumed_orders.add(order_id)
-                    log_match(db_conn, stl_id, order_id, "EXACT_REFERENCE_MATCH", confidence=1.0)
+                    log_match(
+                        db_conn, stl_id, order_id, 
+                        "EXACT_REFERENCE_MATCH", 
+                        confidence=1.0,
+                        reason=f"Exact Reference Verified: Settlement {stl_id} (Ref: '{utr_ref}') matched Order {order_id} (Ref: '{norm_ref}') within {abs_diff} paise variance."
+                    )
                     match_count += 1
                     break
                     

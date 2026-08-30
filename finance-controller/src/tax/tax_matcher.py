@@ -100,16 +100,7 @@ def run_tax_line_matching(db_conn: duckdb.DuckDBPyConnection) -> List[Dict[str, 
             }
             tax_exceptions.append(tax_exc)
             
-            if "exceptions" in tables:
-                try:
-                    db_conn.execute("""
-                        INSERT INTO exceptions (record_id, source, category, reason, suggested_action, priority)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    """, [
-                        stl_id, "bank_settlement", sub_category,
-                        reason_str, action_str, "HIGH"
-                    ])
-                except Exception:
-                    pass
+            # Tax audit exceptions are returned for tax reports without polluting the unmatched bank settlements exception table
+            pass
                     
     return tax_exceptions
