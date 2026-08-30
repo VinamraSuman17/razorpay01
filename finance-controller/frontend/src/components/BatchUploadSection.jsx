@@ -207,12 +207,12 @@ export function BatchUploadSection({ onUploadSuccess }) {
               type="file"
               accept=".csv"
               onChange={(e) => setGatewayFile(e.target.files[0])}
-              className="w-full text-[11px] text-[#0F172A] font-bold file:mr-2 file:py-1 file:px-2 file:border-2 file:border-[#1E3A8A] file:text-[10px] file:font-black file:bg-[#0F172A] file:text-[#FAFAFA] file:shadow-[1px_1px_0px_0px_#0F172A] hover:file:bg-slate-800 cursor-pointer border border-[#1E3A8A] bg-white p-1"
+              className="w-full text-[11px] text-[#0F172A] font-bold file:mr-2 file:py-1 file:px-2 file:border-2 file:border-[#1E3A8A] file:text-[10px] file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[1px_1px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border border-[#1E3A8A] bg-white p-1"
             />
           </div>
 
           {/* Ground Truth File Input (Optional) */}
-          <div className="flex flex-col justify-between border-2 border-[#1E3A8A] bg-amber-50/60 p-3 shadow-[2px_2px_0px_0px_#0F172A]">
+          <div className="flex flex-col justify-between border-2 border-[#1E3A8A] bg-slate-50 p-3 shadow-[2px_2px_0px_0px_#0F172A]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-black uppercase tracking-wider text-[#0F172A] truncate">4. Ground Truth</span>
               <span className="text-[9px] bg-amber-200 text-amber-950 px-1.5 py-0.5 border border-amber-500 font-mono font-bold shrink-0">Benchmark (Opt)</span>
@@ -221,7 +221,7 @@ export function BatchUploadSection({ onUploadSuccess }) {
               type="file"
               accept=".csv"
               onChange={(e) => setGtFile(e.target.files[0])}
-              className="w-full text-[11px] text-[#0F172A] font-bold file:mr-2 file:py-1 file:px-2 file:border-2 file:border-[#1E3A8A] file:text-[10px] file:font-black file:bg-amber-800 file:text-white file:shadow-[1px_1px_0px_0px_#0F172A] hover:file:bg-amber-900 cursor-pointer border border-[#1E3A8A] bg-white p-1"
+              className="w-full text-[11px] text-[#0F172A] font-bold file:mr-2 file:py-1 file:px-2 file:border-2 file:border-[#1E3A8A] file:text-[10px] file:font-black file:bg-[#1D4ED8] file:text-[#FAFAFA] file:shadow-[1px_1px_0px_0px_#0F172A] hover:file:bg-[#2563EB] cursor-pointer border border-[#1E3A8A] bg-white p-1"
             />
           </div>
         </div>

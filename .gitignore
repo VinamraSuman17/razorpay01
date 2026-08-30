@@ -1,3 +1,4 @@
+
 # Environments & Secrets
 venv/
 .venv/
@@ -19,6 +20,9 @@ frontend/dist/
 logs/
 *.log
 *.db
+*.db*
+*.db-wal
+*.db-shm
 finance-controller/data/uploads/
 *_backup.json
 

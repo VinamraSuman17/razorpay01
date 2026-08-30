@@ -35,6 +35,9 @@ def run_gateway_triangulation_matching(
             OR b.settlement_id = g.payout_id 
             OR b.utr_reference = g.payout_id
             OR b.description LIKE '%' || g.order_id || '%'
+            OR b.description LIKE '%' || g.payout_id || '%'
+            OR REPLACE(b.settlement_id, 'STL', 'PAY') = g.payout_id
+            OR REPLACE(b.settlement_id, 'STL', 'PAYOUT') = g.payout_id
         )
         JOIN internal_ledger l ON g.order_id = l.order_id
     """

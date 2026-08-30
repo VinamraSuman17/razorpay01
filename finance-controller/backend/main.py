@@ -292,8 +292,10 @@ def run_full_pipeline(
         
         batch_dir = bank_csv_path.parent if bank_csv_path else resolve_current_batch_dir()
         gateway_csv_path = (batch_dir / "razorpay_gateway_payouts.csv") if batch_dir else None
-        if (not gateway_csv_path or not gateway_csv_path.exists()) and ("demo" in str(batch_dir).lower() or "uploads" not in str(batch_dir).lower()):
+        if not gateway_csv_path or not gateway_csv_path.exists():
             gateway_csv_path = base_dir / "data" / "demo_dataset" / "razorpay_gateway_payouts.csv"
+        if not gateway_csv_path or not gateway_csv_path.exists():
+            gateway_csv_path = base_dir / "data" / "demo_60_records" / "razorpay_gateway_payouts.csv"
         if gateway_csv_path and gateway_csv_path.exists():
             ingest_gateway_settlements(str(gateway_csv_path), db_conn)
 
