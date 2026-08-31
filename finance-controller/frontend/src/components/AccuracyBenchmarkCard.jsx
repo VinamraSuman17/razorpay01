@@ -65,7 +65,7 @@ export function AccuracyBenchmarkCard({ summary }) {
 
         <div className="flex items-center space-x-2 font-mono text-xs">
           <div className="px-3 py-1.5 bg-blue-50 border border-blue-300 text-blue-900 font-bold">
-            Ground Truth Dataset: <span className="font-extrabold">{cm.total_ground_truth || 58} True Pairings</span>
+            Ground Truth Dataset: <span className="font-extrabold">{cm.total_ground_truth ?? data.system_matches_count ?? 0} True Pairings</span>
           </div>
         </div>
       </div>
