@@ -8,6 +8,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      '/evaluation-benchmark': 'http://localhost:8000',
+      '/throughput-metrics': 'http://localhost:8000',
       '/upload-batch': 'http://localhost:8000',
       '/run-batch': 'http://localhost:8000',
       '/summary': 'http://localhost:8000',
@@ -20,6 +22,10 @@ export default defineConfig({
       '/comments': 'http://localhost:8000',
       '/submit-feedback': 'http://localhost:8000',
       '/add-comment': 'http://localhost:8000',
+      '/save-batch': 'http://localhost:8000',
+      '/load-batch': 'http://localhost:8000',
+      '/saved-batch-info': 'http://localhost:8000',
+      '/manual-rematch': 'http://localhost:8000',
     }
   }
 })

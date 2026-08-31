@@ -32,8 +32,8 @@ def test_malformed_json_recovery_and_graceful_fallback(mock_settings):
     
     mock_client.models.generate_content.side_effect = [mock_resp1, mock_resp1]
     
-    settlement = {"settlement_id": "STL001", "amount": 10000}
-    candidates = [{"order_id": "ORD001", "expected_amount": 10000}]
+    settlement = {"settlement_id": "STL999_X", "amount": 10000}
+    candidates = [{"order_id": "ORD888_Y", "expected_amount": 95000}]
     
     res = verify_single_settlement(settlement, candidates, mock_settings, client=mock_client)
     

@@ -13,9 +13,30 @@ export function ExceptionsTable({ exceptions }) {
   const [recordStatuses, setRecordStatuses] = useState({});
   const [showResolved, setShowResolved] = useState(false);
 
-  const getRecordStatus = (recId) => recordStatuses[recId] || 'Open';
-  const setRecordStatus = (recId, status) => {
+  const getRecordStatus = (recId) => {
+    if (recordStatuses[recId]) return recordStatuses[recId];
+    const exc = (exceptions || []).find(e => e.record_id === recId);
+    if (exc && exc.status && exc.status !== 'Open') {
+      return exc.status === 'NEEDS_HUMAN_REVIEW' ? 'In Review' : exc.status;
+    }
+    return 'Open';
+  };
+
+  const setRecordStatus = async (recId, status) => {
     setRecordStatuses(prev => ({ ...prev, [recId]: status }));
+    try {
+      await fetch('/submit-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          settlement_id: recId,
+          order_id: recId,
+          feedback: status === 'In Review' ? 'NEEDS_HUMAN_REVIEW' : status
+        })
+      });
+    } catch (e) {
+      console.error('Error persisting record status to DB:', e);
+    }
   };
 
   const fetchComments = async (recordId) => {

@@ -10,6 +10,7 @@ class ExceptionItem(BaseModel):
     suggested_action: str
     priority: Literal["HIGH", "MEDIUM", "LOW"]
     is_exception: bool = True
+    status: Optional[str] = "Open"
 
 def classify_unmatched_record(
     record: Dict[str, Any],

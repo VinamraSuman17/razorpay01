@@ -524,6 +524,81 @@ def answer_settlement_question(
         columns = [d[0] for d in cursor.description]
         rows = cursor.fetchall()
         
+    if not rows and exceptions_table_exists:
+        exc_cursor = db_conn.execute("""
+            SELECT record_id, category, reason, suggested_action, priority
+            FROM exceptions
+            WHERE record_id = ? OR record_id ILIKE ?
+        """, [val, f"%{val}%"])
+        exc_rows = exc_cursor.fetchall()
+        if exc_rows:
+            e_rec, e_cat, e_reason, e_action, e_prio = exc_rows[0]
+            clean_reason = str(e_reason).rstrip(".")
+            clean_action = str(e_action).rstrip(".")
+            rich_context["unresolved_exception"] = {
+                "record_id": e_rec,
+                "category": e_cat,
+                "priority": e_prio,
+                "reason": clean_reason,
+                "suggested_action": clean_action
+            }
+            b_row = db_conn.execute("""
+                SELECT settlement_id, date, amount, net_amount, fees_deducted, utr_reference, payer_account, description
+                FROM bank_settlements WHERE settlement_id = ?
+            """, [e_rec]).fetchone()
+            if b_row:
+                columns = ["settlement_id", "date", "amount", "net_amount", "fees_deducted", "utr_reference", "payer_account", "description", "exception_category", "exception_reason", "exception_suggested_action"]
+                rows = [[b_row[0], b_row[1], b_row[2], b_row[3], b_row[4], b_row[5], b_row[6], b_row[7], e_cat, clean_reason, clean_action]]
+            else:
+                columns = ["record_id", "date", "amount", "net_amount", "fees_deducted", "utr_reference", "payer_account", "description", "exception_category", "exception_reason", "exception_suggested_action"]
+                rows = [[e_rec, None, None, None, None, None, None, None, e_cat, clean_reason, clean_action]]
+            sql_executed = f"SELECT * FROM exceptions WHERE record_id = '{val}'"
+
+    if not rows and ledger_exists:
+        l_cursor = db_conn.execute("""
+            SELECT order_id, invoice_date, expected_amount, customer_name, customer_reference, expected_settlement_date, status
+            FROM internal_ledger
+            WHERE order_id = ? OR customer_reference = ?
+        """, [val, val])
+        l_rows = l_cursor.fetchall()
+        if l_rows:
+            l_cols = [d[0] for d in l_cursor.description]
+            rows = l_rows
+            columns = l_cols
+            r = l_rows[0]
+            rich_context["internal_order"] = {
+                "order_id": r[0], "invoice_date": str(r[1]), "expected_amount_inr": r[2]/100.0 if r[2] else 0,
+                "customer_name": r[3], "customer_reference": r[4], "expected_settlement_date": str(r[5]), "status": r[6]
+            }
+            if audit_exists:
+                a_row = db_conn.execute("SELECT settlement_id, rule_applied, confidence, timestamp FROM audit_log WHERE order_id = ?", [r[0]]).fetchone()
+                if a_row:
+                    rich_context["audit_match"] = {
+                        "settlement_id": a_row[0], "rule_applied": a_row[1], "confidence_score": a_row[2], "timestamp": str(a_row[3])
+                    }
+            sql_executed = f"SELECT * FROM internal_ledger WHERE order_id = '{val}'"
+
+    gw_exists = db_conn.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = 'gateway_settlements'").fetchone()[0] > 0
+    if not rows and gw_exists:
+        gw_cursor = db_conn.execute("""
+            SELECT payout_id, payout_date, order_id, utr_reference, gross_amount, gateway_fee, gateway_tax, net_payout, status
+            FROM gateway_settlements
+            WHERE payout_id = ? OR order_id = ? OR utr_reference = ?
+        """, [val, val, val])
+        gw_rows = gw_cursor.fetchall()
+        if gw_rows:
+            gw_cols = [d[0] for d in gw_cursor.description]
+            rows = gw_rows
+            columns = gw_cols
+            r = gw_rows[0]
+            rich_context["gateway_settlement"] = {
+                "payout_id": r[0], "payout_date": str(r[1]), "order_id": r[2],
+                "utr_reference": r[3], "gross_amount_inr": r[4]/100.0 if r[4] else 0,
+                "gateway_fee_inr": r[5]/100.0 if r[5] else 0, "net_payout_inr": r[7]/100.0 if r[7] else 0,
+                "status": r[8]
+            }
+            sql_executed = f"SELECT * FROM gateway_settlements WHERE payout_id = '{val}'"
+            
     if not rows:
         return {
             "answer": f"No matching record or data was found for entity '{val}' in the reconciled database.",

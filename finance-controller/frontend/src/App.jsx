@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, AlertTriangle, Activity, Database, Clock, UploadCloud } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Activity, Database, Clock, UploadCloud, Bookmark, FolderDown, Settings } from 'lucide-react';
 import { StatCard } from './components/StatCard';
 import { SignatureBanner } from './components/SignatureBanner';
 import { DashboardCharts } from './components/DashboardCharts';
@@ -15,7 +15,8 @@ import { ThroughputMetricsCard } from './components/ThroughputMetricsCard';
 import { CfoExecutiveSummaryCard } from './components/CfoExecutiveSummaryCard';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { RulesConfigModal } from './components/RulesConfigModal';
-import { Settings } from 'lucide-react';
+import { SaveBatchModal } from './components/SaveBatchModal';
+import { BatchHistoryCard } from './components/BatchHistoryCard';
 
 export default function App() {
   const [summary, setSummary] = useState(null);
@@ -27,6 +28,12 @@ export default function App() {
   const [hasDataset, setHasDataset] = useState(false);
   const [noDataAlert, setNoDataAlert] = useState(null);
   const [appToast, setAppToast] = useState(null);
+
+  // Saved Batch Feature State
+  const [savedBatchInfo, setSavedBatchInfo] = useState({ has_saved_batch: false });
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isSavingBatch, setIsSavingBatch] = useState(false);
+  const [isLoadingBatch, setIsLoadingBatch] = useState(false);
 
   // Dynamic Rule & Rate Settings (Default: 2.0% MDR, 18.0% GST, 0.1% Tolerance)
   const [feeRate, setFeeRate] = useState(2.0);
@@ -131,9 +138,112 @@ export default function App() {
     }, 400);
   };
 
-  // Initial mount data load: Reset session on browser reload (F5) so page starts fresh
+  const [activeSnapshotId, setActiveSnapshotId] = useState(null);
+
+  // Fetch metadata of saved batch in DuckDB
+  const fetchSavedBatchInfo = async () => {
+    try {
+      const res = await fetch('/saved-batch-info');
+      if (res.ok) {
+        const info = await res.json();
+        setSavedBatchInfo(info);
+      }
+    } catch (e) {
+      console.error('Failed to fetch saved batch info:', e);
+    }
+  };
+
+  const handleSaveBatch = async (batchName) => {
+    setIsSavingBatch(true);
+    try {
+      const res = await fetch('/save-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: batchName })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAppToast(`✓ Batch '${batchName}' saved to DuckDB database successfully!`);
+        setActiveSnapshotId(data.id);
+        setIsSaveModalOpen(false);
+        await fetchSavedBatchInfo();
+      } else {
+        alert(data.detail || 'Failed to save batch snapshot.');
+      }
+    } catch (e) {
+      console.error('Error saving batch:', e);
+      alert('Failed to save batch. Server connection error.');
+    } finally {
+      setIsSavingBatch(false);
+    }
+  };
+
+  const handleLoadBatch = async (targetBatchId = null) => {
+    if (!savedBatchInfo?.has_saved_batch) return;
+    
+    let targetBatch = null;
+    if (targetBatchId && savedBatchInfo.saved_batches) {
+      targetBatch = savedBatchInfo.saved_batches.find(b => b.id === targetBatchId);
+    } else if (savedBatchInfo.saved_batches && savedBatchInfo.saved_batches.length > 0) {
+      targetBatch = savedBatchInfo.saved_batches[0];
+    }
+    
+    const name = targetBatch ? targetBatch.name : savedBatchInfo.name;
+    const confirmLoad = window.confirm(`Restore saved batch snapshot "${name}"?\n\nCurrent active operational batch data will be replaced.`);
+    if (!confirmLoad) return;
+
+    setIsLoadingBatch(true);
+    try {
+      const res = await fetch('/load-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ batch_id: targetBatchId || (targetBatch ? targetBatch.id : null) })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setHasDataset(true);
+        setNoDataAlert(null);
+        setActiveSnapshotId(data.id);
+        setAppToast(`✓ Restored saved batch '${data.name}' from ${data.saved_at}!`);
+        // EXPLICIT MULTI-ENDPOINT REFETCH OF ALL MAJOR APIS
+        await fetchData();
+        await fetchSavedBatchInfo();
+      } else {
+        alert(data.detail || 'Failed to restore saved batch snapshot.');
+      }
+    } catch (e) {
+      console.error('Error loading batch snapshot:', e);
+      alert('Failed to load batch. Server connection error.');
+    } finally {
+      setIsLoadingBatch(false);
+    }
+  };
+
+  const handleDeleteBatch = async (batchId) => {
+    const target = savedBatchInfo?.saved_batches?.find(b => b.id === batchId);
+    const confirmDelete = window.confirm(`Are you sure you want to delete snapshot "${target?.name || 'this batch'}" from history?`);
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`/saved-batch/${batchId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setAppToast(`✓ Snapshot deleted from history.`);
+        if (activeSnapshotId === batchId) {
+          setActiveSnapshotId(null);
+        }
+        await fetchSavedBatchInfo();
+      } else {
+        alert('Failed to delete snapshot.');
+      }
+    } catch (e) {
+      console.error('Error deleting snapshot:', e);
+    }
+  };
+
+  // Initial mount data load: Reset session on browser reload (F5) so page starts fresh, and check saved batch info
   React.useEffect(() => {
     handleResetSession(false);
+    fetchSavedBatchInfo();
   }, []);
 
   // Q&A Question Handler
@@ -233,8 +343,10 @@ ${(forecast?.customer_defaulter_analytics || []).map(c => `• ${c.customer_name
                 className="flex items-center space-x-1.5 text-xs text-white bg-[#1D4ED8] hover:bg-[#2563EB] px-3 py-1.5 border-2 border-[#60A5FA] font-mono font-black shadow-[2px_2px_0px_0px_#0F172A] transition-all cursor-pointer"
               >
                 <Settings className="w-4 h-4 text-white" />
-                <span>Rules & Rates Config ⚙️</span>
+                <span>Rules Config ⚙️</span>
               </button>
+
+
 
               {lastRunTime ? (
                 <div className="hidden sm:flex items-center space-x-2 text-xs text-[#FAFAFA] bg-[#1E293B] px-3.5 py-1.5 border-2 border-[#1E3A8A] font-mono font-bold shadow-[2px_2px_0px_0px_#0F172A]">
@@ -307,6 +419,17 @@ ${(forecast?.customer_defaulter_analytics || []).map(c => `• ${c.customer_name
               </button>
             </div>
           )}
+
+          {/* Dedicated Batch History & State Snapshot Manager */}
+          <BatchHistoryCard
+            hasDataset={hasDataset}
+            savedBatchInfo={savedBatchInfo}
+            onOpenSaveModal={() => setIsSaveModalOpen(true)}
+            onLoadBatch={handleLoadBatch}
+            onDeleteBatch={handleDeleteBatch}
+            isLoadingBatch={isLoadingBatch}
+            activeSnapshotId={activeSnapshotId}
+          />
 
           {/* Upload Section with Single Primary Trigger */}
           <BatchUploadSection onUploadSuccess={handleUploadSuccess} />
@@ -490,6 +613,15 @@ ${(forecast?.customer_defaulter_analytics || []).map(c => `• ${c.customer_name
           tolerance={tolerance}
           setTolerance={setTolerance}
           onApply={handleApplyNewRates}
+        />
+
+        {/* Save Batch Modal */}
+        <SaveBatchModal
+          isOpen={isSaveModalOpen}
+          onClose={() => setIsSaveModalOpen(false)}
+          onSave={handleSaveBatch}
+          savedBatchInfo={savedBatchInfo}
+          isSaving={isSavingBatch}
         />
       </div>
     </ErrorBoundary>
