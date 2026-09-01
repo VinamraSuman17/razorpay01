@@ -16,7 +16,7 @@ export function CfoExecutiveSummaryCard({ summary, taxAudit }) {
           CFO EXECUTIVE RECONCILIATION & AUDIT SUMMARY REPORT
 ================================================================================
 Generated Date: ${new Date().toLocaleDateString('en-IN', { dateStyle: 'full' })}
-System: Razorpay Autonomous Finance Controller Engine v3.0
+System: SettleMind Autonomous Finance Controller Engine v3.0
 
 1. EXECUTIVE HEALTH SCORECARD
 --------------------------------------------------------------------------------

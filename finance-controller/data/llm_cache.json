@@ -348,5 +348,12 @@
     "confidence": 1.0,
     "reasoning": "The settlement amount of 5,300,000 matches the expected amount of ORD4022 exactly. After applying a 2% fee deduction (106,000), the net amount of 5,194,000 matches the settlement net amount perfectly. The customer name 'Raga Exports' matches, and the settlement date is within the expected timeframe.",
     "rule_category": "FEE_DEDUCTION"
+  },
+  "d21f9b5235a01e63d452ceabb93982a8bbf0eac0c1e00a200a35231949ede7ca": {
+    "decision": "match",
+    "matched_order_id": "ORD6042",
+    "confidence": 0.95,
+    "reasoning": "The settlement amount of 5,000,000 matches the expected amount of ORD6042. The net amount of 4,850,000 accounts for the 150,000 fee deduction, which is explicitly noted in the settlement description. The customer name 'Vortex Dynamics' matches perfectly, and the settlement date aligns with the expected settlement date of the order.",
+    "rule_category": "FEE_DEDUCTION"
   }
 }

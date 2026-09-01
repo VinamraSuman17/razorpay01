@@ -52,7 +52,7 @@ REQUIRED ACTION:
 Please adjust this transaction credit and issue a revised GST Tax Invoice / Credit Note within 5 business days.
 
 Regards,
-Autonomous Finance Controller Team
+SettleMind Finance Controller Team
 `.trim();
 
     setDisputeModalData({

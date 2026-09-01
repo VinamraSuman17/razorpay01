@@ -103,7 +103,7 @@ export function BatchUploadSection({ onUploadSuccess }) {
         </div>
         <div>
           <h3 className="text-lg font-black uppercase text-[#0F172A]">Supply 3-Source Multi-Source Dataset Batch</h3>
-          <p className="text-xs font-medium text-slate-600">Upload Bank Settlements CSV, Internal Ledger CSV, and Razorpay Gateway Payout Report CSV for 3-way triangulation</p>
+          <p className="text-xs font-medium text-slate-600">Upload Bank Settlements CSV, Internal Ledger CSV, and Gateway Payout Report CSV for 3-way triangulation</p>
         </div>
       </div>
 

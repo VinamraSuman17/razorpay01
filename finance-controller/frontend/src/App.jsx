@@ -11,7 +11,6 @@ import { BatchUploadSection } from './components/BatchUploadSection';
 import { CashForecastWidget } from './components/CashForecastWidget';
 import { TaxAuditWidget } from './components/TaxAuditWidget';
 import { AccuracyBenchmarkCard } from './components/AccuracyBenchmarkCard';
-import { ThroughputMetricsCard } from './components/ThroughputMetricsCard';
 import { CfoExecutiveSummaryCard } from './components/CfoExecutiveSummaryCard';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { RulesConfigModal } from './components/RulesConfigModal';
@@ -281,7 +280,7 @@ export default function App() {
               </div>
               <div>
                 <h1 className="text-lg font-black uppercase tracking-tight flex items-center gap-2 text-white">
-                  Razorpay Autonomous Finance Controller
+                  SettleMind
                   <span className="text-[10px] bg-[#1D4ED8] text-white border border-[#2563EB] px-2 py-0.5 font-mono uppercase font-black shadow-[2px_2px_0px_0px_#0F172A]">
                     v1.0 Production
                   </span>
@@ -295,7 +294,7 @@ export default function App() {
                 onClick={() => {
                   const reportText = `
 ================================================================================
-          RAZORPAY AUTONOMOUS FINANCE CONTROLLER - EXECUTIVE CFO REPORT
+          SETTLEMIND - EXECUTIVE CFO REPORT
 ================================================================================
 Generated At: ${new Date().toLocaleString()}
 Reconciliation Engine: DuckDB In-Memory SQL Invariant Engine + Gemini LLM Verifier
@@ -558,9 +557,6 @@ ${(forecast?.customer_defaulter_analytics || []).map(c => `• ${c.customer_name
 
               {/* Ground Truth Accuracy vs Match Rate Benchmark Card */}
               <AccuracyBenchmarkCard summary={summary} />
-
-              {/* Engine Speed & Latency Diagnostics Card */}
-              <ThroughputMetricsCard summary={summary} />
 
               {/* Forward Cash Forecaster Widget */}
               <CashForecastWidget forecast={forecast} />

@@ -44,7 +44,7 @@ logger.info(startup_msg)
 print(startup_msg)
 
 app = FastAPI(
-    title="AI Finance Controller API",
+    title="SettleMind API",
     description="Fintech reconciliation engine with LLM verification and exception classification",
     version="1.0.0"
 )

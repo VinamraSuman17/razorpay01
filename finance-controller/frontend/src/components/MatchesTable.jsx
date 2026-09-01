@@ -21,7 +21,7 @@ export function MatchesTable({ matches }) {
     const rule = m?.rule_applied || '';
 
     if (rule.includes('TRIANGULATION') || rule.includes('GATEWAY_3WAY')) {
-      return "🌐 3-Way Systems Triangulated: (1) Bank Settlement UTR/Ref matches Razorpay Gateway Payout, (2) Gateway Payout batch Order ID matches Internal ERP Ledger Order, and (3) Calculated Net Credit (Gross Invoice - 2% MDR Fee - 18% GST - 2% TDS) equals Bank Credit down to integer paise (₹0.00 variance).";
+      return "🌐 3-Way Systems Triangulated: (1) Bank Settlement UTR/Ref matches Gateway Payout, (2) Gateway Payout batch Order ID matches Internal ERP Ledger Order, and (3) Calculated Net Credit (Gross Invoice - 2% MDR Fee - 18% GST - 2% TDS) equals Bank Credit down to integer paise (₹0.00 variance).";
     }
     if (rule.includes('EXACT')) {
       return "Signals Agreed: UTR Reference, Net Amount, and Payer Account matched 100% exactly without variance.";
