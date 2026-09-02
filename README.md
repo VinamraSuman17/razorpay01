@@ -242,4 +242,4 @@ Evaluated against `data/ground_truth/ground_truth.csv`:
 
 ## 🛡️ License & Submission Context
 
-Built for the **Razorpay Finance Controller Challenge** and **Pine Tree Researcher Assignment**. Designed for mission-critical fintech settlement operations requiring 100% auditability and zero operational risk.
+Built for the **Razorpay Finance Controller Challenge**. Designed for mission-critical fintech settlement operations requiring 100% auditability and zero operational risk.
