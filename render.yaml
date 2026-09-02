@@ -1,9 +1,10 @@
 services:
   - type: web
-    name: razorpay-finance-backend
+    name: razorpay-backend-c2bt
     env: python
     region: singapore
     plan: free
+    rootDir: finance-controller
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
     envVars:
