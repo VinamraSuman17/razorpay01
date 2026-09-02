@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: razorpay-finance-backend
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: "pip install -r requirements.txt && playwright install chromium"
+    startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: MDR_PERCENTAGE
+        value: "2.36"
+      - key: MAX_DATE_WINDOW_DAYS
+        value: "7"
+      - key: SOLARI_STEALTH_MODE
+        value: "true"
