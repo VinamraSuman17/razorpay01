@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, X, ExternalLink, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, X, ExternalLink, ShieldAlert, CheckCircle2, Monitor } from 'lucide-react';
+import { SolariStreamModal } from './SolariStreamModal';
 
 export function ExceptionsTable({ exceptions }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedException, setSelectedException] = useState(null);
+  const [solariStreamTarget, setSolariStreamTarget] = useState(null);
   const [commentsList, setCommentsList] = useState([]);
+
   const [commentInput, setCommentInput] = useState('');
   const [selectedOwner, setSelectedOwner] = useState('Rahul (Senior Analyst)');
   const [postSuccessMsg, setPostSuccessMsg] = useState('');
@@ -133,9 +136,17 @@ export function ExceptionsTable({ exceptions }) {
         transition={{ duration: 0.35, ease: 'easeOut' }}
         className="bg-[#FAFAFA] border-2 border-[#1E3A8A] shadow-[4px_4px_0px_0px_#0F172A] mb-6 overflow-hidden rounded-none"
       >
+        {actionNotice && (
+          <div className="bg-emerald-600 text-white font-bold text-xs p-3 border-b-2 border-[#1E3A8A] flex justify-between items-center animate-pulse">
+            <span>{actionNotice.msg}</span>
+            <button onClick={() => setActionNotice(null)} className="text-white hover:text-slate-200">✕</button>
+          </div>
+        )}
+
         <div className="p-6 border-b-2 border-[#1E3A8A] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-lg font-black uppercase text-[#0F172A] flex items-center gap-2">
+
               Operational Exceptions Queue
               <span className="text-xs font-mono font-bold px-2 py-0.5 bg-blue-100 text-[#1D4ED8] border border-[#2563EB]">
                 {filteredExceptions.length} {showResolved ? 'records' : 'active exceptions'}
@@ -249,17 +260,31 @@ export function ExceptionsTable({ exceptions }) {
                         {exc?.suggested_action || 'Review record'}
                       </td>
                       <td className="py-3.5 px-4 text-center">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedException(exc);
-                          }}
-                          className="px-2.5 py-1 text-[11px] font-black uppercase bg-[#1D4ED8] text-white border border-[#2563EB] shadow-[1.5px_1.5px_0px_0px_#0F172A] hover:bg-[#2563EB] cursor-pointer flex items-center justify-center gap-1 mx-auto"
-                        >
-                          <span>View</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </button>
+                        <div className="flex gap-1.5 justify-center items-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedException(exc);
+                            }}
+                            className="px-2.5 py-1 text-[11px] font-black uppercase bg-[#1D4ED8] text-white border border-[#2563EB] shadow-[1.5px_1.5px_0px_0px_#0F172A] hover:bg-[#2563EB] cursor-pointer flex items-center justify-center gap-1"
+                          >
+                            <span>View</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSolariStreamTarget(exc);
+                            }}
+                            className="px-2.5 py-1 text-[11px] font-black uppercase bg-indigo-600 text-white border border-indigo-400 shadow-[1.5px_1.5px_0px_0px_#0F172A] hover:bg-indigo-500 cursor-pointer flex items-center justify-center gap-1"
+                            title="Live Solari Cloud Supervision & Proof"
+                          >
+                            <Monitor className="w-3 h-3" />
+                            <span>Solari</span>
+                          </button>
+                        </div>
                       </td>
+
                     </tr>
                   );
                 })
@@ -576,6 +601,30 @@ export function ExceptionsTable({ exceptions }) {
           </>
         )}
       </AnimatePresence>
+
+      {/* Solari Cloud Live Stream & Proof Modal */}
+      {solariStreamTarget && (
+        <SolariStreamModal
+          exceptionId={solariStreamTarget.record_id || solariStreamTarget.id || 'EXC001'}
+          utr={solariStreamTarget.utr || solariStreamTarget.record_id}
+          amount={solariStreamTarget.amount_inr || solariStreamTarget.amount || solariStreamTarget.bank_amount || solariStreamTarget.gross_amount || solariStreamTarget.expected_amount || (solariStreamTarget.amount_paise ? solariStreamTarget.amount_paise / 100 : null)}
+          onClose={() => setSolariStreamTarget(null)}
+
+          onResolve={(id) => {
+
+            setRecordStatus(id, 'Resolved');
+            if (typeof setActionNotice === 'function') {
+              setActionNotice({
+                type: 'success',
+                msg: `✓ Exception #${id} successfully approved & reconciled via Solari Supervision!`
+              });
+              setTimeout(() => setActionNotice(null), 5000);
+            }
+          }}
+        />
+      )}
+
     </>
   );
 }
+
