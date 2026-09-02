@@ -6,7 +6,7 @@ services:
     plan: free
     healthCheckPath: /health
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+    startCommand: "python start.py"
     envVars:
       - key: PYTHONPATH
         value: "."
