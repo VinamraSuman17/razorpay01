@@ -68,6 +68,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "service": "SettleMind API", "version": "1.0.0"}
+
 DB_LOCK = threading.Lock()
 
 @contextmanager
