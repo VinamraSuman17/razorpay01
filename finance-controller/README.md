@@ -102,6 +102,64 @@ The **Razorpay Finance Controller powered by Solari Cloud Agent** transforms tra
 
 ---
 
+## 🔑 Environment Configuration (`.env` Setup)
+
+Before running the application, you must set up your environment variables file (`.env`).
+
+### File Location:
+Create a file named `.env` in the **root directory of the project**:
+```text
+finance-controller/
+├── .env                  <-- Create this file in root directory!
+├── .env.example          <-- Template configuration
+├── backend/
+├── frontend/
+└── src/
+```
+
+### Quick Setup Command:
+Copy the provided `.env.example` template:
+
+#### On Windows (PowerShell / Command Prompt):
+```powershell
+copy .env.example .env
+```
+
+#### On macOS / Linux:
+```bash
+cp .env.example .env
+```
+
+### `.env` File Contents & Variable Explanations:
+Open `.env` and fill in your keys and server configurations:
+
+```env
+# Solari Agent & Gemini API Key Configuration
+SOLARI_API_KEY=your_solari_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Backend Server & Proxy Configuration
+VITE_BACKEND_URL=http://localhost:8000
+PORT=8000
+HOST=0.0.0.0
+
+# Matching Engine Operational Defaults
+MAX_DATE_WINDOW_DAYS=7
+MDR_PERCENTAGE=2.36
+SOLARI_STEALTH_MODE=true
+```
+
+| Variable | Required | Description |
+| :--- | :--- | :--- |
+| `SOLARI_API_KEY` | Recommended | Active API key for Solari Agent Cloud Browser Infrastructure. |
+| `GEMINI_API_KEY` | Optional | Google Gemini API key for fallback ambiguous transaction reasoning. |
+| `VITE_BACKEND_URL` | Required | Target backend API URL (`http://localhost:8000`). |
+| `PORT` | Required | Server port for FastAPI backend (`8000`). |
+| `MDR_PERCENTAGE` | Required | Platform MDR fee percentage (`2.36`). |
+| `SOLARI_STEALTH_MODE` | Optional | Set to `true` to enable anti-bot stealth mode for bank portals. |
+
+---
+
 ## ⚡ Step-by-Step Installation & Reproducing a Run
 
 > [!IMPORTANT]
@@ -118,7 +176,7 @@ The **Razorpay Finance Controller powered by Solari Cloud Agent** transforms tra
 
 #### On Windows (PowerShell / Command Prompt):
 ```powershell
-git clone https://github.com/YourRepo/finance-controller.git
+git clone https://github.com/VinamraSuman17/razorpay01.git
 cd finance-controller
 
 # Create Virtual Environment
@@ -131,7 +189,7 @@ python -m venv venv
 
 #### On macOS / Linux:
 ```bash
-git clone https://github.com/YourRepo/finance-controller.git
+git clone https://github.com/VinamraSuman17/razorpay01.git
 cd finance-controller
 
 # Create Virtual Environment
@@ -242,4 +300,4 @@ Evaluated against `data/ground_truth/ground_truth.csv`:
 
 ## 🛡️ License & Submission Context
 
-Built for the **Razorpay Finance Controller Challenge** and **Pine Tree Researcher Assignment**. Designed for mission-critical fintech settlement operations requiring 100% auditability and zero operational risk.
+Built for the **Razorpay Finance Controller Challenge** and **Pine Tree Researcher Assignment Submission**. Designed for mission-critical fintech settlement operations requiring 100% auditability and zero operational risk.
