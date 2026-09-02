@@ -118,7 +118,7 @@ The **Razorpay Finance Controller powered by Solari Cloud Agent** transforms tra
 
 #### On Windows (PowerShell / Command Prompt):
 ```powershell
-git clone https://github.com/YourRepo/finance-controller.git
+git clone https://github.com/VinamraSuman17/razorpay01.git
 cd finance-controller
 
 # Create Virtual Environment
@@ -131,7 +131,7 @@ python -m venv venv
 
 #### On macOS / Linux:
 ```bash
-git clone https://github.com/YourRepo/finance-controller.git
+git clone https://github.com/VinamraSuman17/razorpay01.git
 cd finance-controller
 
 # Create Virtual Environment
