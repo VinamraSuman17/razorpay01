@@ -179,7 +179,7 @@ From the root directory with `venv` activated:
 python -m uvicorn backend.main:app --reload --port 8000
 ```
 *Backend will run at:* `http://localhost:8000`  
-*Interactive Bank Portal Web App:* `http://localhost:8000/mock-bank/STL6051`
+*Interactive Bank Portal Web App:* `http://localhost:8000/mock-bank/{STLid}`
 
 #### 2. Start Frontend React Dashboard:
 From the `frontend/` directory:
